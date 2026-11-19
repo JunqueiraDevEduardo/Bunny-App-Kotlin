@@ -205,7 +205,7 @@ class WardrobeScreen(g: BunnyView) : GridScreen(g) {
         D.circle(c, r.centerX(), r.centerY() + r.height() * 0.08f, r.height() * 0.40f, D.alpha(C.white, 200), C.outline, 4f)
         pose.mood = 0
         BunnyArt.draw(c, r.centerX(), r.bottom - r.height() * 0.05f, r.height() * 0.5f, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
-        D.text(c, "Guarda-roupa", r.left + r.width() * 0.04f, r.top + r.height() * 0.1f, r.height() * 0.09f, C.ink, Paint.Align.LEFT)
+        D.text(c, "Guarda-roupa", r.left + r.width() * 0.04f, r.top + r.height() * 0.1f, r.height() * 0.09f, C.ink, android.graphics.Paint.Align.LEFT)
     }
 
     private fun cat(): Int = when (tab) {
