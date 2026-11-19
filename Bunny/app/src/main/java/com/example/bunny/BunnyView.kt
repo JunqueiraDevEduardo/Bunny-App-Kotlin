@@ -96,18 +96,18 @@ class BunnyView(ctx: Context) : View(ctx) {
         screen.enter()
     }
 
-    fun say(msg: String) { toast = msg; toastT = 2.2f }
+    fun say(msg: String) { toast = msg; toastT = 2.4f }
 
     fun earn(n: Int) {
         if (n <= 0) return
         Save.coins += n
-        say("+$n moedas")
+        say("+$n moedas!")
     }
 
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
         val wf = w.toFloat(); val hf = h.toFloat()
         top.set(0f, 0f, wf, hf * 0.125f)
-        strip.set(0f, top.bottom, wf, top.bottom + hf * 0.065f)
+        strip.set(0f, top.bottom, wf, top.bottom + hf * 0.070f)
         bottom.set(0f, hf * 0.875f, wf, hf)
         content.set(0f, strip.bottom, wf, bottom.top)
     }
@@ -126,29 +126,60 @@ class BunnyView(ctx: Context) : View(ctx) {
         }
     }
 
+    /** Faixa de estado com Nível (estilo Pou), Necessidades e Moedas. */
     private fun drawStrip(c: Canvas) {
         val h = strip.height()
-        val coinW = strip.width() * 0.26f
+        val lvlW = strip.width() * 0.22f
+        val coinW = strip.width() * 0.22f
+
+        // 1. Pílula de Nível (Estilo Pou com anel de progresso do dia)
+        val lvlPill = RectF(strip.left + strip.width() * 0.02f, strip.top + h * 0.10f, strip.left + strip.width() * 0.02f + lvlW, strip.bottom - h * 0.10f)
+        D.rrect(c, lvlPill, lvlPill.height() * 0.5f, C.white, C.outline, 3f)
+        // Círculo com progresso do dia (24h para subir 1 nível)
+        val lcx = lvlPill.left + lvlPill.height() * 0.5f
+        val lcy = lvlPill.centerY()
+        val lr = lvlPill.height() * 0.38f
+        D.circle(c, lcx, lcy, lr, C.butter, C.gold, 2f)
+        val dProg = Save.dayProgress()
+        if (dProg > 0.05f) {
+            D.s(C.greenD, 3.5f)
+            D.path.reset()
+            D.path.addArc(lcx - lr, lcy - lr, lcx + lr, lcy + lr, -90f, 360f * dProg)
+            c.drawPath(D.path, D.p)
+        }
+        Icons.draw(c, Icons.STAR, lcx, lcy, lr * 0.48f)
+        D.text(c, "Nv.${Save.level()}", lvlPill.centerX() + lvlPill.height() * 0.28f, lvlPill.centerY() + lvlPill.height() * 0.18f, lvlPill.height() * 0.44f, C.ink)
+
+        // 2. Barras de Necessidades no Centro (se não estiver num minigame)
         if (!screen.minigame) {
             val vals = floatArrayOf(Save.hunger, Save.hygiene, Save.energy, Save.joy)
             val icons = intArrayOf(Icons.CARROT, Icons.BUBBLE, Icons.MOON, Icons.HEART)
             val cols = intArrayOf(C.orange, C.sky, C.lav, C.pinkD)
-            val areaW = strip.width() - coinW - strip.width() * 0.04f
+            val areaLeft = lvlPill.right + strip.width() * 0.015f
+            val areaRight = strip.right - coinW - strip.width() * 0.025f
+            val areaW = areaRight - areaLeft
             val bw = areaW / 4f
             for (i in 0 until 4) {
-                val x = strip.left + strip.width() * 0.02f + i * bw
-                Icons.draw(c, icons[i], x + h * 0.32f, strip.centerY(), h * 0.26f)
-                val bx = x + h * 0.68f
-                val bwid = bw - h * 0.85f
+                val x = areaLeft + i * bw
+                Icons.draw(c, icons[i], x + h * 0.22f, strip.centerY(), h * 0.22f)
+                val bx = x + h * 0.50f
+                val bwid = bw - h * 0.58f
                 D.rrect(c, bx, strip.centerY() - h * 0.11f, bx + bwid, strip.centerY() + h * 0.11f, h * 0.11f, D.alpha(C.outline, 120))
                 val fill = bwid * (vals[i] / 100f).coerceIn(0f, 1f)
-                if (fill > h * 0.1f) D.rrect(c, bx, strip.centerY() - h * 0.11f, bx + fill, strip.centerY() + h * 0.11f, h * 0.11f, if (vals[i] < 25f) C.red else cols[i])
+                if (fill > h * 0.08f) {
+                    D.rrect(c, bx, strip.centerY() - h * 0.11f, bx + fill, strip.centerY() + h * 0.11f, h * 0.11f, if (vals[i] < 25f) C.red else cols[i])
+                }
             }
+        } else {
+            // Em minigames mostra o nome da fase
+            D.text(c, "Bunny ${Save.stage()}", strip.centerX(), strip.centerY() + h * 0.16f, h * 0.38f, C.ink)
         }
-        val pill = RectF(strip.right - coinW - strip.width() * 0.02f, strip.top + h * 0.12f, strip.right - strip.width() * 0.02f, strip.bottom - h * 0.12f)
+
+        // 3. Pílula de Moedas à direita
+        val pill = RectF(strip.right - coinW - strip.width() * 0.02f, strip.top + h * 0.10f, strip.right - strip.width() * 0.02f, strip.bottom - h * 0.10f)
         D.rrect(c, pill, pill.height() / 2f, C.butter, C.gold, 3f)
         Icons.draw(c, Icons.COIN, pill.left + pill.height() * 0.55f, pill.centerY(), pill.height() * 0.34f)
-        D.text(c, Save.coins.toString(), pill.centerX() + pill.height() * 0.3f, pill.centerY() + pill.height() * 0.17f, pill.height() * 0.5f, C.ink)
+        D.text(c, Save.coins.toString(), pill.centerX() + pill.height() * 0.25f, pill.centerY() + pill.height() * 0.17f, pill.height() * 0.48f, C.ink)
     }
 
     override fun onDraw(c: Canvas) {
@@ -166,7 +197,8 @@ class BunnyView(ctx: Context) : View(ctx) {
         c.clipRect(content)
         screen.draw(c, content)
         c.restore()
-        // faixas
+
+        // Faixas de navegação e estado
         D.f(D.alpha(C.cream, 255)); c.drawRect(strip, D.p)
         drawStrip(c)
         D.rrect(c, top.left, top.top - top.height(), top.right, top.bottom, top.height() * 0.28f, C.lav, C.outline, 3f)
@@ -189,6 +221,18 @@ class BunnyView(ctx: Context) : View(ctx) {
         if (y < top.bottom) {
             val i = (x / (top.width() / 4f)).toInt().coerceIn(0, 3)
             go(topNav[i]); return true
+        }
+        if (y >= strip.top && y <= strip.bottom) {
+            val lvlW = strip.width() * 0.25f
+            if (x <= strip.left + lvlW) {
+                say("Bunny (${Save.stage()}) · Nível ${Save.level()}/100 · Faltam ${Save.nextLevelHours()}h para subir!")
+                return true
+            }
+            val coinW = strip.width() * 0.25f
+            if (x >= strip.right - coinW) {
+                say("Tens ${Save.coins} moedas! Ganha mais nos mini-jogos!")
+                return true
+            }
         }
         if (y > bottom.top) {
             val i = (x / (bottom.width() / 5f)).toInt().coerceIn(0, 4)

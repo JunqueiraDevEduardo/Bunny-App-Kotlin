@@ -4,7 +4,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.RectF
 import kotlin.math.max
-import kotlin.math.sin
 
 object Rooms {
     val names = listOf("Sala", "Quarto", "Cozinha")
@@ -20,38 +19,106 @@ object Rooms {
             "wall_lav" -> Color.rgb(227, 217, 246)
             "wall_stripes" -> C.cream
             "wall_stars" -> Color.rgb(214, 200, 240)
+            "wall_inca" -> Color.rgb(228, 218, 202) // Pedra Inca de Cusco
+            "wall_aguayo" -> C.cream // Tecido Aguayo peruano às riscas vibrantes
             else -> Color.rgb(255, 217, 228)
         }
         D.f(base); c.drawRect(r, D.p)
-        if (id == "wall_stripes") {
-            val n = 10
-            val w = r.width() / n
-            for (i in 0 until n step 2) {
-                D.f(C.pink); c.drawRect(r.left + i * w, r.top, r.left + (i + 1) * w, r.bottom, D.p)
+
+        when (id) {
+            "wall_stripes" -> {
+                val n = 10; val w = r.width() / n
+                for (i in 0 until n step 2) {
+                    D.f(C.pink); c.drawRect(r.left + i * w, r.top, r.left + (i + 1) * w, r.bottom, D.p)
+                }
             }
-        }
-        if (id == "wall_stars") {
-            val cols = 5
-            val rows = max(2, (r.height() / (r.width() / cols)).toInt())
-            for (i in 0 until cols) for (j in 0 until rows) {
-                val x = r.left + (i + 0.5f + if (j % 2 == 0) 0f else 0.5f) * r.width() / cols
-                val y = r.top + (j + 0.5f) * r.height() / rows
-                if (x < r.right) Icons.drawSpark(c, x, y, r.width() * 0.018f)
+            "wall_aguayo" -> {
+                // Tecido Aguayo tradicional peruano: riscas coloridas andinas
+                val cols = intArrayOf(C.peruRed, C.incaGold, C.turquoise, C.purpleAndes, C.peruRedD, C.mint)
+                val stripeW = r.width() * 0.05f
+                var x = r.left
+                var idx = 0
+                while (x < r.right) {
+                    D.f(cols[idx % cols.size])
+                    c.drawRect(x, r.top, minOf(r.right, x + stripeW), r.bottom, D.p)
+                    x += stripeW * 1.5f
+                    idx++
+                }
             }
-        }
-        if (id == "wall_pink" || id == "wall_mint" || id == "wall_sky" || id == "wall_lav") {
-            // pontinhos suaves
-            val dots = 6
-            for (i in 0 until dots) for (j in 0 until dots) {
-                D.f(D.alpha(C.white, 90))
-                c.drawCircle(r.left + (i + 0.5f + if (j % 2 == 0) 0f else 0.5f) * r.width() / dots,
-                    r.top + (j + 0.5f) * r.height() / dots, r.width() * 0.008f, D.p)
+            "wall_inca" -> {
+                // Parede de pedras talhadas incas com sol dourado Inti
+                val rows = 6
+                val rh = r.height() / rows
+                for (j in 1 until rows) {
+                    D.line(c, r.left, r.top + j * rh, r.right, r.top + j * rh, 3f, Color.rgb(180, 168, 150))
+                    val cols = 5
+                    for (i in 0 until cols) {
+                        val off = if (j % 2 == 0) 0.5f else 0f
+                        val x = r.left + (i + off) * (r.width() / cols)
+                        D.line(c, x, r.top + j * rh, x, r.top + (j + 1) * rh, 3f, Color.rgb(180, 168, 150))
+                    }
+                }
+                // Sol Inti dourado esculpido no centro
+                val scx = r.centerX(); val scy = r.top + r.height() * 0.35f
+                D.circle(c, scx, scy, r.width() * 0.08f, C.incaGold, Color.rgb(190, 140, 40), 2f)
+                for (k in 0 until 8) {
+                    val a = (k * 45) * Math.PI / 180.0
+                    val rx1 = scx + (Math.cos(a) * r.width() * 0.09f).toFloat()
+                    val ry1 = scy + (Math.sin(a) * r.width() * 0.09f).toFloat()
+                    val rx2 = scx + (Math.cos(a) * r.width() * 0.13f).toFloat()
+                    val ry2 = scy + (Math.sin(a) * r.width() * 0.13f).toFloat()
+                    D.line(c, rx1, ry1, rx2, ry2, 3f, C.incaGold)
+                }
+            }
+            "wall_stars" -> {
+                val cols = 5
+                val rows = max(2, (r.height() / (r.width() / cols)).toInt())
+                for (i in 0 until cols) for (j in 0 until rows) {
+                    val x = r.left + (i + 0.5f + if (j % 2 == 0) 0f else 0.5f) * r.width() / cols
+                    val y = r.top + (j + 0.5f) * r.height() / rows
+                    if (x < r.right) Icons.drawSpark(c, x, y, r.width() * 0.018f)
+                }
+            }
+            "wall_pink", "wall_mint", "wall_sky", "wall_lav" -> {
+                val dots = 6
+                for (i in 0 until dots) for (j in 0 until dots) {
+                    D.f(D.alpha(C.white, 90))
+                    c.drawCircle(r.left + (i + 0.5f + if (j % 2 == 0) 0f else 0.5f) * r.width() / dots,
+                        r.top + (j + 0.5f) * r.height() / dots, r.width() * 0.008f, D.p)
+                }
             }
         }
     }
 
     fun drawFloor(c: Canvas, r: RectF, id: String) {
         when (id) {
+            "floor_inca" -> {
+                // Calçada inca de pedra com mosaico andino
+                D.f(Color.rgb(205, 195, 180)); c.drawRect(r, D.p)
+                val rows = 5
+                val rh = r.height() / rows
+                for (j in 0 until rows) {
+                    D.line(c, r.left, r.top + j * rh, r.right, r.top + j * rh, 3f, Color.rgb(165, 155, 140))
+                    val cols = 6
+                    for (i in 0 until cols) {
+                        val shift = (j * 0.35f) % 1f
+                        val x = r.left + (i + shift) * (r.width() / cols)
+                        D.line(c, x, r.top + j * rh, x, r.top + (j + 1) * rh, 3f, Color.rgb(165, 155, 140))
+                    }
+                }
+            }
+            "floor_peru" -> {
+                // Soalho de madeira andina com friso artesanal
+                D.f(Color.rgb(215, 175, 130)); c.drawRect(r, D.p)
+                val rows = 5
+                for (j in 1 until rows) D.line(c, r.left, r.top + j * r.height() / rows, r.right, r.top + j * r.height() / rows, 3f, Color.rgb(180, 140, 100))
+                // Friso decorativo peruano no topo do chão
+                val bw = r.width() * 0.04f
+                for (k in 0 until (r.width() / bw).toInt() + 1) {
+                    D.f(if (k % 2 == 0) C.peruRed else C.incaGold)
+                    c.drawRect(r.left + k * bw, r.top, r.left + (k + 1) * bw, r.top + r.height() * 0.06f, D.p)
+                }
+            }
             "floor_check" -> {
                 val n = 8
                 val w = r.width() / n
@@ -98,6 +165,50 @@ object Rooms {
         val ol = C.outline
         val lw = max(2f, u * 0.03f)
         when (id) {
+            "dec_machupicchu" -> {
+                // Quadro ilustrado de Machu Picchu com sol dourado
+                D.rrect(c, cx - u * 0.55f, cy - u * 0.45f, cx + u * 0.55f, cy + u * 0.45f, u * 0.06f, C.incaGold, C.brown, lw * 1.3f)
+                D.rrect(c, cx - u * 0.48f, cy - u * 0.38f, cx + u * 0.48f, cy + u * 0.38f, u * 0.03f, C.sky)
+                // Sol Inti dourado
+                D.circle(c, cx + u * 0.28f, cy - u * 0.2f, u * 0.11f, C.incaGold)
+                // Montanha Huayna Picchu verde icónica
+                D.poly(c, C.greenD, 0, 0f, cx - u * 0.48f, cy + u * 0.38f, cx - u * 0.1f, cy - u * 0.28f, cx + u * 0.25f, cy + u * 0.38f)
+                D.poly(c, C.green, 0, 0f, cx - u * 0.1f, cy + u * 0.38f, cx + u * 0.18f, cy - u * 0.15f, cx + u * 0.48f, cy + u * 0.38f)
+                // Terrazas incas de pedra
+                D.rrect(c, cx - u * 0.35f, cy + u * 0.18f, cx - u * 0.05f, cy + u * 0.28f, 0.02f * u, Color.rgb(210, 200, 185))
+                D.rrect(c, cx + u * 0.05f, cy + u * 0.12f, cx + u * 0.38f, cy + u * 0.24f, 0.02f * u, Color.rgb(210, 200, 185))
+            }
+            "dec_tapete_peruano" -> {
+                // Tapete andino com motivos geométricos e franjas
+                D.oval(c, cx, cy, u * 1.1f, u * 0.32f, C.peruRed, ol, lw)
+                D.oval(c, cx, cy, u * 0.85f, u * 0.24f, C.incaGold)
+                D.oval(c, cx, cy, u * 0.6f, u * 0.16f, C.turquoise)
+                D.oval(c, cx, cy, u * 0.35f, u * 0.09f, C.purpleAndes)
+                // Franjas nas pontas
+                for (i in -3..3) {
+                    val fx = cx - u * 0.95f + (i + 3) * 0.03f * u
+                    D.line(c, fx, cy - u * 0.08f, fx - u * 0.06f, cy - u * 0.08f, lw, C.incaGold)
+                    val rx = cx + u * 0.95f - (i + 3) * 0.03f * u
+                    D.line(c, rx, cy + u * 0.08f, rx + u * 0.06f, cy + u * 0.08f, lw, C.incaGold)
+                }
+            }
+            "dec_lhama" -> {
+                // Peluche / Estátua fofa de Lhama andina
+                Icons.draw(c, Icons.LLAMA, cx, cy - u * 0.15f, u * 0.45f)
+            }
+            "dec_zampogna" -> {
+                // Flauta de Pã tradicional peruana (tubos de bambu)
+                D.rrect(c, cx - u * 0.35f, cy - u * 0.4f, cx + u * 0.35f, cy + u * 0.35f, 0.06f * u, D.alpha(C.white, 200), ol, lw)
+                val tubes = 7
+                for (i in 0 until tubes) {
+                    val tx = cx - u * 0.26f + i * (u * 0.52f / (tubes - 1))
+                    val th = u * (0.25f + i * 0.06f)
+                    D.rrect(c, tx - u * 0.025f, cy + u * 0.28f - th, tx + u * 0.025f, cy + u * 0.28f, 0.015f * u, Color.rgb(225, 195, 145), C.brown, lw * 0.7f)
+                }
+                // Fita colorida que amarra a flauta
+                D.line(c, cx - u * 0.28f, cy + u * 0.05f, cx + u * 0.28f, cy + u * 0.05f, lw * 2.5f, C.peruRed)
+                D.line(c, cx - u * 0.28f, cy + u * 0.12f, cx + u * 0.28f, cy + u * 0.12f, lw * 2.5f, C.incaGold)
+            }
             "dec_window" -> {
                 D.rrect(c, cx - u * 0.55f, cy - u * 0.6f, cx + u * 0.55f, cy + u * 0.6f, u * 0.08f, C.white, ol, lw)
                 D.rrect(c, cx - u * 0.47f, cy - u * 0.52f, cx + u * 0.47f, cy + u * 0.52f, u * 0.05f, D.mix(C.sky, Color.rgb(30, 35, 80), nightNow))
@@ -168,6 +279,11 @@ object Rooms {
         if (decor) {
             val w = r.width(); val h = r.height()
             fun has(id: String) = Save.decor.contains("$id@$room")
+            if (has("dec_machupicchu")) drawDecor(c, "dec_machupicchu", r.left + w * 0.8f, r.top + h * 0.2f, w * 0.32f)
+            if (has("dec_tapete_peruano")) drawDecor(c, "dec_tapete_peruano", r.left + w * 0.5f, fy + h * 0.27f, w * 0.42f)
+            if (has("dec_lhama")) drawDecor(c, "dec_lhama", r.left + w * 0.16f, fy + h * 0.32f, w * 0.26f)
+            if (has("dec_zampogna")) drawDecor(c, "dec_zampogna", r.left + w * 0.16f, r.top + h * 0.24f, w * 0.24f)
+
             if (has("dec_window")) drawDecor(c, "dec_window", r.left + w * 0.2f, r.top + h * 0.22f, w * 0.26f)
             if (has("dec_frame")) drawDecor(c, "dec_frame", r.left + w * 0.8f, r.top + h * 0.2f, w * 0.2f)
             if (has("dec_shelf")) drawDecor(c, "dec_shelf", r.left + w * 0.84f, fy - w * 0.15f, w * 0.2f)

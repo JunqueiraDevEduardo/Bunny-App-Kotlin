@@ -27,6 +27,11 @@ class MainActivity : Activity() {
         c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
+    override fun onResume() {
+        super.onResume()
+        Save.load(this)
+    }
+
     override fun onPause() {
         super.onPause()
         Save.save()
