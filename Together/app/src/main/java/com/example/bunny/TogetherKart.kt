@@ -197,6 +197,11 @@ class KartScreen(g: BunnyView) : Screen(g) {
                 s.sprites.add(Spr(kind, -(1.4 + rnd.nextDouble() * 1.5), col))
                 s.sprites.add(Spr(1 - kind, 1.4 + rnd.nextDouble() * 1.5, col))
             }
+            // Bandeiras de Corrida Quadriculadas 🏁 nas bermas
+            if (s.index % 8 == 0 && s.index > 2) {
+                s.sprites.add(Spr(3, -1.34, Color.WHITE))
+                s.sprites.add(Spr(3, 1.34, Color.WHITE))
+            }
             // Cenouras douradas (Bunny) / Corações (Cat) e orbes
             if (s.index > 15 && s.index % 25 in 0..2) {
                 s.sprites.add(Spr(2, rnd.nextDouble() * 1.1 - 0.55, 0))
@@ -413,7 +418,12 @@ class KartScreen(g: BunnyView) : Screen(g) {
             maxy = s.p1.sy
         }
 
-        // 3. Sprites de trás para a frente (Vegetação, Cristais, Oponentes)
+        // 4. Calcular tamanho proporcional do kart do jogador e dos oponentes
+        // "quero pista grande carros pequenos mas não muito pequenos"
+        val pw = (w * 0.165f).coerceIn(150f, 310f)
+        val scPlayer = cameraDepth / playerZ
+
+        // 3. Sprites de trás para a frente (Vegetação, Bandeiras, Cristais, Oponentes)
         for (n in drawDist - 1 downTo 0) {
             val s = segments[(baseSeg.index + n) % segments.size]
             if (s.p1.cz <= cameraDepth) continue
@@ -433,26 +443,25 @@ class KartScreen(g: BunnyView) : Screen(g) {
                 val sc = s.p1.scale + (s.p2.scale - s.p1.scale) * pcts
                 val sx = s.p1.sx + (s.p2.sx - s.p1.sx) * pcts.toFloat() + (sc * car.offset * roadW * ww / 2).toFloat()
                 val sy = s.p1.sy + (s.p2.sy - s.p1.sy) * pcts.toFloat()
-                val cw = (sc * roadW * ww / 2 * 0.28).toFloat()
-                drawKartRacer(c, sx, sy, cw, car.isBunny, car.color, car.dark, 0.0, false)
+                val cw = (pw * (sc / scPlayer)).toFloat().coerceIn(12f, pw * 1.35f)
+                drawKartRacer(c, sx, sy, cw, car.isBunny, car.color, car.dark, 0.0, false, car.name)
             }
             c.restore()
         }
 
         // 4. Jogador Principal no centro
-        val pw = (cameraDepth / playerZ * roadW * ww / 2 * 0.28).toFloat()
         val bounce = (sin(clock * 38) * 1.5 * (speed / maxSpeed)).toFloat() * h * 0.005f
         val myIsBunny = Theme.isBunny
         val myColor = if (myIsBunny) Color.rgb(26, 42, 85) else Color.rgb(255, 135, 185)
         val myDark = if (myIsBunny) Color.rgb(105, 20, 50) else Color.rgb(235, 75, 135)
-        drawKartRacer(c, w / 2, h * 0.92f + bounce, pw, myIsBunny, myColor, myDark, steerVis, speed > maxSpeed * 1.05)
+        drawKartRacer(c, w / 2, h * 0.88f + bounce, pw, myIsBunny, myColor, myDark, steerVis, speed > maxSpeed * 1.05)
 
         // Efeitos de velocidade
         if (speed > maxSpeed * 1.05) speedLines(c, w, h)
 
         drawFx(c)
 
-        // 5. Interface HUD Landscape
+        // 5. Interface HUD Landscape (limpa, sem texto de comandos)
         drawHud(c, w, h)
     }
 
@@ -510,7 +519,45 @@ class KartScreen(g: BunnyView) : Screen(g) {
         val r1 = p1.sw * 1.18f; val r2 = p2.sw * 1.18f
         quad(c, rumCol, p1.sx - r1, p1.sy, p1.sx + r1, p1.sy, p2.sx + r2, p2.sy, p2.sx - r2, p2.sy)
 
-        // Asfalto escuro cósmico
+        // 3D Paredes / Guardrails de proteção ao longo da pista ("poe paredes poe a pista a estrada")
+        val wallH1 = p1.sw * 0.22f
+        val wallH2 = p2.sw * 0.22f
+        val wallBaseCol = if (light) 0xEE1E2C48.toInt() else 0xEE141E34.toInt()
+        val wallNeonCol = if (light) 0xFFFF2A7A.toInt() else 0xFF26DEFF.toInt()
+
+        // Parede Esquerda 3D
+        quad(c, wallBaseCol,
+            p1.sx - r1, p1.sy,
+            p1.sx - r1, p1.sy - wallH1,
+            p2.sx - r2, p2.sy - wallH2,
+            p2.sx - r2, p2.sy
+        )
+        // Topo néon luminoso da Parede Esquerda
+        val rimH1 = p1.sw * 0.045f
+        val rimH2 = p2.sw * 0.045f
+        quad(c, wallNeonCol,
+            p1.sx - r1, p1.sy - wallH1,
+            p1.sx - r1 * 0.985f, p1.sy - wallH1 - rimH1,
+            p2.sx - r2 * 0.985f, p2.sy - wallH2 - rimH2,
+            p2.sx - r2, p2.sy - wallH2
+        )
+
+        // Parede Direita 3D
+        quad(c, wallBaseCol,
+            p1.sx + r1, p1.sy,
+            p1.sx + r1, p1.sy - wallH1,
+            p2.sx + r2, p2.sy - wallH2,
+            p2.sx + r2, p2.sy
+        )
+        // Topo néon luminoso da Parede Direita
+        quad(c, wallNeonCol,
+            p1.sx + r1, p1.sy - wallH1,
+            p1.sx + r1 * 0.985f, p1.sy - wallH1 - rimH1,
+            p2.sx + r2 * 0.985f, p2.sy - wallH2 - rimH2,
+            p2.sx + r2, p2.sy - wallH2
+        )
+
+        // Asfalto escuro de alta velocidade
         val rdCol = if (start) (if (s.index % 2 == 0) Color.WHITE else 0xFF222222.toInt()) else if (light) 0xFF6B6B7B.toInt() else 0xFF63637A.toInt()
         quad(c, rdCol, p1.sx - p1.sw, p1.sy, p1.sx + p1.sw, p1.sy, p2.sx + p2.sw, p2.sy, p2.sx - p2.sw, p2.sy)
 
@@ -530,7 +577,27 @@ class KartScreen(g: BunnyView) : Screen(g) {
         if (s.boost) {
             val a = 0.32f
             val bCol = if (light) 0xFF38E8FF.toInt() else 0xFF8CF4FF.toInt()
-            quad(c, bCol, p1.sx - p1.sw * a, p1.sy, p1.sx + p1.sw * a, p1.sy, p2.sx + p2.sw * a, p2.sy, p2.sx - p2.sw * a, p2.sy)
+            quad(c, bCol, p1.sx - p1.sw * a, p1.sy, p1.sx + p1.sw * a, p1.sy, p2.sx + p2.sw, p2.sy, p2.sx - p2.sw * a, p2.sy)
+        }
+
+        // Pórtico de Meta 3D sobre a pista (Segmento 0) com bandeiras quadriculadas
+        if (s.index == 0) {
+            val archTop1 = p1.sy - p1.sw * 0.72f
+            val archTop2 = p2.sy - p2.sw * 0.72f
+            // Pilar esquerdo
+            quad(c, Color.rgb(215, 220, 230), p1.sx - r1 - p1.sw * 0.08f, p1.sy, p1.sx - r1, p1.sy, p1.sx - r1, archTop1, p1.sx - r1 - p1.sw * 0.08f, archTop1)
+            // Pilar direito
+            quad(c, Color.rgb(215, 220, 230), p1.sx + r1, p1.sy, p1.sx + r1 + p1.sw * 0.08f, p1.sy, p1.sx + r1 + p1.sw * 0.08f, archTop1, p1.sx + r1, archTop1)
+            // Travessa superior do pórtico
+            quad(c, Color.rgb(30, 35, 48), p1.sx - r1, archTop1 + p1.sw * 0.16f, p1.sx + r1, archTop1 + p1.sw * 0.16f, p1.sx + r1, archTop1, p1.sx - r1, archTop1)
+            // Padrão quadriculado preto e branco de meta
+            val chkW = (r1 * 2f) / 10f
+            for (ci in 0 until 10) {
+                val cx1 = p1.sx - r1 + ci * chkW
+                val cx2 = cx1 + chkW
+                val chkCol = if (ci % 2 == 0) Color.WHITE else Color.BLACK
+                quad(c, chkCol, cx1, archTop1 + p1.sw * 0.15f, cx2, archTop1 + p1.sw * 0.15f, cx2, archTop1 + p1.sw * 0.01f, cx1, archTop1 + p1.sw * 0.01f)
+            }
         }
     }
 
@@ -569,102 +636,230 @@ class KartScreen(g: BunnyView) : Screen(g) {
                 fill.color = sp.color
                 c.drawOval(x - unit * 0.35f, y - th - unit * 0.35f, x + unit * 0.35f, y - th + unit * 0.2f, fill)
             }
-            else -> { // Cenoura Dourada (Bunny) ou Coração (Cat)
+            2 -> { // Cenoura Dourada (Bunny) ou Coração (Cat)
                 val r = unit * 0.16f
                 val cy = y - unit * 0.35f
                 fill.color = 0x55FFE866; c.drawCircle(x, cy, r * 1.8f, fill)
                 fill.color = Color.rgb(255, 215, 45); c.drawCircle(x, cy, r, fill)
                 fill.color = Color.WHITE; c.drawCircle(x - r * 0.3f, cy - r * 0.3f, r * 0.3f, fill)
             }
+            else -> { // 3: Bandeira de Corrida Quadriculada (🏁) em mastro ("poe bandeiras")
+                val poleW = unit * 0.05f
+                val poleH = unit * 1.6f
+                fill.color = Color.rgb(215, 220, 230)
+                c.drawRect(x - poleW / 2, y - poleH, x + poleW / 2, y, fill)
+                fill.color = Color.rgb(255, 215, 45)
+                c.drawCircle(x, y - poleH, poleW * 1.5f, fill)
+
+                val flagW = unit * 0.55f
+                val flagH = unit * 0.38f
+                val wave = (sin(clock * 14.0 + x * 0.05) * unit * 0.06f).toFloat()
+                val fx = if (sp.offset < 0) x - flagW else x
+                val fy = y - poleH + poleW
+
+                val rows = 3; val cols = 4
+                val cellW = flagW / cols; val cellH = flagH / rows
+                for (ro in 0 until rows) {
+                    for (co in 0 until cols) {
+                        fill.color = if ((ro + co) % 2 == 0) Color.WHITE else Color.BLACK
+                        val cLeft = fx + co * cellW + (ro * wave * 0.3f)
+                        val cTop = fy + ro * cellH
+                        c.drawRect(cLeft, cTop, cLeft + cellW, cTop + cellH, fill)
+                    }
+                }
+            }
         }
     }
 
-    /** Desenha o carro desportivo/kart do Bunny ou da Cat com piloto. */
-    private fun drawKartRacer(c: Canvas, cx: Float, by: Float, w: Float, isBunny: Boolean, color: Int, dark: Int, steer: Double, boost: Boolean) {
+    /** Desenha o carro desportivo/kart do Bunny ou da Cat com piloto claramente visível ao volante. */
+    private fun drawKartRacer(
+        c: Canvas, cx: Float, by: Float, w: Float,
+        isBunny: Boolean, color: Int, dark: Int,
+        steer: Double, boost: Boolean, name: String = ""
+    ) {
         if (w < 4f) return
-        val h = w * 0.60f
+        val h = w * 0.64f
         c.save()
-        c.rotate((steer * 8).toFloat(), cx, by)
+        c.rotate((steer * 9).toFloat(), cx, by)
 
-        // Sombra suave no chão
-        fill.color = 0x44000000
-        c.drawOval(cx - w * 0.55f, by - h * 0.12f, cx + w * 0.55f, by + h * 0.12f, fill)
+        // 1. Sombra suave no asfalto
+        fill.color = 0x55000000
+        c.drawOval(cx - w * 0.55f, by - h * 0.16f, cx + w * 0.55f, by + h * 0.16f, fill)
 
-        // Rodas traseiras largas de competição
-        fill.color = Color.rgb(25, 25, 30)
-        c.drawRoundRect(cx - w * 0.52f, by - h * 0.55f, cx - w * 0.38f, by - h * 0.05f, 4f, 4f, fill)
-        c.drawRoundRect(cx + w * 0.38f, by - h * 0.55f, cx + w * 0.52f, by - h * 0.05f, 4f, 4f, fill)
+        // 2. Rodas traseiras largas de alta aderência
+        fill.color = Color.rgb(20, 20, 25)
+        val wheelW = w * 0.15f
+        val wheelH = h * 0.52f
+        c.drawRoundRect(cx - w * 0.53f, by - wheelH * 0.95f, cx - w * 0.53f + wheelW, by + wheelH * 0.05f, 5f, 5f, fill)
+        c.drawRoundRect(cx + w * 0.53f - wheelW, by - wheelH * 0.95f, cx + w * 0.53f, by + wheelH * 0.05f, 5f, 5f, fill)
+        // Jantes prateadas
+        fill.color = Color.rgb(180, 185, 195)
+        c.drawCircle(cx - w * 0.455f, by - wheelH * 0.45f, wheelW * 0.32f, fill)
+        c.drawCircle(cx + w * 0.455f, by - wheelH * 0.45f, wheelW * 0.32f, fill)
 
-        // Chamas do Turbo / Propulsores
-        val flameCol = if (boost) Color.rgb(255, 225, 60) else Color.rgb(255, 110, 45)
-        val fr = w * (if (boost) 0.15f else 0.09f)
-        fill.color = flameCol
-        c.drawCircle(cx - w * 0.28f, by - h * 0.25f, fr, fill)
-        c.drawCircle(cx + w * 0.28f, by - h * 0.25f, fr, fill)
-        if (boost) {
-            fill.color = 0x88FFE666.toInt()
-            c.drawOval(cx - w * 0.36f, by - h * 0.25f, cx - w * 0.20f, by + h * 0.40f, fill)
-            c.drawOval(cx + w * 0.20f, by - h * 0.25f, cx + w * 0.36f, by + h * 0.40f, fill)
-        }
+        // 3. Chassi Inferior e Tubos de Escape Cromados
+        fill.color = Color.rgb(40, 42, 50)
+        c.drawRoundRect(cx - w * 0.44f, by - h * 0.35f, cx + w * 0.44f, by - h * 0.08f, 6f, 6f, fill)
 
-        // Aileron / Asa traseira com formato temático
-        fill.color = dark
-        c.drawRoundRect(cx - w * 0.48f, by - h * 0.88f, cx + w * 0.48f, by - h * 0.72f, 4f, 4f, fill)
+        // Escapes duplos com chamas
+        fill.color = Color.rgb(140, 145, 155)
+        c.drawCircle(cx - w * 0.22f, by - h * 0.20f, w * 0.065f, fill)
+        c.drawCircle(cx + w * 0.22f, by - h * 0.20f, w * 0.065f, fill)
 
-        // Orelhinhas decorativas no carro!
-        if (isBunny) {
-            // Orelhas de coelho estilizadas no aileron
-            fill.color = Color.WHITE
-            c.drawRoundRect(cx - w * 0.40f, by - h * 1.15f, cx - w * 0.30f, by - h * 0.75f, 6f, 6f, fill)
-            c.drawRoundRect(cx + w * 0.30f, by - h * 1.15f, cx + w * 0.40f, by - h * 0.75f, 6f, 6f, fill)
-            fill.color = Color.rgb(255, 185, 205)
-            c.drawRoundRect(cx - w * 0.38f, by - h * 1.10f, cx - w * 0.32f, by - h * 0.80f, 4f, 4f, fill)
-            c.drawRoundRect(cx + w * 0.32f, by - h * 1.10f, cx + w * 0.38f, by - h * 0.80f, 4f, 4f, fill)
-        } else {
-            // Orelhas de gato fofas no aileron
-            path.reset()
-            path.moveTo(cx - w * 0.44f, by - h * 0.85f); path.lineTo(cx - w * 0.34f, by - h * 1.12f); path.lineTo(cx - w * 0.24f, by - h * 0.85f); path.close()
-            fill.color = Color.rgb(255, 185, 215); c.drawPath(path, fill)
-            path.reset()
-            path.moveTo(cx + w * 0.24f, by - h * 0.85f); path.lineTo(cx + w * 0.34f, by - h * 1.12f); path.lineTo(cx + w * 0.44f, by - h * 0.85f); path.close()
-            fill.color = Color.rgb(255, 185, 215); c.drawPath(path, fill)
-        }
+        val flameColor = if (boost) Color.rgb(85, 235, 255) else Color.rgb(255, 145, 30)
+        val coreColor = if (boost) Color.WHITE else Color.rgb(255, 240, 90)
+        val flameR = w * (if (boost) 0.16f else 0.09f)
 
-        // Chassi desportivo do Kart
+        fill.color = flameColor
+        c.drawCircle(cx - w * 0.22f, by - h * 0.20f + flameR * 0.4f, flameR, fill)
+        c.drawCircle(cx + w * 0.22f, by - h * 0.20f + flameR * 0.4f, flameR, fill)
+        fill.color = coreColor
+        c.drawCircle(cx - w * 0.22f, by - h * 0.20f + flameR * 0.4f, flameR * 0.55f, fill)
+        c.drawCircle(cx + w * 0.22f, by - h * 0.20f + flameR * 0.4f, flameR * 0.55f, fill)
+
+        // 4. Carroçaria Principal Aerodinâmica do Kart (Cores do Bunny/Cat)
         fill.color = color
-        c.drawRoundRect(cx - w * 0.42f, by - h * 0.75f, cx + w * 0.42f, by - h * 0.16f, w * 0.10f, w * 0.10f, fill)
+        c.drawRoundRect(cx - w * 0.42f, by - h * 0.72f, cx + w * 0.42f, by - h * 0.12f, w * 0.08f, w * 0.08f, fill)
+
+        // Faixas desportivas e saias laterais
         fill.color = dark
-        c.drawRoundRect(cx - w * 0.42f, by - h * 0.34f, cx + w * 0.42f, by - h * 0.16f, w * 0.08f, w * 0.08f, fill)
+        c.drawRoundRect(cx - w * 0.40f, by - h * 0.42f, cx + w * 0.40f, by - h * 0.16f, 6f, 6f, fill)
+        c.drawRoundRect(cx - w * 0.08f, by - h * 0.72f, cx + w * 0.08f, by - h * 0.12f, 4f, 4f, fill)
 
-        // Cockpit & Piloto
-        fill.color = Color.rgb(45, 55, 75)
-        c.drawOval(cx - w * 0.22f, by - h * 1.05f, cx + w * 0.22f, by - h * 0.50f, fill)
+        // 5. Aileron / Asa Traseira Aerodinâmica com orelhas decorativas
+        fill.color = dark
+        c.drawRoundRect(cx - w * 0.48f, by - h * 0.94f, cx + w * 0.48f, by - h * 0.78f, 5f, 5f, fill)
+        // Suportes do aileron
+        fill.color = Color.rgb(30, 32, 40)
+        c.drawRect(cx - w * 0.32f, by - h * 0.82f, cx - w * 0.26f, by - h * 0.65f, fill)
+        c.drawRect(cx + w * 0.26f, by - h * 0.82f, cx + w * 0.32f, by - h * 0.65f, fill)
 
-        // Cabeça do Piloto visto de trás
+        // Orelhinhas temáticas no aileron traseiro
         if (isBunny) {
-            fill.color = Color.rgb(245, 245, 250)
-            c.drawCircle(cx, by - h * 0.82f, w * 0.12f, fill)
-            // Orelhas do coelho a abanar ao vento!
-            val windFlap = (sin(clock * 35) * 4).toFloat()
             fill.color = Color.WHITE
-            c.drawOval(cx - w * 0.09f + windFlap, by - h * 1.35f, cx - w * 0.03f + windFlap, by - h * 0.85f, fill)
-            c.drawOval(cx + w * 0.03f - windFlap, by - h * 1.35f, cx + w * 0.09f - windFlap, by - h * 0.85f, fill)
-            fill.color = Color.rgb(255, 185, 205)
-            c.drawOval(cx - w * 0.08f + windFlap, by - h * 1.30f, cx - w * 0.04f + windFlap, by - h * 0.90f, fill)
-            c.drawOval(cx + w * 0.04f - windFlap, by - h * 1.30f, cx + w * 0.08f - windFlap, by - h * 0.90f, fill)
+            c.drawRoundRect(cx - w * 0.42f, by - h * 1.18f, cx - w * 0.32f, by - h * 0.82f, 6f, 6f, fill)
+            c.drawRoundRect(cx + w * 0.32f, by - h * 1.18f, cx + w * 0.42f, by - h * 0.82f, 6f, 6f, fill)
+            fill.color = Color.rgb(255, 180, 205)
+            c.drawRoundRect(cx - w * 0.40f, by - h * 1.14f, cx - w * 0.34f, by - h * 0.86f, 4f, 4f, fill)
+            c.drawRoundRect(cx + w * 0.34f, by - h * 1.14f, cx + w * 0.40f, by - h * 0.86f, 4f, 4f, fill)
         } else {
+            path.reset()
+            path.moveTo(cx - w * 0.45f, by - h * 0.88f); path.lineTo(cx - w * 0.35f, by - h * 1.14f); path.lineTo(cx - w * 0.25f, by - h * 0.88f); path.close()
+            fill.color = Color.rgb(255, 185, 215); c.drawPath(path, fill)
+            path.reset()
+            path.moveTo(cx + w * 0.25f, by - h * 0.88f); path.lineTo(cx + w * 0.35f, by - h * 1.14f); path.lineTo(cx + w * 0.45f, by - h * 0.88f); path.close()
+            fill.color = Color.rgb(255, 185, 215); c.drawPath(path, fill)
+        }
+
+        // 6. Cockpit Aberto
+        fill.color = Color.rgb(28, 30, 38)
+        c.drawOval(cx - w * 0.24f, by - h * 0.88f, cx + w * 0.24f, by - h * 0.38f, fill)
+
+        // Volante de Corrida
+        fill.color = Color.rgb(45, 48, 60)
+        c.drawOval(cx - w * 0.15f, by - h * 0.70f, cx + w * 0.15f, by - h * 0.50f, fill)
+
+        // 7. PILOTO BUNNY / CAT CLARAMENTE VISÍVEL DENTRO DO CARRO
+        val headY = by - h * 0.84f
+        val headR = w * 0.14f
+
+        // Ombros do piloto com jersey desportivo
+        fill.color = if (isBunny) Color.rgb(35, 55, 110) else Color.rgb(255, 145, 180)
+        c.drawRoundRect(cx - w * 0.20f, by - h * 0.68f, cx + w * 0.20f, by - h * 0.36f, 8f, 8f, fill)
+
+        // Patinhas segurando o volante
+        val pawColor = if (isBunny) Color.WHITE else Color.rgb(255, 245, 248)
+        fill.color = pawColor
+        c.drawCircle(cx - w * 0.13f, by - h * 0.56f, w * 0.045f, fill)
+        c.drawCircle(cx + w * 0.13f, by - h * 0.56f, w * 0.045f, fill)
+
+        // Cabeça do Piloto
+        fill.color = pawColor
+        c.drawCircle(cx, headY, headR, fill)
+
+        if (isBunny) {
+            // Orelhas longas do Bunny a abanar ao vento!
+            val windFlap = (sin(clock * 32.0) * 4.5 * (1.0 + (speed / maxSpeed))).toFloat()
+            val earW = headR * 0.44f
+            val earH = headR * 1.85f
+            // Orelha Esquerda
+            c.save()
+            c.rotate(-8f + windFlap * 0.8f, cx - headR * 0.45f, headY - headR * 0.5f)
             fill.color = Color.WHITE
-            c.drawCircle(cx, by - h * 0.82f, w * 0.12f, fill)
-            // Orelhas de gatinha e laço fofo
+            c.drawRoundRect(cx - headR * 0.7f, headY - headR * 0.5f - earH, cx - headR * 0.7f + earW, headY - headR * 0.5f, earW / 2, earW / 2, fill)
+            fill.color = Color.rgb(255, 180, 205)
+            c.drawRoundRect(cx - headR * 0.66f, headY - headR * 0.5f - earH * 0.88f, cx - headR * 0.7f + earW * 0.85f, headY - headR * 0.5f, earW * 0.35f, earW * 0.35f, fill)
+            c.restore()
+
+            // Orelha Direita
+            c.save()
+            c.rotate(8f - windFlap * 0.8f, cx + headR * 0.45f, headY - headR * 0.5f)
+            fill.color = Color.WHITE
+            c.drawRoundRect(cx + headR * 0.7f - earW, headY - headR * 0.5f - earH, cx + headR * 0.7f, headY - headR * 0.5f, earW / 2, earW / 2, fill)
+            fill.color = Color.rgb(255, 180, 205)
+            c.drawRoundRect(cx + headR * 0.7f - earW * 0.85f, headY - headR * 0.5f - earH * 0.88f, cx + headR * 0.66f, headY - headR * 0.5f, earW * 0.35f, earW * 0.35f, fill)
+            c.restore()
+
+            // Óculos de corrida / Viseira no capacete do Bunny
+            fill.color = Color.rgb(40, 95, 215)
+            c.drawRoundRect(cx - headR * 0.85f, headY - headR * 0.45f, cx + headR * 0.85f, headY + headR * 0.05f, 6f, 6f, fill)
+            fill.color = Color.rgb(135, 215, 255)
+            c.drawRoundRect(cx - headR * 0.75f, headY - headR * 0.35f, cx - headR * 0.08f, headY - headR * 0.02f, 4f, 4f, fill)
+            c.drawRoundRect(cx + headR * 0.08f, headY - headR * 0.35f, cx + headR * 0.75f, headY - headR * 0.02f, 4f, 4f, fill)
+
+            // Rabinho de algodão pom-pom na traseira
+            fill.color = Color.WHITE
+            c.drawCircle(cx, by - h * 0.32f, w * 0.07f, fill)
+
+        } else {
+            // Orelhinhas pontiagudas de Gatinha
             path.reset()
-            path.moveTo(cx - w * 0.11f, by - h * 0.88f); path.lineTo(cx - w * 0.06f, by - h * 1.08f); path.lineTo(cx - w * 0.01f, by - h * 0.88f); path.close()
-            fill.color = Color.rgb(255, 175, 205); c.drawPath(path, fill)
+            path.moveTo(cx - headR * 0.95f, headY - headR * 0.2f)
+            path.lineTo(cx - headR * 0.65f, headY - headR * 1.55f)
+            path.lineTo(cx - headR * 0.15f, headY - headR * 0.55f)
+            path.close()
+            fill.color = Color.rgb(255, 240, 245); c.drawPath(path, fill)
             path.reset()
-            path.moveTo(cx + w * 0.01f, by - h * 0.88f); path.lineTo(cx + w * 0.06f, by - h * 1.08f); path.lineTo(cx + w * 0.11f, by - h * 0.88f); path.close()
+            path.moveTo(cx - headR * 0.85f, headY - headR * 0.25f)
+            path.lineTo(cx - headR * 0.65f, headY - headR * 1.35f)
+            path.lineTo(cx - headR * 0.25f, headY - headR * 0.52f)
+            path.close()
             fill.color = Color.rgb(255, 175, 205); c.drawPath(path, fill)
-            // Lacinho rosa
-            fill.color = Color.rgb(255, 85, 145)
-            c.drawCircle(cx - w * 0.06f, by - h * 1.02f, w * 0.025f, fill)
+
+            path.reset()
+            path.moveTo(cx + headR * 0.15f, headY - headR * 0.55f)
+            path.lineTo(cx + headR * 0.65f, headY - headR * 1.55f)
+            path.lineTo(cx + headR * 0.95f, headY - headR * 0.2f)
+            path.close()
+            fill.color = Color.rgb(255, 240, 245); c.drawPath(path, fill)
+            path.reset()
+            path.moveTo(cx + headR * 0.25f, headY - headR * 0.52f)
+            path.lineTo(cx + headR * 0.65f, headY - headR * 1.35f)
+            path.lineTo(cx + headR * 0.85f, headY - headR * 0.25f)
+            path.close()
+            fill.color = Color.rgb(255, 175, 205); c.drawPath(path, fill)
+
+            // Lacinho rosa fofo
+            fill.color = Color.rgb(255, 65, 135)
+            c.drawCircle(cx - headR * 0.70f, headY - headR * 0.85f, headR * 0.22f, fill)
+
+            // Óculos de piloto da Gatinha
+            fill.color = Color.rgb(235, 75, 135)
+            c.drawRoundRect(cx - headR * 0.85f, headY - headR * 0.45f, cx + headR * 0.85f, headY + headR * 0.05f, 6f, 6f, fill)
+            fill.color = Color.rgb(255, 215, 235)
+            c.drawRoundRect(cx - headR * 0.75f, headY - headR * 0.35f, cx - headR * 0.08f, headY - headR * 0.02f, 4f, 4f, fill)
+            c.drawRoundRect(cx + headR * 0.08f, headY - headR * 0.35f, cx + headR * 0.75f, headY - headR * 0.02f, 4f, 4f, fill)
+
+            // Cauda da gatinha a abanar suavemente
+            val tailWag = (sin(clock * 12.0) * headR * 0.4f).toFloat()
+            path.reset()
+            path.moveTo(cx + w * 0.15f, by - h * 0.34f)
+            path.quadTo(cx + w * 0.30f + tailWag, by - h * 0.50f, cx + w * 0.22f + tailWag * 1.2f, by - h * 0.65f)
+            fill.color = Color.rgb(255, 240, 245)
+            fill.style = Paint.Style.STROKE
+            fill.strokeWidth = w * 0.05f
+            c.drawPath(path, fill)
+            fill.style = Paint.Style.FILL
         }
 
         c.restore()
@@ -688,39 +883,38 @@ class KartScreen(g: BunnyView) : Screen(g) {
         standings.sortByDescending { it.dist }
         playerPlace = standings.indexOfFirst { it.isMe } + 1
 
-        // Botão Voltar
-        backBtn.set(24f, 16f, 130f, 16f + u * 0.75f)
+        // Botão Voltar (Apenas ícone limpo)
+        backBtn.set(24f, 16f, 84f, 16f + u * 0.75f)
         fill.color = Color.rgb(32, 40, 60)
         c.drawRoundRect(backBtn, backBtn.height() * 0.35f, backBtn.height() * 0.35f, fill)
-        label(c, "← Sair", backBtn.centerX(), backBtn.centerY() + u * 0.14f, u * 0.30f, Color.WHITE, Paint.Align.CENTER)
+        label(c, "←", backBtn.centerX(), backBtn.centerY() + u * 0.14f, u * 0.38f, Color.WHITE, Paint.Align.CENTER)
 
         // Contador de Voltas & Posição
-        val lapTxt = "VOLTA $currentLap / $totalLaps"
-        label(c, lapTxt, w * 0.17f, u * 0.60f, u * 0.36f, Color.rgb(255, 225, 80))
-        val placeTxt = "${playerPlace}º LUGAR"
+        val lapTxt = "$currentLap / $totalLaps"
+        label(c, lapTxt, w * 0.12f, u * 0.60f, u * 0.38f, Color.rgb(255, 225, 80))
+        val placeTxt = "${playerPlace}º"
         val placeCol = if (playerPlace == 1) Color.rgb(255, 215, 45) else Color.WHITE
-        label(c, placeTxt, w * 0.35f, u * 0.60f, u * 0.44f, placeCol)
+        label(c, placeTxt, w * 0.24f, u * 0.60f, u * 0.44f, placeCol)
 
         // Velocímetro
         val kmh = (speed / maxSpeed * 240).toInt()
-        label(c, "$kmh km/h", w * 0.52f, u * 0.60f, u * 0.38f, Color.rgb(105, 240, 175))
+        label(c, "$kmh km/h", w * 0.35f, u * 0.60f, u * 0.38f, Color.rgb(105, 240, 175))
 
-        // Barra de Energia do Turbo
-        val barW = w * 0.20f
-        val barH = u * 0.25f
-        val barX = w * 0.50f
-        val barY = u * 0.90f
-        fill.color = Color.rgb(45, 45, 55)
+        // Barra de Energia do Turbo (sem texto "TURBO" a poluir)
+        val barW = w * 0.16f
+        val barH = u * 0.22f
+        val barX = w * 0.48f
+        val barY = u * 0.42f
+        fill.color = Color.rgb(35, 38, 48)
         c.drawRoundRect(barX, barY, barX + barW, barY + barH, barH / 2, barH / 2, fill)
         fill.color = Color.rgb(255, 185, 45)
         val fillW = (barW * (energy / 100.0)).toFloat().coerceIn(0f, barW)
         c.drawRoundRect(barX, barY, barX + fillW, barY + barH, barH / 2, barH / 2, fill)
-        label(c, "TURBO", barX - 10f, barY + barH * 0.80f, u * 0.22f, Color.WHITE, Paint.Align.RIGHT)
 
-        // 2. Tabela de Classificação de 1º a 10º Jogadores (Live Leaderboard Ben 10 Galactic Racing)
-        val leadW = w * 0.23f
+        // 2. Tabela de Classificação de 1º a 10º Jogadores (Live Leaderboard Minimalista)
+        val leadW = w * 0.21f
         val leadRowH = u * 0.25f
-        val leadH = leadRowH * 11 + 10f
+        val leadH = leadRowH * 11 + 6f
         val leadX = w - leadW - 16f
         val leadY = 16f
 
@@ -730,7 +924,7 @@ class KartScreen(g: BunnyView) : Screen(g) {
         text.textSize = u * 0.18f
         text.textAlign = Paint.Align.LEFT
         text.color = Color.rgb(255, 215, 65)
-        c.drawText("TABELA 1º - 10º", leadX + 10f, leadY + leadRowH * 0.70f, text)
+        c.drawText("🏁 1º - 10º", leadX + 10f, leadY + leadRowH * 0.70f, text)
 
         for (i in 0 until min(10, standings.size)) {
             val entry = standings[i]
@@ -743,39 +937,35 @@ class KartScreen(g: BunnyView) : Screen(g) {
             text.color = rowCol
             c.drawText(rankPrefix, leadX + 8f, ry + leadRowH * 0.65f, text)
 
-            val dName = if (entry.name.length > 14) entry.name.take(13) + "…" else entry.name
-            c.drawText(dName, leadX + 36f, ry + leadRowH * 0.65f, text)
+            val dName = if (entry.name.length > 13) entry.name.take(12) + "…" else entry.name
+            c.drawText(dName, leadX + 34f, ry + leadRowH * 0.65f, text)
         }
 
-        // Botões táteis discretos na vertical/landscape (Sem texto de controlos explicativos)
-        val btnH = h * 0.20f
-        val btnW = w * 0.14f
+        // Áreas de toque limpas e translúcidas SEM TEXTO DE COMANDOS
+        // (o comando PS4 opera nativamente pelo joystick e botões)
+        val btnH = h * 0.18f
+        val btnW = w * 0.13f
 
-        steerLeftBtn.set(24f, h - btnH - 20f, 24f + btnW, h - 20f)
-        steerRightBtn.set(steerLeftBtn.right + 14f, steerLeftBtn.top, steerLeftBtn.right + 14f + btnW, steerLeftBtn.bottom)
+        steerLeftBtn.set(24f, h - btnH - 18f, 24f + btnW, h - 18f)
+        steerRightBtn.set(steerLeftBtn.right + 12f, steerLeftBtn.top, steerLeftBtn.right + 12f + btnW, steerLeftBtn.bottom)
 
-        fill.color = if (leftDown) Color.rgb(255, 105, 165) else D.alpha(Color.rgb(35, 45, 70), 160)
+        fill.color = if (leftDown) 0x66FF69A5 else 0x22FFFFFF
         c.drawRoundRect(steerLeftBtn, btnH * 0.28f, btnH * 0.28f, fill)
-        label(c, "◀", steerLeftBtn.centerX(), steerLeftBtn.centerY() + btnH * 0.15f, btnH * 0.40f, Color.WHITE, Paint.Align.CENTER)
 
-        fill.color = if (rightDown) Color.rgb(255, 105, 165) else D.alpha(Color.rgb(35, 45, 70), 160)
+        fill.color = if (rightDown) 0x66FF69A5 else 0x22FFFFFF
         c.drawRoundRect(steerRightBtn, btnH * 0.28f, btnH * 0.28f, fill)
-        label(c, "▶", steerRightBtn.centerX(), steerRightBtn.centerY() + btnH * 0.15f, btnH * 0.40f, Color.WHITE, Paint.Align.CENTER)
 
-        // Botão de Turbo no canto inferior direito
-        val turbW = w * 0.18f
-        turboBtn.set(w - turbW - 24f, h - btnH - 20f, w - 24f, h - 20f)
-        val turbCol = if (boostDown || ps4Boost) Color.rgb(255, 195, 35) else Color.rgb(235, 45, 95)
-        fill.color = turbCol
+        // Botão de Turbo sem texto no canto direito
+        val turbW = w * 0.15f
+        turboBtn.set(w - turbW - 24f, h - btnH - 18f, w - 24f, h - 18f)
+        fill.color = if (boostDown || ps4Boost) 0xAAFFC323.toInt() else 0x33EB2D5F.toInt()
         c.drawRoundRect(turboBtn, btnH * 0.32f, btnH * 0.32f, fill)
-        label(c, "⚡ TURBO", turboBtn.centerX(), turboBtn.centerY() + btnH * 0.12f, btnH * 0.32f, Color.WHITE, Paint.Align.CENTER)
 
         // Ecrã de Contagem Decrescente
         if (state == State.COUNTDOWN) {
             val countSec = (timer).toInt() + 1
-            val countTxt = if (countSec > 3) "PREPARAR..." else "$countSec"
+            val countTxt = if (countSec > 3) "..." else "$countSec"
             label(c, countTxt, w / 2, h * 0.48f, u * 1.5f, Color.rgb(255, 225, 60), Paint.Align.CENTER)
-            label(c, "TogetherKart Cósmico · 10 Corredores!", w / 2, h * 0.58f, u * 0.38f, Color.WHITE, Paint.Align.CENTER)
         }
 
         // Ecrã de Fim de Corrida
@@ -786,15 +976,13 @@ class KartScreen(g: BunnyView) : Screen(g) {
             fill.color = Color.rgb(26, 36, 68)
             c.drawRoundRect(box, 24f, 24f, fill)
 
-            val winTxt = if (playerPlace == 1) "🏆 1º LUGAR! CAMPEÕES!" else "🏁 CORRIDA TERMINADA (${playerPlace}º)"
-            label(c, winTxt, box.centerX(), box.top + boxH * 0.25f, u * 0.55f, Color.rgb(255, 215, 55), Paint.Align.CENTER)
-            val partnerName = if (Save.partnerConnected) Save.partnerName else (if (Theme.isBunny) "Gatinha" else "Bunny")
-            label(c, "Parceiro(a) $partnerName correu contigo! +100 Moedas!", box.centerX(), box.top + boxH * 0.48f, u * 0.32f, Color.WHITE, Paint.Align.CENTER)
+            val winTxt = if (playerPlace == 1) "🏆 1º LUGAR!" else "🏁 ${playerPlace}º LUGAR"
+            label(c, winTxt, box.centerX(), box.top + boxH * 0.28f, u * 0.55f, Color.rgb(255, 215, 55), Paint.Align.CENTER)
 
-            restartBtn.set(box.centerX() - boxW * 0.32f, box.bottom - boxH * 0.32f, box.centerX() + boxW * 0.32f, box.bottom - boxH * 0.10f)
+            restartBtn.set(box.centerX() - boxW * 0.30f, box.bottom - boxH * 0.30f, box.centerX() + boxW * 0.30f, box.bottom - boxH * 0.10f)
             fill.color = Theme.primary
             c.drawRoundRect(restartBtn, restartBtn.height() * 0.35f, restartBtn.height() * 0.35f, fill)
-            label(c, "Correr de Novo 🔄", restartBtn.centerX(), restartBtn.centerY() + restartBtn.height() * 0.16f, restartBtn.height() * 0.38f, Color.WHITE, Paint.Align.CENTER)
+            label(c, "🔄", restartBtn.centerX(), restartBtn.centerY() + restartBtn.height() * 0.18f, restartBtn.height() * 0.45f, Color.WHITE, Paint.Align.CENTER)
         }
     }
 

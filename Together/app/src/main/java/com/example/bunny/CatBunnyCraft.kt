@@ -300,7 +300,7 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
     private var joyThumbX = 0f; private var joyThumbY = 0f
     private val joyRadius = 90f
 
-    // Botões da interface Landscape
+    // Botões da interface Landscape (sem descrições)
     private val backBtn = RectF()
     private val invToggleBtn = RectF()
     private val modeToggleBtn = RectF()
@@ -311,6 +311,32 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
     private val enterHouseBtn = RectF()
     private var nearHouseTarget = 0 // 1 = Bunny, 2 = Cat
     private val hotbarSlotRects = Array(hotbarSlotsCount) { RectF() }
+
+    // 3D Cursor para inserção de blocos nas 3 posições (X, Y, Z) de 1 a 1
+    // (frente, trás, esquerda, direita, cima e baixo)
+    private var curRelForward = 2
+    private var curRelLateral = 0
+    private var curTargetZ = 1
+
+    // Botões para manipular o cursor 3D
+    private val zUpBtn = RectF()
+    private val zDownBtn = RectF()
+    private val curFwdBtn = RectF()
+    private val curBackBtn = RectF()
+    private val curLeftBtn = RectF()
+    private val curRightBtn = RectF()
+
+    private fun getTargetCoords(): Triple<Int, Int, Int> {
+        val fwdX = sin(camYaw)
+        val fwdY = cos(camYaw)
+        val rightX = cos(camYaw)
+        val rightY = -sin(camYaw)
+
+        val tx = (playerX + fwdX * curRelForward + rightX * curRelLateral).toInt().coerceIn(0, worldW - 1)
+        val ty = (playerY + fwdY * curRelForward + rightY * curRelLateral).toInt().coerceIn(0, worldH - 1)
+        val tz = curTargetZ.coerceIn(1, 20)
+        return Triple(tx, ty, tz)
+    }
 
     // Janela do Inventário Massivo
     private val invWindow = RectF()
@@ -386,7 +412,6 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         }
         camYaw = 0.45f
         camPitch = 0.20f
-        g.say("CatBunnyCraft 3D · Mundo 100% Plano & Landscape! ⛏️🎮")
     }
 
     override fun leave() {
@@ -521,13 +546,13 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
 
         renderList.clear()
 
-        // Blocos colocados pelos jogadores (Construção 3D)
+        // Blocos colocados pelos jogadores (Construção 3D nas 3 dimensões X, Y, Z)
         for (cb in Save.craftBlocks) {
             val baseH = heightMap[cb.x.coerceIn(0, worldW - 1)][cb.y.coerceIn(0, worldH - 1)]
-            val actualZ = (baseH + cb.z).toFloat()
-            val proj = project3D(cb.x + 0.5f, cb.y + 0.5f, actualZ, r) ?: continue
+            val actualZ = (baseH + cb.z - 1).toFloat()
+            val proj = project3D(cb.x + 0.5f, cb.y + 0.5f, actualZ + 0.5f, r) ?: continue
             renderList.add(RenderItem(proj.third) {
-                drawVoxelBlock3D(c, cb.x + 0.5f, cb.y + 0.5f, actualZ, cb.type, proj.first, proj.second, proj.third, r, isCustom = true)
+                drawVoxelBlock3D(c, cb.x, cb.y, cb.z, cb.type, r)
             })
         }
 
@@ -582,6 +607,9 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         // Painter's Algorithm: ordena por profundidade
         renderList.sortByDescending { it.depth }
         for (item in renderList) item.drawAction.invoke()
+
+        // Cursor 3D em wireframe translúcido indicando a célula ativa (X, Y, Z)
+        draw3DCursor(c, r)
 
         drawFx(c)
 
@@ -672,72 +700,139 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
             }
         }
 
-        // Cursor / Mira de Seleção suave no chão
-        val forwardX = sin(camYaw)
-        val forwardY = cos(camYaw)
-        val targetX = (playerX + forwardX * 1.8f).toInt().coerceIn(0, worldW - 1)
-        val targetY = (playerY + forwardY * 1.8f).toInt().coerceIn(0, worldH - 1)
-
-        val tp0 = project3D(targetX.toFloat(), targetY.toFloat(), 1.0f, r)
-        val tp1 = project3D(targetX + 1f, targetY.toFloat(), 1.0f, r)
-        val tp2 = project3D(targetX + 1f, targetY + 1f, 1.0f, r)
-        val tp3 = project3D(targetX.toFloat(), targetY + 1f, 1.0f, r)
-
-        if (tp0 != null && tp1 != null && tp2 != null && tp3 != null) {
-            val hasBlocks = Save.craftBlocks.any { it.x == targetX && it.y == targetY }
-            val reticleColor = if (hasBlocks) Color.rgb(255, 75, 75) else Color.rgb(255, 225, 65)
-            val reticleFill = if (hasBlocks) 0x44FF3333 else 0x33FFE140
-            D.poly(c, reticleFill, reticleColor, 2.5f,
-                tp0.first, tp0.second,
-                tp1.first, tp1.second,
-                tp2.first, tp2.second,
-                tp3.first, tp3.second
-            )
-        }
     }
 
-    /** Desenha um bloco cúbico estilo Minecraft em perspetiva 3D. */
-    private fun drawVoxelBlock3D(c: Canvas, wx: Float, wy: Float, wz: Float, id: Int, sx: Float, sy: Float, depth: Float, r: RectF, isCustom: Boolean = false) {
-        val focal = r.height() * 0.95f
-        val bSize = (focal / depth) * 0.95f
-        if (bSize < 4f) return
+    /** Desenha um bloco cúbico estilo Minecraft em perspetiva 3D com faces lisas e sem arestas/bordas escuras. */
+    private fun drawVoxelBlock3D(c: Canvas, bx: Int, by: Int, bz: Int, id: Int, r: RectF) {
+        val x0 = bx.toFloat(); val x1 = (bx + 1).toFloat()
+        val y0 = by.toFloat(); val y1 = (by + 1).toFloat()
+        val z0 = bz.toFloat(); val z1 = (bz + 1).toFloat()
 
-        val hw = bSize * 0.50f
-        val hh = bSize * 0.35f
-        val bH = bSize * 0.65f
+        val p000 = project3D(x0, y0, z0, r)
+        val p100 = project3D(x1, y0, z0, r)
+        val p110 = project3D(x1, y1, z0, r)
+        val p010 = project3D(x0, y1, z0, r)
+
+        val p001 = project3D(x0, y0, z1, r)
+        val p101 = project3D(x1, y0, z1, r)
+        val p111 = project3D(x1, y1, z1, r)
+        val p011 = project3D(x0, y1, z1, r)
+
+        if (p001 == null || p101 == null || p111 == null || p011 == null) return
 
         val item = allItems.firstOrNull { it.id == id } ?: allItems.first()
         val baseCol = item.color
-        val topCol = baseCol
-        val leftCol = D.mix(baseCol, Color.rgb(20, 15, 15), 0.22f)
-        val rightCol = D.mix(baseCol, Color.rgb(10, 8, 8), 0.40f)
+        // Se for relva, o topo é rigorosamente idêntica à cor do chão (Color.rgb(96, 172, 80))
+        val topCol = if (id == ID_GRASS) Color.rgb(96, 172, 80) else baseCol
+        val sideCol1 = D.mix(baseCol, Color.rgb(20, 25, 30), 0.16f)
+        val sideCol2 = D.mix(baseCol, Color.rgb(10, 15, 20), 0.28f)
 
-        // Face Esquerda
-        D.poly(c, leftCol, Color.rgb(45, 38, 35), 1.2f,
-            sx - hw, sy,
-            sx, sy + hh,
-            sx, sy + hh + bH,
-            sx - hw, sy + bH
+        // 1. Face Superior (Tampo Z+)
+        // strokeWidth = 0f para união perfeitamente contínua e lisa com os blocos vizinhos
+        D.poly(c, topCol, topCol, 0f,
+            p001.first, p001.second,
+            p101.first, p101.second,
+            p111.first, p111.second,
+            p011.first, p011.second
         )
 
-        // Face Direita
-        D.poly(c, rightCol, Color.rgb(45, 38, 35), 1.2f,
-            sx, sy + hh,
-            sx + hw, sy,
-            sx + hw, sy + bH,
-            sx, sy + hh + bH
-        )
+        // 2. Faces Laterais sem arestas
+        val camEyeX = playerX - camDist * cos(camPitch) * sin(camYaw)
+        val camEyeY = playerY - camDist * cos(camPitch) * cos(camYaw)
 
-        // Face Superior (Tampo)
-        D.poly(c, topCol, Color.rgb(45, 38, 35), 1.2f,
-            sx, sy - hh,
-            sx + hw, sy,
-            sx, sy + hh,
-            sx - hw, sy
-        )
+        // Face Y (Sul / Norte)
+        if (camEyeY < y0) {
+            if (p000 != null && p100 != null) {
+                D.poly(c, sideCol1, sideCol1, 0f,
+                    p000.first, p000.second,
+                    p100.first, p100.second,
+                    p101.first, p101.second,
+                    p001.first, p001.second
+                )
+            }
+        } else if (camEyeY > y1) {
+            if (p010 != null && p110 != null) {
+                D.poly(c, sideCol1, sideCol1, 0f,
+                    p010.first, p010.second,
+                    p110.first, p110.second,
+                    p111.first, p111.second,
+                    p011.first, p011.second
+                )
+            }
+        }
+
+        // Face X (Oeste / Este)
+        if (camEyeX < x0) {
+            if (p000 != null && p010 != null) {
+                D.poly(c, sideCol2, sideCol2, 0f,
+                    p000.first, p000.second,
+                    p010.first, p010.second,
+                    p011.first, p011.second,
+                    p001.first, p001.second
+                )
+            }
+        } else if (camEyeX > x1) {
+            if (p100 != null && p110 != null) {
+                D.poly(c, sideCol2, sideCol2, 0f,
+                    p100.first, p100.second,
+                    p110.first, p110.second,
+                    p111.first, p111.second,
+                    p101.first, p101.second
+                )
+            }
+        }
 
         if (id == ID_BLOCK_HEART) {
-            D.heart(c, sx, sy, hw * 0.45f, Color.WHITE)
+            val cx = (p001.first + p111.first) / 2f
+            val cy = (p001.second + p111.second) / 2f
+            val hr = abs(p101.first - p001.first) * 0.25f
+            if (hr > 2f) D.heart(c, cx, cy, hr, Color.WHITE)
+        }
+    }
+
+    /** Desenha a caixa 3D do cursor indicando a posição exata de inserção (X, Y, Z). */
+    private fun draw3DCursor(c: Canvas, r: RectF) {
+        val (tx, ty, tz) = getTargetCoords()
+        val x0 = tx.toFloat(); val x1 = (tx + 1).toFloat()
+        val y0 = ty.toFloat(); val y1 = (ty + 1).toFloat()
+        val z0 = tz.toFloat(); val z1 = (tz + 1).toFloat()
+
+        val p000 = project3D(x0, y0, z0, r)
+        val p100 = project3D(x1, y0, z0, r)
+        val p110 = project3D(x1, y1, z0, r)
+        val p010 = project3D(x0, y1, z0, r)
+
+        val p001 = project3D(x0, y0, z1, r)
+        val p101 = project3D(x1, y0, z1, r)
+        val p111 = project3D(x1, y1, z1, r)
+        val p011 = project3D(x0, y1, z1, r)
+
+        if (p001 == null || p101 == null || p111 == null || p011 == null) return
+
+        val hasBlock = Save.craftBlocks.any { it.x == tx && it.y == ty && it.z == tz }
+        val wireCol = if (hasBlock) Color.rgb(255, 65, 65) else Color.rgb(255, 235, 65)
+        val fillCol = if (hasBlock) 0x44FF3333 else 0x33FFE140
+        val strokeW = 2.5f
+
+        // Tampo translúcido da célula 3D
+        D.poly(c, fillCol, wireCol, strokeW,
+            p001.first, p001.second,
+            p101.first, p101.second,
+            p111.first, p111.second,
+            p011.first, p011.second
+        )
+
+        // Verticais e Base em wireframe suave
+        if (p000 != null && p100 != null && p110 != null && p010 != null) {
+            D.line(c, p000.first, p000.second, p100.first, p100.second, strokeW, wireCol)
+            D.line(c, p100.first, p100.second, p110.first, p110.second, strokeW, wireCol)
+            D.line(c, p110.first, p110.second, p010.first, p010.second, strokeW, wireCol)
+            D.line(c, p010.first, p010.second, p000.first, p000.second, strokeW, wireCol)
+
+            D.line(c, p000.first, p000.second, p001.first, p001.second, strokeW, wireCol)
+            D.line(c, p100.first, p100.second, p101.first, p101.second, strokeW, wireCol)
+            D.line(c, p110.first, p110.second, p111.first, p111.second, strokeW, wireCol)
+            D.line(c, p010.first, p010.second, p011.first, p011.second, strokeW, wireCol)
         }
     }
 
@@ -854,72 +949,99 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         D.text(c, pName, sx, heartY - 11f, 11f, Theme.primary)
     }
 
-    /** Interface Landscape elegante e ampla com suporte completo a comando PS4. */
+    /** Interface Landscape elegante e limpa sem descrições de texto. */
     private fun drawHudLandscape(c: Canvas, r: RectF) {
         // Miradouro central (Crosshair estilo Minecraft)
         val cx = r.centerX()
         val cy = r.centerY() + r.height() * 0.04f
-        D.line(c, cx - 14f, cy, cx + 14f, cy, 2.8f, D.alpha(Color.WHITE, 200))
-        D.line(c, cx, cy - 14f, cx, cy + 14f, 2.8f, D.alpha(Color.WHITE, 200))
+        D.line(c, cx - 12f, cy, cx + 12f, cy, 2.5f, D.alpha(Color.WHITE, 190))
+        D.line(c, cx, cy - 12f, cx, cy + 12f, 2.5f, D.alpha(Color.WHITE, 190))
 
-        // Barra Superior Landscape
-        val btnH = r.height() * 0.09f
-        backBtn.set(r.left + 24f, r.top + 16f, r.left + 140f, r.top + 16f + btnH)
-        D.button(c, backBtn, "← Voltar", Theme.card, Theme.text, btnH * 0.35f)
+        // Barra Superior Landscape (Apenas ícones limpos)
+        val btnH = r.height() * 0.10f
+        backBtn.set(r.left + 24f, r.top + 16f, r.left + 80f, r.top + 16f + btnH)
+        D.button(c, backBtn, "←", Theme.card, Theme.text, btnH * 0.40f)
 
-        // Botão Inventário
-        invToggleBtn.set(backBtn.right + 14f, backBtn.top, backBtn.right + 190f, backBtn.bottom)
+        // Botão Inventário (🎒)
+        invToggleBtn.set(backBtn.right + 12f, backBtn.top, backBtn.right + 80f, backBtn.bottom)
         D.rrect(c, invToggleBtn, btnH * 0.35f, Color.rgb(35, 40, 55), Color.rgb(255, 205, 45), 2f)
-        D.text(c, "🎒 Inventário", invToggleBtn.centerX(), invToggleBtn.centerY() + btnH * 0.16f, btnH * 0.34f, Color.rgb(255, 225, 80))
+        D.text(c, "🎒", invToggleBtn.centerX(), invToggleBtn.centerY() + btnH * 0.16f, btnH * 0.42f, Color.rgb(255, 225, 80))
 
-        // Alternador de Modo (Construir / Minar)
-        val modeW = 160f
-        modeToggleBtn.set(invToggleBtn.right + 14f, backBtn.top, invToggleBtn.right + 14f + modeW, backBtn.bottom)
+        // Alternador de Modo (⛏️ ou 🧱)
+        modeToggleBtn.set(invToggleBtn.right + 12f, backBtn.top, invToggleBtn.right + 80f, backBtn.bottom)
         val activeItem = allItems.firstOrNull { it.id == hotbarItemIds[selectedHotbarIdx] }
         val isTool = activeItem?.isTool == true
-        val modeTxt = if (isTool) "⛏️ Minar" else "🧱 Construir"
+        val modeIcon = if (isTool) "⛏️" else "🧱"
         val modeCol = if (isTool) Color.rgb(182, 42, 42) else Color.rgb(42, 142, 62)
         D.rrect(c, modeToggleBtn, btnH * 0.35f, modeCol, Color.WHITE, 1.8f)
-        D.text(c, modeTxt, modeToggleBtn.centerX(), modeToggleBtn.centerY() + btnH * 0.16f, btnH * 0.34f, Color.WHITE)
+        D.text(c, modeIcon, modeToggleBtn.centerX(), modeToggleBtn.centerY() + btnH * 0.16f, btnH * 0.42f, Color.WHITE)
+
+        // Indicador de Patamar Z atual
+        val (tx, ty, tz) = getTargetCoords()
+        val zIndicator = RectF(modeToggleBtn.right + 12f, backBtn.top, modeToggleBtn.right + 95f, backBtn.bottom)
+        D.rrect(c, zIndicator, btnH * 0.35f, Color.rgb(25, 30, 45), Color.rgb(105, 185, 255), 1.8f)
+        D.text(c, "Z:$tz", zIndicator.centerX(), zIndicator.centerY() + btnH * 0.16f, btnH * 0.36f, Color.rgb(105, 215, 255))
 
         // Moedas à direita
-        val coinPill = RectF(r.right - 180f, backBtn.top, r.right - 24f, backBtn.bottom)
+        val coinPill = RectF(r.right - 130f, backBtn.top, r.right - 24f, backBtn.bottom)
         D.rrect(c, coinPill, btnH * 0.4f, Color.rgb(26, 36, 68), Color.rgb(255, 205, 45), 2f)
         Icons.draw(c, Icons.COIN, coinPill.left + btnH * 0.55f, coinPill.centerY(), btnH * 0.35f)
         D.text(c, Save.coins.toString(), coinPill.centerX() + btnH * 0.2f, coinPill.centerY() + btnH * 0.16f, btnH * 0.38f, Color.rgb(255, 225, 80))
 
-        // Botões de Ação no canto inferior direito: Saltar, Colocar Bloco, Eliminar Bloco
-        val actBtnH = r.height() * 0.12f
-        val actBtnW = 120f
+        // Botões de Ação no canto inferior direito: Apenas ícones limpos!
+        val actBtnH = r.height() * 0.14f
+        val actBtnW = actBtnH
+
+        // 1. Saltar (⬆)
         jumpActionBtn.set(r.right - actBtnW - 20f, r.bottom - actBtnH - 16f, r.right - 20f, r.bottom - 16f)
-        D.button(c, jumpActionBtn, "Saltar ⬆", Theme.primary, Color.WHITE, actBtnH * 0.30f)
+        D.button(c, jumpActionBtn, "⬆", Theme.primary, Color.WHITE, actBtnH * 0.45f)
 
-        val placeW = 115f
-        placeActionBtn.set(jumpActionBtn.left - placeW - 10f, jumpActionBtn.top, jumpActionBtn.left - 10f, jumpActionBtn.bottom)
-        D.button(c, placeActionBtn, "🧱 Colocar", Color.rgb(45, 142, 65), Color.WHITE, actBtnH * 0.28f)
+        // 2. Colocar Bloco (🧱)
+        placeActionBtn.set(jumpActionBtn.left - actBtnW - 14f, jumpActionBtn.top, jumpActionBtn.left - 14f, jumpActionBtn.bottom)
+        D.button(c, placeActionBtn, "🧱", Color.rgb(45, 142, 65), Color.WHITE, actBtnH * 0.45f)
 
-        val mineW = 115f
-        mineActionBtn.set(placeActionBtn.left - mineW - 10f, jumpActionBtn.top, placeActionBtn.left - 10f, jumpActionBtn.bottom)
-        D.button(c, mineActionBtn, "⛏️ Eliminar", Color.rgb(195, 45, 45), Color.WHITE, actBtnH * 0.28f)
+        // 3. Eliminar Bloco (⛏️)
+        mineActionBtn.set(placeActionBtn.left - actBtnW - 14f, jumpActionBtn.top, placeActionBtn.left - 14f, jumpActionBtn.bottom)
+        D.button(c, mineActionBtn, "⛏️", Color.rgb(195, 45, 45), Color.WHITE, actBtnH * 0.45f)
 
-        // Botão de Interação com parceiro
+        // 4. Ajustar Patamar de Altura 3D Z (Z▲ e Z▼)
+        zUpBtn.set(mineActionBtn.left - actBtnW - 14f, jumpActionBtn.top, mineActionBtn.left - 14f, jumpActionBtn.centerY() - 4f)
+        D.button(c, zUpBtn, "Z▲", Color.rgb(35, 45, 70), Color.rgb(255, 215, 65), zUpBtn.height() * 0.42f)
+
+        zDownBtn.set(mineActionBtn.left - actBtnW - 14f, jumpActionBtn.centerY() + 4f, mineActionBtn.left - 14f, jumpActionBtn.bottom)
+        D.button(c, zDownBtn, "Z▼", Color.rgb(35, 45, 70), Color.rgb(255, 215, 65), zDownBtn.height() * 0.42f)
+
+        // 5. Ajustar Posição Horizontal do Cursor (Frente / Trás / Esquerda / Direita)
+        val padW = actBtnW * 0.82f
+        curFwdBtn.set(zUpBtn.left - padW - 10f, jumpActionBtn.top, zUpBtn.left - 10f, jumpActionBtn.centerY() - 4f)
+        D.button(c, curFwdBtn, "▲", Color.rgb(35, 40, 55), Color.WHITE, curFwdBtn.height() * 0.42f)
+
+        curBackBtn.set(zUpBtn.left - padW - 10f, jumpActionBtn.centerY() + 4f, zUpBtn.left - 10f, jumpActionBtn.bottom)
+        D.button(c, curBackBtn, "▼", Color.rgb(35, 40, 55), Color.WHITE, curBackBtn.height() * 0.42f)
+
+        curLeftBtn.set(curFwdBtn.left - padW - 8f, jumpActionBtn.centerY() + 4f, curFwdBtn.left - 8f, jumpActionBtn.bottom)
+        D.button(c, curLeftBtn, "◄", Color.rgb(35, 40, 55), Color.WHITE, curLeftBtn.height() * 0.42f)
+
+        curRightBtn.set(curFwdBtn.left - padW - 8f, jumpActionBtn.top, curFwdBtn.left - 8f, jumpActionBtn.centerY() - 4f)
+        D.button(c, curRightBtn, "►", Color.rgb(35, 40, 55), Color.WHITE, curRightBtn.height() * 0.42f)
+
+        // Botão de Interação com parceiro (Apenas ícone ♥)
         val distToPartner = hypot(playerX - partnerX, playerY - partnerY)
         if (distToPartner < 3.2f) {
-            val actW = 220f
+            val actW = 80f
             partnerInteractBtn.set(r.centerX() - actW / 2f, r.top + r.height() * 0.15f, r.centerX() + actW / 2f, r.top + r.height() * 0.15f + btnH)
-            D.button(c, partnerInteractBtn, "♥ Abraço (+25 🪙)", Color.rgb(235, 35, 85), Color.WHITE, btnH * 0.34f)
+            D.button(c, partnerInteractBtn, "♥", Color.rgb(235, 35, 85), Color.WHITE, btnH * 0.45f)
         } else {
             partnerInteractBtn.setEmpty()
         }
 
-        // Botão de Entrar na Casinha
+        // Botão de Entrar na Casinha (Apenas ícone 🏠)
         if (nearHouseTarget != 0) {
-            val hW = 260f
+            val hW = 80f
             val hY = if (partnerInteractBtn.isEmpty) r.top + r.height() * 0.15f else partnerInteractBtn.bottom + 10f
             enterHouseBtn.set(r.centerX() - hW / 2f, hY, r.centerX() + hW / 2f, hY + btnH)
-            val hTxt = if (nearHouseTarget == 1) "🏠 Entrar Casinha Bunny" else "🏠 Entrar Casinha Cat"
             val hCol = if (nearHouseTarget == 1) Color.rgb(42, 92, 172) else Color.rgb(222, 72, 122)
-            D.button(c, enterHouseBtn, hTxt, hCol, Color.WHITE, btnH * 0.32f)
+            D.button(c, enterHouseBtn, "🏠", hCol, Color.WHITE, btnH * 0.45f)
         } else {
             enterHouseBtn.setEmpty()
         }
@@ -958,10 +1080,6 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
                 }
             }
         }
-
-        val activeItem = allItems.firstOrNull { it.id == hotbarItemIds[selectedHotbarIdx] }
-        val name = if (Save.language == "es") activeItem?.nameEs else activeItem?.namePt
-        D.text(c, "$name", r.centerX(), barTop - 8f, r.height() * 0.035f, Color.WHITE)
     }
 
     /** Janela do Inventário Massivo Expandido (84 blocos e itens em 6 categorias). */
@@ -976,7 +1094,7 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         invCloseBtn.set(invWindow.right - 42f, invWindow.top + 10f, invWindow.right - 10f, invWindow.top + 42f)
         D.button(c, invCloseBtn, "✕", Color.rgb(195, 45, 45), Color.WHITE, 16f)
 
-        D.text(c, "🎒 Inventário Completo estilo Minecraft", invWindow.centerX(), invWindow.top + 28f, 16f, Color.rgb(255, 225, 80))
+        D.text(c, "🎒", invWindow.centerX(), invWindow.top + 28f, 18f, Color.rgb(255, 225, 80))
 
         val tabNames = arrayOf("Construção", "Madeira", "Minérios", "Natureza", "Lãs / Cores", "Mobília / Ferramentas")
         val tabW = (winW - 24f) / 6f
@@ -1020,8 +1138,6 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
             val name = if (Save.language == "es") itm.nameEs else itm.namePt
             D.text(c, name, cx, sRect.bottom - 4f, 8.5f, Color.rgb(220, 230, 245))
         }
-
-        D.text(c, "Toca num bloco para equipar na Hotbar!", invWindow.centerX(), invWindow.bottom - 12f, 12f, Color.rgb(205, 225, 255))
     }
 
     private fun drawJoystick(c: Canvas) {
@@ -1035,6 +1151,22 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         if (event.action != KeyEvent.ACTION_DOWN) return false
 
         when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                curTargetZ = min(20, curTargetZ + 1)
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                curTargetZ = max(1, curTargetZ - 1)
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                curRelLateral = (curRelLateral - 1).coerceIn(-4, 4)
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                curRelLateral = (curRelLateral + 1).coerceIn(-4, 4)
+                return true
+            }
             KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_DPAD_CENTER -> {
                 if (isGrounded) {
                     playerVy = 9.5f
@@ -1104,7 +1236,6 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
             for (slot in invItemSlots) {
                 if (slot.first.contains(x, y)) {
                     hotbarItemIds[selectedHotbarIdx] = slot.second.id
-                    g.say("Equipado: ${slot.second.namePt}!")
                     isInventoryOpen = false
                     return
                 }
@@ -1149,6 +1280,38 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
 
         if (mineActionBtn.contains(x, y)) {
             mineCurrentTargetBlock()
+            return
+        }
+
+        if (zUpBtn.contains(x, y)) {
+            curTargetZ = min(20, curTargetZ + 1)
+            burst(zUpBtn.centerX(), zUpBtn.centerY(), Icons.SPARK, 2, 8f)
+            return
+        }
+
+        if (zDownBtn.contains(x, y)) {
+            curTargetZ = max(1, curTargetZ - 1)
+            burst(zDownBtn.centerX(), zDownBtn.centerY(), Icons.SPARK, 2, 8f)
+            return
+        }
+
+        if (curFwdBtn.contains(x, y)) {
+            curRelForward = min(5, curRelForward + 1)
+            return
+        }
+
+        if (curBackBtn.contains(x, y)) {
+            curRelForward = max(1, curRelForward - 1)
+            return
+        }
+
+        if (curLeftBtn.contains(x, y)) {
+            curRelLateral = max(-4, curRelLateral - 1)
+            return
+        }
+
+        if (curRightBtn.contains(x, y)) {
+            curRelLateral = min(4, curRelLateral + 1)
             return
         }
 
@@ -1228,8 +1391,6 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
             Save.partnerLastGift = "kiss"
             Save.syncOnline { _, _ -> }
             Save.save()
-            val msg = if (Save.partnerConnected && Save.partnerMessage.isNotEmpty()) Save.partnerMessage else "Amo-te tanto! Machu Picchu é nosso! ♥"
-            g.say("Abraço Doce! +25 moedas! \"$msg\"")
         }
     }
 
@@ -1237,52 +1398,44 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         (g.context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         if (nearHouseTarget == 1) {
             Save.activeChar = "bunny"
-            g.say("A entrar na Casinha do Bunny! 🐰")
         } else {
             Save.activeChar = "cat"
-            g.say("A entrar na Casinha da Gatinha! 🐱")
         }
         Save.save()
         g.go(Nav.HOME)
     }
 
     private fun placeCurrentHotbarBlock() {
-        val forwardX = sin(camYaw)
-        val forwardY = cos(camYaw)
-        val targetX = (playerX + forwardX * 1.8f).toInt().coerceIn(0, worldW - 1)
-        val targetY = (playerY + forwardY * 1.8f).toInt().coerceIn(0, worldH - 1)
-
+        val (tx, ty, tz) = getTargetCoords()
         val selId = hotbarItemIds[selectedHotbarIdx]
         val itm = allItems.firstOrNull { it.id == selId }
         if (itm?.isTool == true) return
 
-        val existing = Save.craftBlocks.filter { it.x == targetX && it.y == targetY }
-        val newZ = existing.size + 1
-        Save.addCraftBlock(targetX, targetY, newZ, selId)
+        // Inserção de 1 a 1 na coordenada exata (X, Y, Z)
+        Save.addCraftBlock(tx, ty, tz, selId)
         SoundFx.playBuild()
         burst(g.width / 2f, g.height / 2f, Icons.SPARK, 6, 12f)
         g.earn(10)
-        g.say("+10 moedas! ${itm?.namePt} colocado!")
     }
 
     private fun mineCurrentTargetBlock() {
-        val forwardX = sin(camYaw)
-        val forwardY = cos(camYaw)
-        val targetX = (playerX + forwardX * 1.8f).toInt().coerceIn(0, worldW - 1)
-        val targetY = (playerY + forwardY * 1.8f).toInt().coerceIn(0, worldH - 1)
-
-        val existing = Save.craftBlocks.filter { it.x == targetX && it.y == targetY }
-        if (existing.isNotEmpty()) {
-            val topBlock = existing.maxByOrNull { it.z }!!
-            Save.removeCraftBlock(targetX, targetY, topBlock.z)
+        val (tx, ty, tz) = getTargetCoords()
+        val removed = Save.removeCraftBlock(tx, ty, tz)
+        if (removed) {
             SoundFx.playMine()
             burst(g.width / 2f, g.height / 2f, Icons.ROCK, 8, 14f)
             g.earn(20)
-            g.say("+20 moedas mineradas! ⛏️")
         } else {
-            SoundFx.playMine()
-            burst(g.width / 2f, g.height / 2f, Icons.SPARK, 4, 10f)
-            g.say("Chão base protegido! Usa 'Colocar' para construir e 'Eliminar' para retirar!")
+            val existing = Save.craftBlocks.filter { it.x == tx && it.y == ty }
+            if (existing.isNotEmpty()) {
+                val topBlock = existing.maxByOrNull { it.z }!!
+                Save.removeCraftBlock(tx, ty, topBlock.z)
+                SoundFx.playMine()
+                burst(g.width / 2f, g.height / 2f, Icons.ROCK, 8, 14f)
+                g.earn(20)
+            } else {
+                SoundFx.playMine()
+            }
         }
     }
 
