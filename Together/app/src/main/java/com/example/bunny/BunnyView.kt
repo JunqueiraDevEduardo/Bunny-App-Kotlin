@@ -19,6 +19,8 @@ object Nav {
     const val MULTIPLAYER = -4
     const val CRAFT = -5
     const val KART = -6
+    const val WIDGETS = -7
+    const val PROFILE = -8
     const val HOME = 0; const val EAT = 1; const val BATH = 2; const val SLEEP = 3; const val PLAY = 4
     const val RUNNER = 5; const val MEMORY = 6; const val CARROTS = 7; const val PUZZLE = 8
     const val SHOP = 9; const val WARDROBE = 10; const val DECOR = 11
@@ -102,6 +104,8 @@ class BunnyView(ctx: Context) : View(ctx) {
             Nav.MULTIPLAYER -> MultiplayerScreen(this)
             Nav.CRAFT -> CatBunnyCraftScreen(this)
             Nav.KART -> KartScreen(this)
+            Nav.WIDGETS -> WidgetsScreen(this)
+            Nav.PROFILE -> PetProfileScreen(this)
             Nav.EAT -> EatScreen(this)
             Nav.BATH -> BathScreen(this)
             Nav.SLEEP -> SleepScreen(this)
@@ -260,7 +264,7 @@ class BunnyView(ctx: Context) : View(ctx) {
             say(msg)
         }
 
-        val isFull = current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT || current == Nav.KART
+        val isFull = current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT || current == Nav.KART || current == Nav.WIDGETS || current == Nav.PROFILE
 
         D.f(Theme.bg); c.drawRect(0f, 0f, width.toFloat(), height.toFloat(), D.p)
 
@@ -296,7 +300,8 @@ class BunnyView(ctx: Context) : View(ctx) {
     }
 
     private fun bannerHit(x: Float, y: Float): Boolean {
-        if (current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT || current == Nav.KART) return false
+        val isFull = current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT || current == Nav.KART || current == Nav.WIDGETS || current == Nav.PROFILE
+        if (isFull) return false
 
         if (y < top.bottom) {
             val i = (x / (top.width() / 4f)).toInt().coerceIn(0, 3)
@@ -324,7 +329,8 @@ class BunnyView(ctx: Context) : View(ctx) {
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
         val x = e.x; val y = e.y
-        val target = if (current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT) full else content
+        val isFull = current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT || current == Nav.KART || current == Nav.WIDGETS || current == Nav.PROFILE
+        val target = if (isFull) full else content
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 lastX = x; lastY = y

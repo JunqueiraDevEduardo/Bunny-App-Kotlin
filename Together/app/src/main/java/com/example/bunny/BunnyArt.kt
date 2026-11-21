@@ -32,7 +32,7 @@ object BunnyArt {
     )
 
     fun furPalette(colorId: String): Triple<Int, Int, Int> {
-        // No Bunny: estritamente azuis, cores de vinho e roxo. Nunca rosa nem branco!
+        // No Bunny: estritamente azuis, cores de vinho e roxo. Nunca rosa nem branco puro!
         return when (colorId) {
             "col_caramel" -> Triple(Theme.bWineLight, Color.rgb(85, 30, 50), Theme.bPurple)
             "col_grey" -> Triple(Theme.bSilver, Theme.bBlueIce, Theme.bPurple)
@@ -40,7 +40,8 @@ object BunnyArt {
             "col_gold" -> Triple(Theme.bBlueSky, Theme.bBlueIce, Theme.bWine)
             "col_cocoa" -> Triple(Theme.bPurpleDark, Color.rgb(45, 15, 60), Theme.bWineDark)
             "col_sky" -> Triple(Theme.bBlueRoyal, Theme.bBlueIce, Theme.bWine)
-            else -> Triple(Theme.bSilver, Theme.bBlueIce, Theme.bWine) // Celestial Ice/Silver com orelha vinho
+            "col_lilac", "col_bunbun" -> Triple(Color.rgb(232, 226, 246), Color.rgb(248, 250, 255), Theme.bWineLight) // Bun Bun Figma 3D Lilac-Silver
+            else -> Triple(Color.rgb(232, 226, 246), Color.rgb(248, 250, 255), Theme.bWineLight) // Default Bun Bun Figma
         }
     }
 
@@ -64,15 +65,17 @@ object BunnyArt {
         // Cauda
         D.circle(c, 0.30f * s, -0.2f * s, 0.1f * s, furC, ol, lw)
 
-        // Orelhas
-        val sway = sin(ps.t * 2f) * 3f
-        val drop = when (ps.mood) { 2 -> 30f; 3 -> 20f; else -> 0f }
+        // Orelhas longas e fofas (Estilo Bun Bun Figma 3D - graciosas e caídas ao lado da cabeça)
+        val sway = sin(ps.t * 2f) * 2.5f
+        val drop = when (ps.mood) { 2 -> 25f; 3 -> 15f; else -> 0f }
         for (sg in -1..1 step 2) {
             c.save()
-            c.translate(sg * 0.17f * s, -1.0f * s)
-            c.rotate(sg * (10f + drop) + sway)
-            D.oval(c, 0f, -0.30f * s, 0.10f * s, 0.30f * s, furC, ol, lw)
-            D.oval(c, 0f, -0.28f * s, 0.05f * s, 0.21f * s, earInnerC)
+            c.translate(sg * 0.16f * s, -0.96f * s)
+            c.rotate(sg * (18f + drop) + sway)
+            D.oval(c, sg * 0.02f * s, -0.22f * s, 0.11f * s, 0.32f * s, furC, ol, lw)
+            D.oval(c, sg * 0.02f * s, -0.21f * s, 0.062f * s, 0.24f * s, earInnerC)
+            // Tufo suave de pelo na base da orelha
+            D.circle(c, 0f, -0.02f * s, 0.038f * s, bellyC)
             c.restore()
         }
 
@@ -142,8 +145,10 @@ object BunnyArt {
             if (d[1] > -0.7f) D.circle(c, d[0] * s, d[1] * s, d[2] * s, D.alpha(C.brown, 150))
         }
 
-        // Cabeça
+        // Cabeça redondinha e fofa estilo 3D vinyl
         D.oval(c, 0f, -0.78f * s, 0.40f * s, 0.34f * s, furC, ol, lw)
+        // Brilho suave 3D de vinil na testa
+        D.oval(c, -0.05f * s, -0.96f * s, 0.14f * s, 0.06f * s, D.alpha(Theme.bBlueIce, 80))
         for (i in 0 until nd) {
             val d = dirtSpots[i]
             if (d[1] <= -0.7f) D.circle(c, d[0] * s, d[1] * s, d[2] * s, D.alpha(C.brown, 150))
@@ -157,23 +162,29 @@ object BunnyArt {
         }
         if (outfit == "fit_cape") D.circle(c, 0f, -0.5f * s, 0.035f * s, C.gold, ol, lw)
 
-        // Bochechas em tom suave de vinho nobre (sem rosa)
-        D.circle(c, -0.26f * s, -0.70f * s, 0.065f * s, D.alpha(Theme.bWine, 85))
-        D.circle(c, 0.26f * s, -0.70f * s, 0.065f * s, D.alpha(Theme.bWine, 85))
+        // Bochechas em tom suave de vinho nobre (Blush circular Figma)
+        D.circle(c, -0.25f * s, -0.70f * s, 0.068f * s, D.alpha(Theme.bWineLight, 120))
+        D.circle(c, 0.25f * s, -0.70f * s, 0.068f * s, D.alpha(Theme.bWineLight, 120))
 
-        // Olhos (brilho em azul gelo celestial, sem branco)
-        val ey = -0.81f * s
+        // Olhos esféricos brilhantes estilo Figma 3D com duplo brilho celestial
+        val ey = -0.80f * s
         val ex = 0.155f * s
         val blink = (ps.t % 4.2f) < 0.12f
         for (sg in -1..1 step 2) {
             val x = sg * ex
             if (ps.mood == 3 || blink) {
-                D.path.reset(); D.path.moveTo(x - 0.05f * s, ey); D.path.quadTo(x, ey + 0.05f * s, x + 0.05f * s, ey)
-                D.s(Theme.bNavyDark, lw * 1.6f); c.drawPath(D.path, D.p)
+                D.path.reset(); D.path.moveTo(x - 0.055f * s, ey); D.path.quadTo(x, ey + 0.05f * s, x + 0.055f * s, ey)
+                D.s(Theme.bNavyDark, lw * 1.8f); c.drawPath(D.path, D.p)
             } else {
-                D.circle(c, x + ps.look * 0.02f * s, ey, 0.058f * s, Theme.bNavyDark)
-                D.circle(c, x + ps.look * 0.02f * s - 0.02f * s, ey - 0.022f * s, 0.022f * s, Theme.bBlueIce)
-                D.circle(c, x + ps.look * 0.02f * s + 0.018f * s, ey + 0.02f * s, 0.012f * s, Theme.bBlueIce)
+                val lx = ps.look * 0.015f * s
+                val eyeDark = Color.rgb(24, 20, 42)
+                D.oval(c, x + lx, ey, 0.068f * s, 0.090f * s, eyeDark)
+                // Íris roxo andino sutil
+                D.oval(c, x + lx, ey + 0.024f * s, 0.050f * s, 0.040f * s, Theme.bPurple)
+                // Brilho principal superior esquerdo
+                D.circle(c, x + lx - 0.022f * s, ey - 0.028f * s, 0.028f * s, Theme.bBlueIce)
+                // Brilho secundário inferior direito
+                D.circle(c, x + lx + 0.022f * s, ey + 0.028f * s, 0.014f * s, Theme.bBlueIce)
             }
             if (ps.mood == 2) {
                 val outer = x + sg * 0.06f * s

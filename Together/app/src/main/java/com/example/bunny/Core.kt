@@ -382,6 +382,8 @@ object Icons {
     const val MULTIPLAYER = 49; const val CHECK = 50
     // CatBunnyCraft
     const val PICKAXE = 51; const val CRAFT = 52
+    // Widgets & Together Figma 3D
+    const val WIDGET = 53; const val FLAME = 54; const val LIGHTNING = 55
 
     /** Seleciona e desenha o ícone correspondente ao ID fornecido na posição (cx, cy) com raio r. */
     fun draw(c: Canvas, id: Int, cx: Float, cy: Float, r: Float) {
@@ -816,6 +818,32 @@ object Icons {
                 D.poly(c, C.brown, ol, lw, cx - bw, cy, cx, cy + bh, cx, cy + bh + bw, cx - bw, cy + bw)
                 // Lado direito
                 D.poly(c, D.mix(C.brown, Color.BLACK, 0.3f), ol, lw, cx, cy + bh, cx + bw, cy, cx + bw, cy + bw, cx, cy + bh + bw)
+            }
+            WIDGET -> {
+                // Ícone de Widget estilo iOS/Android: grelha de blocos arredondados
+                val wBg = if (Theme.isBunny) Theme.bBlueRoyal else Color.rgb(255, 115, 155)
+                D.rrect(c, cx - 0.52f * r, cy - 0.52f * r, cx + 0.52f * r, cy + 0.52f * r, 0.16f * r, wBg, ol, lw)
+                D.rrect(c, cx - 0.40f * r, cy - 0.40f * r, cx - 0.04f * r, cy - 0.04f * r, 0.08f * r, C.white)
+                D.rrect(c, cx + 0.04f * r, cy - 0.40f * r, cx + 0.40f * r, cy + 0.40f * r, 0.08f * r, C.white)
+                D.rrect(c, cx - 0.40f * r, cy + 0.04f * r, cx - 0.04f * r, cy + 0.40f * r, 0.08f * r, C.white)
+            }
+            FLAME -> {
+                // Chama de Streak / Dias Juntos (Figma)
+                D.poly(c, Color.rgb(255, 95, 45), 0, 0f, cx, cy - 0.65f * r, cx + 0.45f * r, cy + 0.35f * r, cx - 0.45f * r, cy + 0.35f * r)
+                D.circle(c, cx, cy + 0.2f * r, 0.40f * r, Color.rgb(255, 95, 45))
+                D.circle(c, cx, cy + 0.25f * r, 0.22f * r, Color.rgb(255, 215, 65))
+            }
+            LIGHTNING -> {
+                // Raio de Energia (Figma Energy card)
+                D.poly(c, Color.rgb(72, 195, 125), 0, 0f,
+                    cx - 0.1f * r, cy - 0.6f * r,
+                    cx + 0.35f * r, cy - 0.6f * r,
+                    cx, cy,
+                    cx + 0.25f * r, cy,
+                    cx - 0.3f * r, cy + 0.6f * r,
+                    cx - 0.05f * r, cy + 0.05f * r,
+                    cx - 0.3f * r, cy + 0.05f * r
+                )
             }
         }
     }

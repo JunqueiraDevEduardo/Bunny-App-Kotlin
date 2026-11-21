@@ -7,13 +7,13 @@ import kotlin.math.sin
 
 object CatArt {
 
-    /** Paleta de pelo da gatinha: estritamente cor de rosa, brancos e tons creme/prata suaves. ZERO azul, vinho ou roxo! */
+    /** Paleta de pelo da gatinha (Estilo Mochi Figma 3D): tons pêssego-creme quentes, brancos e rosa suave. ZERO azul, vinho ou roxo! */
     fun catFurPalette(colorId: String): Triple<Int, Int, Int> {
         return when (colorId) {
             "cat_col_pink" -> Triple(Color.rgb(255, 218, 233), C.white, Color.rgb(255, 175, 200))
-            "cat_col_cream" -> Triple(Color.rgb(255, 248, 230), C.white, Color.rgb(255, 210, 225))
+            "cat_col_cream", "cat_col_mochi" -> Triple(Color.rgb(248, 206, 172), Color.rgb(255, 248, 242), Color.rgb(255, 170, 166)) // Mochi Figma 3D Peach-Cream
             "cat_col_silver" -> Triple(Color.rgb(240, 244, 250), C.white, Color.rgb(255, 200, 218))
-            else -> Triple(C.white, C.pink, Color.rgb(255, 185, 208)) // Branco algodão puro
+            else -> Triple(Color.rgb(248, 206, 172), Color.rgb(255, 248, 242), Color.rgb(255, 170, 166)) // Default Mochi Figma
         }
     }
 
@@ -122,7 +122,7 @@ object CatArt {
             D.circle(c, 0f, -0.41f * s, 0.015f * s, C.pinkD)
         }
 
-        // Orelhas pontiagudas de gatinha
+        // Orelhas pontiagudas arredondadas de gatinha (Estilo 3D Figma)
         val earTwitch = sin(t * 1.5f) * 2f
         for (sg in -1..1 step 2) {
             c.save()
@@ -130,36 +130,45 @@ object CatArt {
             c.rotate(sg * (12f + earTwitch))
             D.poly(c, furC, ol, lw, -0.14f * s, 0.05f * s, 0.14f * s, 0.05f * s, 0f, -0.28f * s)
             D.poly(c, earInnerC, 0, 0f, -0.08f * s, 0.03f * s, 0.08f * s, 0.03f * s, 0f, -0.20f * s)
+            // Tufo de pelo fofo branco na base da orelha (Figma Mochi)
+            D.circle(c, -0.04f * s, 0.02f * s, 0.035f * s, bellyC)
+            D.circle(c, 0.04f * s, 0.02f * s, 0.030f * s, bellyC)
             c.restore()
         }
 
-        // Cabeça redondinha e fofa
+        // Cabeça redondinha e fofa com bochechas volumosas
         D.circle(c, 0f, -0.62f * s, 0.32f * s, furC, ol, lw)
-        // Mancha fofa rosa na orelha
+        // Brilho suave 3D de vinil na testa
+        D.oval(c, -0.04f * s, -0.80f * s, 0.12f * s, 0.05f * s, D.alpha(C.white, 80))
+        // Mancha fofa cremosa na orelha
         D.oval(c, -0.15f * s, -0.75f * s, 0.14f * s, 0.10f * s, bellyC)
 
-        // Bochechinhas coradas rosa amoroso
-        D.circle(c, -0.20f * s, -0.56f * s, 0.055f * s, D.alpha(C.pinkD, 140))
-        D.circle(c, 0.20f * s, -0.56f * s, 0.055f * s, D.alpha(C.pinkD, 140))
+        // Bochechinhas coradas rosa amoroso (Blush circular Figma)
+        D.circle(c, -0.20f * s, -0.55f * s, 0.065f * s, D.alpha(Color.rgb(255, 140, 165), 160))
+        D.circle(c, 0.20f * s, -0.55f * s, 0.065f * s, D.alpha(Color.rgb(255, 140, 165), 160))
 
-        // Olhos da gatinha
-        val ey = -0.64f * s
+        // Olhos da gatinha: Grandes, brilhantes, estilo vinil 3D Pop Mart com duplo reflexo
+        val ey = -0.63f * s
         val blink = (t % 3.6f) < 0.12f
         for (sg in -1..1 step 2) {
             val ex = sg * 0.13f * s
             if (mood == 2 || mood == 3 || blink) {
                 // Olhos fechados felizes / a ronronar (^.^)
                 D.path.reset()
-                D.path.moveTo(ex - 0.05f * s, ey)
-                D.path.quadTo(ex, ey - 0.045f * s, ex + 0.05f * s, ey)
-                D.s(Color.rgb(135, 75, 95), lw * 1.6f); c.drawPath(D.path, D.p)
+                D.path.moveTo(ex - 0.055f * s, ey)
+                D.path.quadTo(ex, ey - 0.045f * s, ex + 0.055f * s, ey)
+                D.s(Color.rgb(85, 45, 60), lw * 1.8f); c.drawPath(D.path, D.p)
             } else {
-                // Olhos grandes anime / chibi super brilhantes
+                // Olhos esféricos chocolate profundo
                 val lx = lookX * 0.015f * s
-                D.oval(c, ex + lx, ey, 0.062f * s, 0.085f * s, Color.rgb(115, 65, 80))
-                // Brilhos nos olhos puramente brancos
-                D.circle(c, ex + lx - 0.02f * s, ey - 0.032f * s, 0.026f * s, C.white)
-                D.circle(c, ex + lx + 0.022f * s, ey + 0.03f * s, 0.014f * s, C.white)
+                val eyeDark = Color.rgb(38, 24, 32)
+                D.oval(c, ex + lx, ey, 0.068f * s, 0.090f * s, eyeDark)
+                // Íris sutil quente
+                D.oval(c, ex + lx, ey + 0.024f * s, 0.050f * s, 0.040f * s, Color.rgb(78, 45, 58))
+                // Brilho principal superior esquerdo (Specular highlight)
+                D.circle(c, ex + lx - 0.022f * s, ey - 0.028f * s, 0.028f * s, C.white)
+                // Brilho secundário inferior direito
+                D.circle(c, ex + lx + 0.022f * s, ey + 0.028f * s, 0.014f * s, C.white)
             }
         }
 
@@ -171,21 +180,21 @@ object CatArt {
             D.line(c, -0.04f * s, ey, 0.04f * s, ey, lw * 1.5f, gCol)
         }
 
-        // Narizinho rosa doce
-        D.poly(c, C.pinkD, 0, 0f, -0.024f * s, -0.545f * s, 0.024f * s, -0.545f * s, 0f, -0.52f * s)
+        // Narizinho botão rosa doce (Figma Mochi)
+        D.circle(c, 0f, -0.535f * s, 0.022f * s, Color.rgb(255, 150, 175))
 
         // Boquinha de gatinha :3 (ou aberta ao comer)
-        val my = -0.505f * s
+        val my = -0.510f * s
         if (mouth > 0.05f) {
             val oh = (0.02f + 0.04f * mouth) * s
-            D.oval(c, 0f, my + oh * 0.4f, 0.045f * s, oh, C.pinkD, ol, lw)
+            D.oval(c, 0f, my + oh * 0.4f, 0.045f * s, oh, Color.rgb(255, 140, 165), ol, lw)
             D.circle(c, 0f, my + 0.01f * s, 0.018f * s, C.white)
         } else {
             D.path.reset()
-            D.path.moveTo(-0.065f * s, my - 0.01f * s)
-            D.path.quadTo(-0.03f * s, my + 0.025f * s, 0f, my)
-            D.path.quadTo(0.03f * s, my + 0.025f * s, 0.065f * s, my - 0.01f * s)
-            D.s(ol, lw * 1.2f); c.drawPath(D.path, D.p)
+            D.path.moveTo(-0.055f * s, my - 0.008f * s)
+            D.path.quadTo(-0.026f * s, my + 0.022f * s, 0f, my)
+            D.path.quadTo(0.026f * s, my + 0.022f * s, 0.055f * s, my - 0.008f * s)
+            D.s(Color.rgb(130, 65, 80), lw * 1.3f); c.drawPath(D.path, D.p)
         }
 
         // Manchas de sujidade suaves
