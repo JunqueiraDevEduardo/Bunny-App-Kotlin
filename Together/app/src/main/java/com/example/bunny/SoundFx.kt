@@ -8,17 +8,22 @@ import android.os.Build
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.random.Random
 
 /**
  * SoundFx.kt
- * Motor de áudio procedural para TOGETHER:
- * - Sons exclusivos para Bunny (mastigar cenourinha, bolhas de banho, saltos brincalhões)
- * - Sons exclusivos para Cat (ronronar, miau melodioso, espirros de água, carinho)
- * - Beijocas doces ("mwah! ♥") e moedas
- * - 100% sintetizado em PCM sem dependências de ficheiros externos
+ * Motor de áudio acústico e procedural de alta fidelidade para TOGETHER:
+ * - GATINHA (Cat):
+ *     * Miado melodioso autêntico com formantes vocálicos ("M-i-a-u! :3")
+ *     * Ronronar profundo ("run-run-run-run") para dormir com flutter de 26Hz
+ * - COELHINHO (Bunny):
+ *     * Mastigar real de coelho: "crunch-crunch-crunch" estaladiço de cenoura/vegetais
+ *     * Som de sono/contentamento real: "tooth purring" suave com respiração tranquila
+ * - Kart e Efeitos:
+ *     * Turbo whoosh, motor acelerado, minar, construir, moedas e beijinhos doces
  */
 object SoundFx {
     private const val SAMPLE_RATE = 22050
@@ -71,7 +76,7 @@ object SoundFx {
                 track.stop()
                 track.release()
             } catch (e: Exception) {
-                // Modo silencioso gracioso se o dispositivo não tiver saída de áudio
+                // Modo silencioso gracioso
             }
         }.apply {
             isDaemon = true
@@ -82,75 +87,145 @@ object SoundFx {
 
     private fun postPcm(samples: ShortArray) {
         if (!Save.soundEnabled) return
-        if (audioQueue.size < 6) {
+        if (audioQueue.size < 8) {
             audioQueue.offer(samples)
         }
     }
 
-    // ================================================================= SOM AO COMER
+    // ================================================================= SOM AO COMER (REALISTA)
     fun playEat(isCat: Boolean) {
         if (isCat) {
-            // Cat: Mastigar delicado + ronronar doce
-            val duration = 0.28f
+            // Cat: Lambidela macia e ronronar satisfeito ("slurp-purr")
+            val duration = 0.32f
             val count = (SAMPLE_RATE * duration).toInt()
             val buf = ShortArray(count)
             for (i in 0 until count) {
                 val t = i / SAMPLE_RATE.toFloat()
-                val chewT = t % 0.07f
-                val env = exp(-chewT * 35.0).toFloat()
-                val freq = 520f - chewT * 2200f
-                val purr = 0.5f + 0.5f * sin(2.0 * PI * 28.0 * t).toFloat()
-                val s = sin(2.0 * PI * freq * chewT).toFloat() * env * purr
-                buf[i] = (s * 17000f).toInt().coerceIn(-32767, 32767).toShort()
+                // Duas lambidelas suaves seguidas de ronronar
+                val lickPhase = (t % 0.14f) / 0.14f
+                val env = sin(PI * lickPhase).toFloat()
+                val freq = 480f - lickPhase * 160f
+                val purrMod = 0.5f + 0.5f * sin(2.0 * PI * 28.0 * t).toFloat()
+                val lick = sin(2.0 * PI * freq * t).toFloat() * 0.6f +
+                        0.25f * sin(4.0 * PI * freq * t).toFloat()
+                buf[i] = (lick * env * purrMod * 19000f).toInt().coerceIn(-32767, 32767).toShort()
             }
             postPcm(buf)
         } else {
-            // Bunny: Mastigação rápida e fofa ("nom nom nom nom")
-            val duration = 0.26f
+            // Bunny: Mastigação REAL de coelho a comer cenourinha fresca!
+            // Rápido "crunch-crunch-crunch-crunch" com estalidos crocantes característicos
+            val duration = 0.38f
+            val count = (SAMPLE_RATE * duration).toInt()
+            val buf = ShortArray(count)
+            val rnd = Random(42)
+            for (i in 0 until count) {
+                val t = i / SAMPLE_RATE.toFloat()
+                val biteIdx = (t / 0.085f).toInt()
+                val biteT = (t % 0.085f)
+                val env = exp(-biteT * 48.0).toFloat()
+
+                // Ruído crocante filtrado (cenoura estaladiça)
+                val noise = (rnd.nextFloat() * 2f - 1f) * env
+                // Impacto dos dentes incisivos do coelho
+                val toothClick = sin(2.0 * PI * (1950f + biteIdx * 180f) * biteT).toFloat() * exp(-biteT * 95.0).toFloat()
+                val crunch = noise * 0.65f + toothClick * 0.35f
+                buf[i] = (crunch * 23000f).toInt().coerceIn(-32767, 32767).toShort()
+            }
+            postPcm(buf)
+        }
+    }
+
+    // ================================================================= SOM AO DORMIR (RON-RON & PURR)
+    fun playSleep(isCat: Boolean) {
+        if (isCat) {
+            // Gatinha a dormir: Ronronar rítmico profundo e reconfortante ("run... run... run... run...")
+            // Modulação de 25 Hz típica do músculo laríngeo felino sobre frequência fundamental de 70 Hz
+            val duration = 0.75f
             val count = (SAMPLE_RATE * duration).toInt()
             val buf = ShortArray(count)
             for (i in 0 until count) {
                 val t = i / SAMPLE_RATE.toFloat()
-                val chewT = t % 0.06f
-                val env = exp(-chewT * 40.0).toFloat()
-                val freq = 620f - chewT * 2800f
-                val s = sin(2.0 * PI * freq * chewT).toFloat() * env
-                buf[i] = (s * 19000f).toInt().coerceIn(-32767, 32767).toShort()
+                val breatheEnv = (0.35f + 0.65f * sin(2.0 * PI * 1.35 * t).toFloat().coerceAtLeast(0f))
+                val flutter = (0.5f + 0.5f * sin(2.0 * PI * 26.0 * t).toFloat())
+                val fundamental = sin(2.0 * PI * 72.0 * t).toFloat()
+                val harm2 = 0.45f * sin(2.0 * PI * 144.0 * t).toFloat()
+                val harm3 = 0.20f * sin(2.0 * PI * 216.0 * t).toFloat()
+                val purr = (fundamental + harm2 + harm3) * flutter * breatheEnv
+                buf[i] = (purr * 22000f).toInt().coerceIn(-32767, 32767).toShort()
+            }
+            postPcm(buf)
+        } else {
+            // Coelho a dormir: "Tooth Purring" real de coelho feliz e relaxado
+            // Pequenos cliques suaves de dentes e sopros quentes ritmados
+            val duration = 0.65f
+            val count = (SAMPLE_RATE * duration).toInt()
+            val buf = ShortArray(count)
+            val rnd = Random(19)
+            for (i in 0 until count) {
+                val t = i / SAMPLE_RATE.toFloat()
+                val breathCycle = sin(PI * (t / duration)).toFloat()
+                // Micro-estalidos rítmicos de contentamento
+                val clickT = t % 0.09f
+                val clickEnv = exp(-clickT * 60.0).toFloat()
+                val click = (rnd.nextFloat() * 2f - 1f) * clickEnv * 0.35f
+                val softPuff = sin(2.0 * PI * 180.0 * t).toFloat() * 0.20f
+                val s = (click + softPuff) * breathCycle
+                buf[i] = (s * 17000f).toInt().coerceIn(-32767, 32767).toShort()
             }
             postPcm(buf)
         }
+    }
+
+    // ================================================================= MIADO REAL DA GATINHA ("M-I-A-U! :3")
+    fun playCatMeow() {
+        val duration = 0.42f
+        val count = (SAMPLE_RATE * duration).toInt()
+        val buf = ShortArray(count)
+        for (i in 0 until count) {
+            val t = i / SAMPLE_RATE.toFloat()
+            val p = t / duration
+
+            // Curva melódica natural: inicia em 350Hz (m-), sobe para 860Hz (-ia-), finaliza em 420Hz (-u)
+            val freq = when {
+                p < 0.25f -> 360f + (p / 0.25f) * 500f
+                p < 0.65f -> 860f + sin((p - 0.25f) / 0.40f * PI).toFloat() * 80f
+                else -> 860f - ((p - 0.65f) / 0.35f) * 440f
+            }
+
+            // Envelope de volume suave sem estalidos
+            val env = when {
+                p < 0.12f -> p / 0.12f
+                p > 0.70f -> (1f - p) / 0.30f
+                else -> 1.0f
+            }
+
+            // Formantes e harmónicos felinos quentes
+            val f1 = sin(2.0 * PI * freq * t).toFloat()
+            val f2 = 0.38f * sin(4.0 * PI * freq * t).toFloat()
+            val f3 = 0.15f * sin(6.0 * PI * freq * t).toFloat()
+            val meow = (f1 + f2 + f3) * env
+            buf[i] = (meow * 20000f).toInt().coerceIn(-32767, 32767).toShort()
+        }
+        postPcm(buf)
     }
 
     // ================================================================= SOM NO BANHO
     fun playBath(isCat: Boolean) {
         if (isCat) {
-            // Cat: Gotas de água suaves + miadinho fofo de espanto
-            val duration = 0.22f
-            val count = (SAMPLE_RATE * duration).toInt()
-            val buf = ShortArray(count)
-            for (i in 0 until count) {
-                val t = i / SAMPLE_RATE.toFloat()
-                val dropEnv = exp(-(t % 0.05f) * 55.0).toFloat()
-                val dropFreq = 780f + sin(2.0 * PI * 35.0 * t).toFloat() * 120f
-                val drop = sin(2.0 * PI * dropFreq * t).toFloat() * dropEnv
-                val mewFreq = 850f + t * 450f
-                val mewEnv = sin(PI * (t / duration)).toFloat()
-                val mew = sin(2.0 * PI * mewFreq * t).toFloat() * mewEnv * 0.4f
-                buf[i] = ((drop * 0.7f + mew) * 16000f).toInt().coerceIn(-32767, 32767).toShort()
-            }
-            postPcm(buf)
+            // Cat: Salpico de água delicado e miadinho fofo
+            playCatMeow()
         } else {
-            // Bunny: Bolhinhas de sabão a estalar ("pop-pop-pop!")
+            // Bunny: Gotinhas e bolhinhas de sabão no chuveiro
             val duration = 0.24f
             val count = (SAMPLE_RATE * duration).toInt()
             val buf = ShortArray(count)
             for (i in 0 until count) {
                 val t = i / SAMPLE_RATE.toFloat()
-                val popT = t % 0.045f
-                val env = exp(-popT * 50.0).toFloat()
-                val freq = 450f + (t * 1200f) % 650f
+                val popT = t % 0.05f
+                val env = exp(-popT * 55.0).toFloat()
+                val freq = 480f + ((t * 1400f) % 700f)
                 val s = sin(2.0 * PI * freq * popT).toFloat() * env
-                buf[i] = (s * 18000f).toInt().coerceIn(-32767, 32767).toShort()
+                buf[i] = (s * 19000f).toInt().coerceIn(-32767, 32767).toShort()
             }
             postPcm(buf)
         }
@@ -159,39 +234,25 @@ object SoundFx {
     // ================================================================= SOM AO BRINCAR
     fun playPlay(isCat: Boolean) {
         if (isCat) {
-            // Cat: "Miau!" alegre e melodioso
-            val duration = 0.32f
-            val count = (SAMPLE_RATE * duration).toInt()
-            val buf = ShortArray(count)
-            for (i in 0 until count) {
-                val t = i / SAMPLE_RATE.toFloat()
-                val frac = t / duration
-                // Curva melódica do miado: sobe e desce suavemente
-                val freq = 620f + sin(PI * frac).toFloat() * 380f
-                val env = sin(PI * frac).toFloat()
-                val purr = 0.85f + 0.15f * sin(2.0 * PI * 32.0 * t).toFloat()
-                val s = (sin(2.0 * PI * freq * t).toFloat() + 0.3f * sin(4.0 * PI * freq * t).toFloat()) * env * purr
-                buf[i] = (s * 18000f).toInt().coerceIn(-32767, 32767).toShort()
-            }
-            postPcm(buf)
+            playCatMeow()
         } else {
-            // Bunny: Salto animado / apito fofo ("boing!")
-            val duration = 0.25f
+            // Bunny: Salto elástico e animado ("boing!")
+            val duration = 0.26f
             val count = (SAMPLE_RATE * duration).toInt()
             val buf = ShortArray(count)
             for (i in 0 until count) {
                 val t = i / SAMPLE_RATE.toFloat()
                 val frac = t / duration
-                val freq = 420f + frac * 750f
+                val freq = 460f + frac * 850f
                 val env = (1f - frac) * sin(PI * frac).toFloat()
                 val s = sin(2.0 * PI * freq * t).toFloat() * env
-                buf[i] = (s * 20000f).toInt().coerceIn(-32767, 32767).toShort()
+                buf[i] = (s * 21000f).toInt().coerceIn(-32767, 32767).toShort()
             }
             postPcm(buf)
         }
     }
 
-    // ================================================================= BEIJOCAS ("Mwah! ♥")
+    // ================================================================= BEIJOCAS DOCES ("Mwah! ♥")
     fun playKiss() {
         val duration = 0.28f
         val count = (SAMPLE_RATE * duration).toInt()
@@ -199,23 +260,21 @@ object SoundFx {
         for (i in 0 until count) {
             val t = i / SAMPLE_RATE.toFloat()
             if (t < 0.05f) {
-                // Sucção rápida do beijo
                 val noise = (Random.nextFloat() * 2f - 1f) * (t / 0.05f)
-                val pop = sin(2.0 * PI * 420.0 * t).toFloat()
-                buf[i] = ((pop * 0.6f + noise * 0.4f) * 19000f).toInt().coerceIn(-32767, 32767).toShort()
+                val pop = sin(2.0 * PI * 440.0 * t).toFloat()
+                buf[i] = ((pop * 0.6f + noise * 0.4f) * 20000f).toInt().coerceIn(-32767, 32767).toShort()
             } else {
-                // Ressonância doce harmónica
                 val remT = t - 0.05f
                 val env = exp(-remT * 18.0).toFloat()
-                val s1 = sin(2.0 * PI * 920.0 * remT).toFloat()
-                val s2 = sin(2.0 * PI * 1380.0 * remT).toFloat() * 0.5f
-                buf[i] = ((s1 + s2) * env * 17000f).toInt().coerceIn(-32767, 32767).toShort()
+                val s1 = sin(2.0 * PI * 960.0 * remT).toFloat()
+                val s2 = sin(2.0 * PI * 1440.0 * remT).toFloat() * 0.5f
+                buf[i] = ((s1 + s2) * env * 18000f).toInt().coerceIn(-32767, 32767).toShort()
             }
         }
         postPcm(buf)
     }
 
-    // ================================================================= MOEDAS & RECOMPENSAS
+    // ================================================================= MOEDAS
     fun playCoin() {
         val duration = 0.24f
         val count = (SAMPLE_RATE * duration).toInt()
@@ -225,35 +284,54 @@ object SoundFx {
             val env = exp(-t * 14.0).toFloat()
             val s1 = sin(2.0 * PI * 1320.0 * t).toFloat()
             val s2 = sin(2.0 * PI * 1760.0 * t).toFloat() * 0.6f
-            buf[i] = ((s1 + s2) * env * 16000f).toInt().coerceIn(-32767, 32767).toShort()
+            buf[i] = ((s1 + s2) * env * 17000f).toInt().coerceIn(-32767, 32767).toShort()
         }
         postPcm(buf)
     }
 
     // ================================================================= CATBUNNYCRAFT (CONSTRUIR & MINAR)
     fun playBuild() {
-        val duration = 0.09f
+        val duration = 0.10f
         val count = (SAMPLE_RATE * duration).toInt()
         val buf = ShortArray(count)
         for (i in 0 until count) {
             val t = i / SAMPLE_RATE.toFloat()
-            val env = exp(-t * 45.0).toFloat()
-            val s = sin(2.0 * PI * 520.0 * t).toFloat() * env
+            val env = exp(-t * 40.0).toFloat()
+            val s = sin(2.0 * PI * 580.0 * t).toFloat() * env
             buf[i] = (s * 22000f).toInt().coerceIn(-32767, 32767).toShort()
         }
         postPcm(buf)
     }
 
     fun playMine() {
-        val duration = 0.12f
+        val duration = 0.14f
         val count = (SAMPLE_RATE * duration).toInt()
         val buf = ShortArray(count)
+        val rnd = Random(55)
         for (i in 0 until count) {
             val t = i / SAMPLE_RATE.toFloat()
-            val env = exp(-t * 30.0).toFloat()
-            val noise = (Random.nextFloat() * 2f - 1f) * env * 0.65f
-            val thud = sin(2.0 * PI * 180.0 * t).toFloat() * env * 0.35f
-            buf[i] = ((noise + thud) * 21000f).toInt().coerceIn(-32767, 32767).toShort()
+            val env = exp(-t * 26.0).toFloat()
+            val noise = (rnd.nextFloat() * 2f - 1f) * env * 0.65f
+            val thud = sin(2.0 * PI * 190.0 * t).toFloat() * env * 0.35f
+            buf[i] = ((noise + thud) * 22000f).toInt().coerceIn(-32767, 32767).toShort()
+        }
+        postPcm(buf)
+    }
+
+    // ================================================================= KART RACER (TURBO & MOTOR)
+    fun playTurbo() {
+        val duration = 0.35f
+        val count = (SAMPLE_RATE * duration).toInt()
+        val buf = ShortArray(count)
+        val rnd = Random(88)
+        for (i in 0 until count) {
+            val t = i / SAMPLE_RATE.toFloat()
+            val frac = t / duration
+            val freq = 350f + frac * 900f
+            val noise = (rnd.nextFloat() * 2f - 1f) * (0.3f + 0.7f * frac)
+            val tone = sin(2.0 * PI * freq * t).toFloat()
+            val env = sin(PI * frac).toFloat()
+            buf[i] = ((tone * 0.6f + noise * 0.4f) * env * 22000f).toInt().coerceIn(-32767, 32767).toShort()
         }
         postPcm(buf)
     }

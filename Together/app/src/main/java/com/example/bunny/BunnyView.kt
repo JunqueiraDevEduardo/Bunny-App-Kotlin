@@ -18,6 +18,7 @@ object Nav {
     const val REPORT = -3
     const val MULTIPLAYER = -4
     const val CRAFT = -5
+    const val KART = -6
     const val HOME = 0; const val EAT = 1; const val BATH = 2; const val SLEEP = 3; const val PLAY = 4
     const val RUNNER = 5; const val MEMORY = 6; const val CARROTS = 7; const val PUZZLE = 8
     const val SHOP = 9; const val WARDROBE = 10; const val DECOR = 11
@@ -100,6 +101,7 @@ class BunnyView(ctx: Context) : View(ctx) {
             Nav.REPORT -> ReportScreen(this)
             Nav.MULTIPLAYER -> MultiplayerScreen(this)
             Nav.CRAFT -> CatBunnyCraftScreen(this)
+            Nav.KART -> KartScreen(this)
             Nav.EAT -> EatScreen(this)
             Nav.BATH -> BathScreen(this)
             Nav.SLEEP -> SleepScreen(this)

@@ -504,8 +504,9 @@ class SleepScreen(g: BunnyView) : Screen(g) {
         if (Save.sleeping) {
             zT -= dt
             if (zT <= 0f) {
-                zT = 1.2f
+                zT = 1.4f
                 fx.add(Fx(g.width * 0.58f, g.height * 0.45f, g.width * 0.04f, -g.height * 0.05f, 2.2f, -1, g.height * 0.035f))
+                SoundFx.playSleep(Theme.isCat)
             }
             if (Save.energy >= 100f) {
                 // Acordar com energia cheia
@@ -584,6 +585,7 @@ class SleepScreen(g: BunnyView) : Screen(g) {
             val petName = Save.currentPetName()
             if (Save.sleeping) {
                 Save.sleepStartTime = System.currentTimeMillis()
+                SoundFx.playSleep(Theme.isCat)
                 g.say("Boa noite $petName! Recupera em 2 minutos.")
             } else {
                 g.say("Bom dia $petName!")
@@ -1249,6 +1251,7 @@ class MultiplayerScreen(g: BunnyView) : Screen(g) {
     private val poseB = Pose()
     private val backBtn = RectF()
     private val craftGameBtn = RectF()
+    private val kartGameBtn = RectF()
     private val sendKissBtn = RectF()
     private val sendFoodBtn = RectF()
     private val sendLetterBtn = RectF()
@@ -1308,21 +1311,33 @@ class MultiplayerScreen(g: BunnyView) : Screen(g) {
         }
 
         // Cartão em destaque para o jogo estilo Minecraft: CatBunnyCraft em Machu Picchu
-        val craftH = r.height() * 0.072f
-        val craftY = partnerCard.bottom + r.height() * 0.010f
+        val craftH = r.height() * 0.055f
+        val craftY = partnerCard.bottom + r.height() * 0.008f
         craftGameBtn.set(partnerCard.left, craftY, partnerCard.right, craftY + craftH)
         val craftFill = if (Theme.isBunny) Color.rgb(26, 36, 68) else Color.rgb(255, 235, 244)
         val craftLine = if (Theme.isBunny) Color.rgb(255, 205, 45) else Color.rgb(222, 72, 122)
         D.rrect(c, craftGameBtn, craftH * 0.35f, craftFill, craftLine, 2.5f)
         Icons.draw(c, Icons.CRAFT, craftGameBtn.left + craftH * 0.65f, craftGameBtn.centerY(), craftH * 0.36f)
         val craftTitleCol = if (Theme.isBunny) Color.rgb(255, 225, 80) else Color.rgb(222, 72, 122)
-        D.text(c, I18n.t("catbunnycraft"), craftGameBtn.centerX() + craftH * 0.25f, craftGameBtn.centerY() - craftH * 0.08f, craftH * 0.30f, craftTitleCol)
-        D.text(c, I18n.t("craft_sub"), craftGameBtn.centerX() + craftH * 0.25f, craftGameBtn.centerY() + craftH * 0.30f, craftH * 0.18f, Theme.textDim)
+        D.text(c, I18n.t("catbunnycraft"), craftGameBtn.centerX() + craftH * 0.25f, craftGameBtn.centerY() - craftH * 0.10f, craftH * 0.32f, craftTitleCol)
+        D.text(c, I18n.t("craft_sub"), craftGameBtn.centerX() + craftH * 0.25f, craftGameBtn.centerY() + craftH * 0.26f, craftH * 0.20f, Theme.textDim)
+
+        // Novo Jogo de Carros Multiplayer: TogetherKart
+        val kartH = r.height() * 0.055f
+        val kartY = craftGameBtn.bottom + r.height() * 0.008f
+        kartGameBtn.set(partnerCard.left, kartY, partnerCard.right, kartY + kartH)
+        val kartFill = if (Theme.isBunny) Color.rgb(32, 28, 65) else Color.rgb(255, 228, 240)
+        val kartLine = if (Theme.isBunny) Color.rgb(105, 215, 255) else Color.rgb(255, 105, 165)
+        D.rrect(c, kartGameBtn, kartH * 0.35f, kartFill, kartLine, 2.5f)
+        Icons.draw(c, Icons.STAR, kartGameBtn.left + kartH * 0.65f, kartGameBtn.centerY(), kartH * 0.36f)
+        val kartTitleCol = if (Theme.isBunny) Color.rgb(135, 225, 255) else Color.rgb(235, 45, 115)
+        D.text(c, "🏎️ TogetherKart · Corrida Bunny vs Cat!", kartGameBtn.centerX() + kartH * 0.25f, kartGameBtn.centerY() - kartH * 0.10f, kartH * 0.32f, kartTitleCol)
+        D.text(c, "Corrida 3D em Machu Picchu · 2 Carros Multiplayer", kartGameBtn.centerX() + kartH * 0.25f, kartGameBtn.centerY() + kartH * 0.26f, kartH * 0.20f, Theme.textDim)
 
         // Botões de Ações de Amor (Beijinho, Comida, Carta)
         val actW = (cardW - r.width() * 0.04f) / 3f
-        val actH = r.height() * 0.050f
-        val actY = craftGameBtn.bottom + r.height() * 0.010f
+        val actH = r.height() * 0.046f
+        val actY = kartGameBtn.bottom + r.height() * 0.008f
 
         sendKissBtn.set(partnerCard.left, actY, partnerCard.left + actW, actY + actH)
         sendFoodBtn.set(sendKissBtn.right + r.width() * 0.02f, actY, sendKissBtn.right + r.width() * 0.02f + actW, actY + actH)
@@ -1407,6 +1422,9 @@ class MultiplayerScreen(g: BunnyView) : Screen(g) {
         }
         if (craftGameBtn.contains(x, y)) {
             g.go(Nav.CRAFT); return
+        }
+        if (kartGameBtn.contains(x, y)) {
+            g.go(Nav.KART); return
         }
         if (sendKissBtn.contains(x, y)) {
             Save.partnerLastGift = "kiss"
