@@ -14,10 +14,191 @@ import kotlin.math.sin
 /**
  * Core.kt
  * Contém as definições visuais fundamentais do aplicativo Bunny:
- * - C: Paleta de cores (tons pastel e tradicionais andinos/peruanos).
- * - D: Utilitários e atalhos de desenho em Canvas (formas, linhas, textos e botões).
+ * - I18n: Suporte multilíngue completo (Português PT e Espanhol ES).
+ * - Theme: Gestão rigorosa de temas e paletas de cores por personagem:
+ *          Bunny -> Azuis, Vinho, Roxo (Zero rosa, Zero branco).
+ *          Cat   -> Cor de Rosa, Brancos (Zero azul, Zero vinho, Zero roxo).
+ * - C: Paleta de cores base.
+ * - D: Utilitários e atalhos de desenho em Canvas.
  * - Icons: Sistema de renderização vetorial programática de ícones e itens.
  */
+
+/** Internacionalização (i18n): Português (PT) e Espanhol (ES). */
+object I18n {
+    fun t(key: String): String {
+        val lang = Save.language
+        return if (lang == "es") esMap[key] ?: ptMap[key] ?: key
+        else ptMap[key] ?: key
+    }
+
+    private val ptMap = mapOf(
+        "app_title" to "TOGETHER",
+        "auth_title" to "Autenticação",
+        "auth_sub" to "Inicia sessão para entrar na tua casinha",
+        "user_label" to "Nome de Utilizador",
+        "pass_label" to "Palavra-passe",
+        "login_btn" to "Entrar na Casinha",
+        "login_error" to "Credenciais incorretas! Tenta novamente.",
+        "settings" to "Definições",
+        "language" to "Idioma / Idioma",
+        "sound" to "Efeitos Sonoros",
+        "reminders" to "Lembretes Diários de Cuidado",
+        "room_code" to "Código de Sala (Multiplayer)",
+        "save_settings" to "Guardar & Voltar",
+        "logout" to "Terminar Sessão / Trocar",
+        "report_title_bunny" to "Ficha Secreta do Meu Coelhinho",
+        "report_title_cat" to "Ficha Secreta da Minha Gatinha",
+        "report_sub" to "Primeiro preenche este relatório especial sobre ti:",
+        "rep_name" to "O teu Nome / Apelido:",
+        "rep_likes" to "O que mais gostas de fazer:",
+        "rep_dislikes" to "O que não gostas de fazer:",
+        "rep_color" to "A tua cor favorita:",
+        "rep_food" to "A tua comida favorita:",
+        "rep_msg" to "Mensagem de amor para o parceiro:",
+        "rep_finish" to "Concluir Ficha & Entrar! ✨",
+        "rep_done_anim" to "Ficha gravada com muito carinho! ♥",
+        "multiplayer" to "Amor à Distância · Conexão",
+        "partner_conn" to "Conectado ao teu parceiro!",
+        "partner_wait" to "À espera do parceiro conectar...",
+        "copy_code" to "📋 Copiar Código de Ligação",
+        "paste_code" to "📥 Colar Código do Parceiro",
+        "share_code" to "📲 Partilhar via WhatsApp",
+        "sync_cloud" to "☁ Sincronizar Nuvem",
+        "send_kiss" to "💋 Enviar Beijinho Doce",
+        "send_food" to "🥟 Enviar Comida Peruana",
+        "send_letter" to "💌 Enviar Cartinha de Amor",
+        "gift_sent" to "Presentinho enviado com sucesso!",
+        "view_partner" to "Ver Ficha do Parceiro",
+        "home" to "Casa", "eat" to "Comer", "bath" to "Banho", "sleep" to "Dormir", "play" to "Brincar",
+        "shop" to "Loja", "wardrobe" to "Roupas", "decor" to "Decorar",
+        "level" to "Nível", "coins" to "Moedas",
+        "catbunnycraft" to "⛏️ CatBunnyCraft",
+        "craft_sub" to "Mundo 3D em Machu Picchu · Construir a Dois!",
+        "enter_house_bunny" to "🏠 Entrar na Casinha do Bunny 🐰",
+        "enter_house_cat" to "🏠 Entrar na Casinha da Gatinha 🐱",
+        "build_mode" to "Construir", "mine_mode" to "Minar"
+    )
+
+    private val esMap = mapOf(
+        "app_title" to "TOGETHER",
+        "auth_title" to "Autenticación",
+        "auth_sub" to "Inicia sesión para entrar en tu casita",
+        "user_label" to "Nombre de Usuario",
+        "pass_label" to "Contraseña",
+        "login_btn" to "Entrar a la Casita",
+        "login_error" to "¡Credenciales incorrectas! Inténtalo de nuevo.",
+        "settings" to "Ajustes",
+        "language" to "Idioma / Language",
+        "sound" to "Efectos de Sonido",
+        "reminders" to "Recordatorios Diarios de Cuidado",
+        "room_code" to "Código de Sala (Multijugador)",
+        "save_settings" to "Guardar y Volver",
+        "logout" to "Cerrar Sesión / Cambiar",
+        "report_title_bunny" to "Ficha Secreta de Mi Conejito",
+        "report_title_cat" to "Ficha Secreta de Mi Gatita",
+        "report_sub" to "Primero completa este reporte especial sobre ti:",
+        "rep_name" to "Tu Nombre / Apodo:",
+        "rep_likes" to "Lo que más te gusta hacer:",
+        "rep_dislikes" to "Lo que no te gusta hacer:",
+        "rep_color" to "Tu color favorito:",
+        "rep_food" to "Tu comida favorita:",
+        "rep_msg" to "Mensaje de amor para tu pareja:",
+        "rep_finish" to "¡Completar Ficha y Entrar! ✨",
+        "rep_done_anim" to "¡Ficha guardada con mucho cariño! ♥",
+        "multiplayer" to "Amor a Distancia · Conexión",
+        "partner_conn" to "¡Conectado con tu pareja!",
+        "partner_wait" to "Esperando que tu pareja se conecte...",
+        "copy_code" to "📋 Copiar Código de Conexión",
+        "paste_code" to "📥 Pegar Código de Pareja",
+        "share_code" to "📲 Compartir por WhatsApp",
+        "sync_cloud" to "☁ Sincronizar Nube",
+        "send_kiss" to "💋 Enviar Besito Dulce",
+        "send_food" to "🥟 Enviar Comida Peruana",
+        "send_letter" to "💌 Enviar Cartita de Amor",
+        "gift_sent" to "¡Regalito enviado con éxito!",
+        "view_partner" to "Ver Ficha de Pareja",
+        "home" to "Casa", "eat" to "Comer", "bath" to "Baño", "sleep" to "Dormir", "play" to "Jugar",
+        "shop" to "Tienda", "wardrobe" to "Ropa", "decor" to "Decorar",
+        "level" to "Nivel", "coins" to "Monedas",
+        "catbunnycraft" to "⛏️ CatBunnyCraft",
+        "craft_sub" to "Mundo 3D en Machu Picchu · Construir en Pareja",
+        "enter_house_bunny" to "🏠 Entrar a la Casita de Bunny 🐰",
+        "enter_house_cat" to "🏠 Entrar a la Casita de Cat 🐱",
+        "build_mode" to "Construir", "mine_mode" to "Minar"
+    )
+}
+
+/**
+ * Gestão rigorosa de Temas e Paletas de Cores:
+ * - No Bunny: azuis, cores de vinho, roxo. NUNCA rosa nem branco.
+ * - Na Cat: cor de rosa, brancos. NUNCA azul, cores de vinho, nem roxo.
+ */
+object Theme {
+    val isBunny: Boolean get() = Save.activeChar == "bunny"
+    val isCat: Boolean get() = Save.activeChar == "cat"
+
+    // Cores Bunny (Azuis, Vinho, Roxo - Sem Rosa e Sem Branco)
+    val bNavyDark = Color.rgb(18, 24, 48)
+    val bNavy = Color.rgb(26, 36, 68)
+    val bNavyLight = Color.rgb(40, 52, 92)
+    val bBlueRoyal = Color.rgb(42, 92, 172)
+    val bBlueSky = Color.rgb(85, 148, 222)
+    val bBlueIce = Color.rgb(205, 225, 248)  // Substitui o branco com tom celestial azulado
+    val bSilver = Color.rgb(212, 224, 240)   // Prateado azulado (substitui o branco)
+    val bWineDark = Color.rgb(82, 14, 34)
+    val bWine = Color.rgb(125, 24, 52)
+    val bWineLight = Color.rgb(162, 42, 75)
+    val bPurpleDark = Color.rgb(62, 18, 76)
+    val bPurple = Color.rgb(102, 38, 118)
+    val bPurpleLight = Color.rgb(142, 70, 160)
+
+    // Cores Cat (Rosa, Brancos - Sem Azul, Sem Vinho, Sem Roxo)
+    val cPinkDark = Color.rgb(222, 72, 122)
+    val cPink = Color.rgb(255, 175, 205)
+    val cPinkSoft = Color.rgb(255, 208, 226)
+    val cPinkCream = Color.rgb(255, 238, 244)
+    val cWhitePure = Color.rgb(255, 255, 255)
+    val cWhiteCream = Color.rgb(255, 250, 252)
+    val cPeach = Color.rgb(255, 220, 200)
+
+    // Elementos dinâmicos da Interface
+    val bg: Int get() = if (isBunny) bNavyDark else cPinkCream
+    val surface: Int get() = if (isBunny) bNavy else cWhitePure
+    val card: Int get() = if (isBunny) bNavyLight else cWhiteCream
+    val cardAccent: Int get() = if (isBunny) bPurpleDark else cPinkSoft
+    val outline: Int get() = if (isBunny) bPurple else Color.rgb(245, 185, 208)
+    val primary: Int get() = if (isBunny) bWine else cPink
+    val primaryDark: Int get() = if (isBunny) bWineDark else cPinkDark
+    val secondary: Int get() = if (isBunny) bBlueRoyal else cWhitePure
+    val accent: Int get() = if (isBunny) bPurpleLight else cPinkDark
+    val text: Int get() = if (isBunny) bSilver else Color.rgb(115, 65, 80)
+    val textDim: Int get() = if (isBunny) bBlueSky else Color.rgb(175, 125, 140)
+    val bannerTop: Int get() = if (isBunny) bPurpleDark else cPink
+    val bannerBottom: Int get() = if (isBunny) bNavyLight else cPinkSoft
+    val stripBg: Int get() = if (isBunny) Color.rgb(22, 32, 60) else cWhiteCream
+
+    /** Sanitiza qualquer cor para cumprir com 100% de rigor as regras de cor do usuário. */
+    fun sanitize(color: Int): Int {
+        val r = Color.red(color); val g = Color.green(color); val b = Color.blue(color)
+        if (isBunny) {
+            // No Bunny: PROIBIDO cor de rosa e branco!
+            // Se for branco ou perto de branco -> converter para Azul Gelo / Prateado
+            if (r > 215 && g > 215 && b > 215) return bSilver
+            // Se for rosa (vermelho alto, azul moderado/alto, verde baixo) -> converter para Vinho
+            if (r > 190 && b > 140 && g < 225 && r > g) return bWine
+            return color
+        } else {
+            // Na Cat: PROIBIDO azul, vinho e roxo!
+            // Se for azul (azul alto e dominante) -> converter para Branco Puro
+            if (b > 155 && b > r + 15) return cWhitePure
+            // Se for vinho (vermelho escuro com pouco verde/azul) -> converter para Rosa Escuro
+            if (r in 70..185 && g < 60 && b < 90) return cPinkDark
+            // Se for roxo (vermelho e azul altos com pouco verde) -> converter para Rosa Suave
+            if (r > 65 && b > 85 && g < 90) return cPink
+            return color
+        }
+    }
+}
 
 /** Paleta pastel (estilo livro infantil) e cores tradicionais andinas e peruanas. */
 object C {
@@ -144,6 +325,25 @@ object D {
         rrect(c, r, r.height() * 0.4f, fill, C.outline, max(2f, r.height() * 0.03f))
         text(c, label, r.centerX(), r.centerY() + size * 0.35f, size, textColor)
     }
+
+    /** Desenha um coração suave e perfeitamente proporcionado. */
+    fun heart(c: Canvas, cx: Float, cy: Float, r: Float, fill: Int, line: Int = 0, lw: Float = 0f) {
+        path.reset()
+        path.moveTo(cx, cy + 0.72f * r)
+        path.cubicTo(cx - 1.15f * r, cy - 0.05f * r, cx - 0.55f * r, cy - 0.95f * r, cx, cy - 0.3f * r)
+        path.cubicTo(cx + 0.55f * r, cy - 0.95f * r, cx + 1.15f * r, cy - 0.05f * r, cx, cy + 0.72f * r)
+        f(fill); c.drawPath(path, p)
+        if (lw > 0f) { s(line, lw); c.drawPath(path, p) }
+    }
+
+    /** Desenha um arco curvo para brilhos e contornos. */
+    fun arc(c: Canvas, cx: Float, cy: Float, rx: Float, ry: Float, startAngle: Float, sweepAngle: Float, color: Int, w: Float) {
+        rf.set(cx - rx, cy - ry, cx + rx, cy + ry)
+        s(color, w)
+        path.reset()
+        path.addArc(rf, startAngle, sweepAngle)
+        c.drawPath(path, p)
+    }
 }
 
 /**
@@ -166,6 +366,11 @@ object Icons {
     const val SNEAKER = 38; const val POTION = 39; const val COLOR_PALETTE = 40
     // Brinquedos e Companhia (Gatinha)
     const val CAT = 41; const val WAND = 42; const val CAR_TOY = 43; const val CARROT_PLUSH = 44
+    // Definições, Autenticação e Amor a Dois
+    const val SETTINGS = 45; const val LOCK = 46; const val KISS = 47; const val LETTER = 48
+    const val MULTIPLAYER = 49; const val CHECK = 50
+    // CatBunnyCraft
+    const val PICKAXE = 51; const val CRAFT = 52
 
     /** Seleciona e desenha o ícone correspondente ao ID fornecido na posição (cx, cy) com raio r. */
     fun draw(c: Canvas, id: Int, cx: Float, cy: Float, r: Float) {
@@ -529,7 +734,106 @@ object Icons {
                 D.circle(c, cx + 0.15f * r, cy - 0.05f * r, 0.04f * r, C.ink)
                 D.line(c, cx - 0.08f * r, cy + 0.12f * r, cx + 0.08f * r, cy + 0.12f * r, lw, ol)
             }
+            SETTINGS -> {
+                // Engrenagem de definições
+                val fill = Theme.cardAccent
+                D.circle(c, cx, cy, 0.55f * r, fill, ol, lw)
+                for (k in 0 until 6) {
+                    val a = (k * 60) * PI / 180
+                    val tx = cx + (cos(a) * 0.65f * r).toFloat()
+                    val ty = cy + (sin(a) * 0.65f * r).toFloat()
+                    D.circle(c, tx, ty, 0.18f * r, fill, ol, lw * 0.7f)
+                }
+                D.circle(c, cx, cy, 0.25f * r, Theme.bg, ol, lw * 0.8f)
+            }
+            LOCK -> {
+                // Cadeado de autenticação segura
+                D.rrect(c, cx - 0.45f * r, cy - 0.1f * r, cx + 0.45f * r, cy + 0.65f * r, 0.15f * r, C.gold, ol, lw)
+                // Arco do cadeado
+                D.s(ol, lw * 1.8f)
+                D.path.reset()
+                D.path.addArc(cx - 0.3f * r, cy - 0.65f * r, cx + 0.3f * r, cy + 0.05f * r, 180f, 180f)
+                c.drawPath(D.path, D.p)
+                // Buraco da chave
+                D.circle(c, cx, cy + 0.18f * r, 0.09f * r, C.ink)
+                D.poly(c, C.ink, 0, 0f, cx - 0.04f * r, cy + 0.22f * r, cx + 0.04f * r, cy + 0.22f * r, cx, cy + 0.42f * r)
+            }
+            KISS -> {
+                // Beijinho doce com lábios em coração
+                val lipC = if (Theme.isBunny) Theme.bWineLight else C.pinkD
+                D.oval(c, cx - 0.22f * r, cy - 0.08f * r, 0.28f * r, 0.18f * r, lipC, ol, lw)
+                D.oval(c, cx + 0.22f * r, cy - 0.08f * r, 0.28f * r, 0.18f * r, lipC, ol, lw)
+                D.oval(c, cx, cy + 0.15f * r, 0.38f * r, 0.22f * r, lipC, ol, lw)
+                drawSpark(c, cx + 0.45f * r, cy - 0.35f * r, r * 0.25f)
+            }
+            LETTER -> {
+                // Cartinha de amor com selo de coração
+                val paperC = if (Theme.isBunny) Theme.bSilver else C.white
+                D.rrect(c, cx - 0.55f * r, cy - 0.38f * r, cx + 0.55f * r, cy + 0.42f * r, 0.08f * r, paperC, ol, lw)
+                D.line(c, cx - 0.52f * r, cy - 0.35f * r, cx, cy + 0.05f * r, lw, ol)
+                D.line(c, cx + 0.52f * r, cy - 0.35f * r, cx, cy + 0.05f * r, lw, ol)
+                // Selo de coração
+                D.circle(c, cx, cy + 0.05f * r, 0.14f * r, if (Theme.isBunny) Theme.bWine else C.pinkD)
+            }
+            MULTIPLAYER -> {
+                // Dois corações unidos / coelhinho e gatinha juntos
+                val c1 = if (Theme.isBunny) Theme.bBlueRoyal else C.pinkD
+                val c2 = if (Theme.isBunny) Theme.bWine else C.white
+                D.circle(c, cx - 0.22f * r, cy, 0.38f * r, c1, ol, lw)
+                D.circle(c, cx + 0.22f * r, cy, 0.38f * r, c2, ol, lw)
+                Icons.draw(c, HEART, cx, cy - 0.18f * r, 0.32f * r)
+            }
+            CHECK -> {
+                // Visto de confirmação / sucesso
+                D.circle(c, cx, cy, 0.55f * r, C.greenD, ol, lw)
+                D.line(c, cx - 0.25f * r, cy, cx - 0.05f * r, cy + 0.2f * r, lw * 2f, C.white)
+                D.line(c, cx - 0.05f * r, cy + 0.2f * r, cx + 0.30f * r, cy - 0.2f * r, lw * 2f, C.white)
+            }
+            PICKAXE -> {
+                // Picareta de mineração estilo Minecraft
+                D.line(c, cx - 0.45f * r, cy + 0.55f * r, cx + 0.25f * r, cy - 0.25f * r, lw * 2.2f, C.brown)
+                // Lâmina curva de ferro/pedra inca
+                D.arc(c, cx + 0.15f * r, cy - 0.25f * r, 0.45f * r, 0.35f * r, 190f, 160f, C.sky, lw * 3f)
+                D.circle(c, cx + 0.15f * r, cy - 0.25f * r, 0.12f * r, C.incaGold)
+            }
+            CRAFT -> {
+                // Bloco isométrico 3D estilo Minecraft
+                val bw = r * 0.7f; val bh = bw * 0.5f
+                // Topo relva
+                D.poly(c, C.green, ol, lw, cx, cy - bh, cx + bw, cy, cx, cy + bh, cx - bw, cy)
+                // Lado esquerdo
+                D.poly(c, C.brown, ol, lw, cx - bw, cy, cx, cy + bh, cx, cy + bh + bw, cx - bw, cy + bw)
+                // Lado direito
+                D.poly(c, D.mix(C.brown, Color.BLACK, 0.3f), ol, lw, cx, cy + bh, cx + bw, cy, cx + bw, cy + bw, cx, cy + bh + bw)
+            }
         }
+    }
+
+    /**
+     * Desenha o Logótipo Oficial da aplicação:
+     * Um coração grande e vermelho vibrante que diz 'TOGETHER' em letras brancas,
+     * acompanhado por brilhos dourados e iluminação 3D.
+     */
+    fun drawTogetherLogo(c: Canvas, cx: Float, cy: Float, size: Float) {
+        val r = size * 0.48f
+        // Sombra suave do coração
+        D.heart(c, cx, cy + r * 0.08f, r * 1.02f, D.alpha(Color.BLACK, 45))
+        // Coração vermelho vibrante
+        val redHeart = Color.rgb(229, 29, 56)
+        val strokeHeart = Color.rgb(194, 18, 42)
+        D.heart(c, cx, cy, r, redHeart, strokeHeart, max(2f, r * 0.04f))
+        // Brilho na curva superior esquerda
+        D.arc(c, cx - r * 0.38f, cy - r * 0.40f, r * 0.28f, r * 0.18f, 180f, 150f, Color.rgb(255, 82, 109), max(2f, r * 0.05f))
+        // Faixa suave sob o texto
+        D.rrect(c, cx - r * 0.68f, cy - r * 0.12f, cx + r * 0.68f, cy + r * 0.22f, r * 0.08f, D.alpha(Color.BLACK, 35))
+        // Texto "TOGETHER" em branco nítido
+        val txtSize = r * 0.27f
+        D.text(c, "TOGETHER", cx, cy + txtSize * 0.24f, txtSize, Color.WHITE)
+        // Mini coração abaixo do texto
+        D.heart(c, cx, cy + r * 0.44f, r * 0.15f, Color.WHITE)
+        // Brilhos dourados em volta
+        drawSpark(c, cx - r * 0.85f, cy - r * 0.65f, r * 0.22f)
+        drawSpark(c, cx + r * 0.85f, cy - r * 0.60f, r * 0.19f)
     }
 
     /** Desenha um brilho/estrela em destaque. */

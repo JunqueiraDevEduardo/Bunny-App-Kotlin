@@ -163,27 +163,46 @@ class RunnerScreen(g: BunnyView) : Screen(g) {
         // Colecionáveis
         for (cn in cns) {
             if (!cn.got) {
-                val icon = if (cn.isGold) Icons.GOLDEN else if (mapIndex == 1) Icons.CHOCLO else Icons.CARROT
-                Icons.draw(c, icon, r.left + cn.x * w, gy - cn.y * h, h * 0.035f)
+                val icon = if (cn.isGold) {
+                    Icons.GOLDEN
+                } else if (Theme.isCat) {
+                    when (mapIndex) {
+                        1 -> Icons.ALFAJOR
+                        2 -> Icons.HEART
+                        else -> Icons.BERRY
+                    }
+                } else {
+                    if (mapIndex == 1) Icons.CHOCLO else Icons.CARROT
+                }
+                Icons.draw(c, icon, r.left + cn.x * w, gy - cn.y * h, h * 0.030f)
             }
         }
 
-        // Coelho corredor
+        // Pet corredor
         val scale = Save.bunnyScale()
-        BunnyArt.draw(c, r.left + 0.25f * w, gy - off * h, h * 0.13f * scale, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        if (Theme.isBunny) {
+            BunnyArt.draw(c, r.left + 0.25f * w, gy - off * h, h * 0.13f * scale, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        } else {
+            CatArt.draw(c, r.left + 0.25f * w, gy - off * h, h * 0.13f * scale, pose.t, mood = 0)
+        }
 
-        // UI do Runner
-        D.text(c, "${dist.toInt()} m", r.left + w * 0.05f, r.top + h * 0.06f, h * 0.04f, C.ink, android.graphics.Paint.Align.LEFT)
-        Icons.draw(c, Icons.CARROT, r.left + w * 0.06f, r.top + h * 0.11f, h * 0.022f)
-        D.text(c, "x $carrots", r.left + w * 0.1f, r.top + h * 0.12f, h * 0.035f, C.ink, android.graphics.Paint.Align.LEFT)
+        val hudTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+        val hudFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        val hudIcon = if (Theme.isCat) Icons.HEART else Icons.CARROT
+
+        // UI do Runner compacta e legível em vertical
+        D.text(c, "${dist.toInt()} m", r.left + w * 0.05f, r.top + h * 0.052f, h * 0.024f, hudTxt, Paint.Align.LEFT)
+        Icons.draw(c, hudIcon, r.left + w * 0.065f, r.top + h * 0.082f, h * 0.016f)
+        D.text(c, "x $carrots", r.left + w * 0.105f, r.top + h * 0.088f, h * 0.022f, hudTxt, Paint.Align.LEFT)
 
         // Botão para trocar de mapa
-        mapBtn.set(r.right - w * 0.44f, r.top + h * 0.04f, r.right - w * 0.04f, r.top + h * 0.10f)
-        D.rrect(c, mapBtn, mapBtn.height() * 0.4f, C.white, C.outline, 3f)
-        D.text(c, mapNames[mapIndex], mapBtn.centerX(), mapBtn.centerY() + mapBtn.height() * 0.16f, mapBtn.height() * 0.42f, C.ink)
+        mapBtn.set(r.right - w * 0.38f, r.top + h * 0.038f, r.right - w * 0.04f, r.top + h * 0.082f)
+        D.rrect(c, mapBtn, mapBtn.height() * 0.38f, hudFill, Theme.outline, 2.5f)
+        D.text(c, mapNames[mapIndex], mapBtn.centerX(), mapBtn.centerY() + mapBtn.height() * 0.16f, mapBtn.height() * 0.35f, hudTxt)
 
         if (state == 0) {
-            D.text(c, "Toca para saltar! (Salto duplo permitido)", r.centerX(), r.top + h * 0.42f, h * 0.038f, C.ink)
+            val hint = if (Theme.isCat) "Toca para a Gatinha saltar!" else "Toca para saltar! (Salto duplo)"
+            D.text(c, hint, r.centerX(), r.top + h * 0.40f, h * 0.022f, hudTxt)
         }
         if (state == 2) {
             overlay(c, r, "Ups!", "+$reward moedas", "Toca para correr de novo")
@@ -191,10 +210,13 @@ class RunnerScreen(g: BunnyView) : Screen(g) {
     }
 
     private fun overlay(c: Canvas, r: RectF, a: String, b: String, d: String) {
-        D.rrect(c, r.left + r.width() * 0.12f, r.top + r.height() * 0.28f, r.right - r.width() * 0.12f, r.top + r.height() * 0.58f, r.height() * 0.04f, D.alpha(C.white, 240), C.outline, 4f)
-        D.text(c, a, r.centerX(), r.top + r.height() * 0.38f, r.height() * 0.06f, C.pinkD)
-        D.text(c, b, r.centerX(), r.top + r.height() * 0.46f, r.height() * 0.04f, C.ink)
-        D.text(c, d, r.centerX(), r.top + r.height() * 0.53f, r.height() * 0.028f, C.ink)
+        val ovFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        val ovTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+        val ovAccent = if (Theme.isBunny) Theme.bWine else Theme.primary
+        D.rrect(c, r.left + r.width() * 0.12f, r.top + r.height() * 0.32f, r.right - r.width() * 0.12f, r.top + r.height() * 0.58f, r.height() * 0.035f, D.alpha(ovFill, 242), Theme.outline, 3.5f)
+        D.text(c, a, r.centerX(), r.top + r.height() * 0.40f, r.height() * 0.042f, ovAccent)
+        D.text(c, b, r.centerX(), r.top + r.height() * 0.47f, r.height() * 0.026f, ovTxt)
+        D.text(c, d, r.centerX(), r.top + r.height() * 0.53f, r.height() * 0.018f, Theme.textDim)
     }
 
     override fun down(x: Float, y: Float, r: RectF) {
@@ -273,27 +295,32 @@ class MemoryScreen(g: BunnyView) : Screen(g) {
     }
 
     override fun draw(c: Canvas, r: RectF) {
-        D.f(D.mix(C.cream, C.lav, 0.35f)); c.drawRect(r, D.p)
+        val bgCol = if (Theme.isBunny) Theme.bNavyDark else Theme.cPinkCream
+        D.f(bgCol); c.drawRect(r, D.p)
 
         val w = r.width(); val h = r.height()
         // Botões de Tema e Dificuldade
-        val btnH = h * 0.055f
+        val btnH = h * 0.046f
         themeBtn.set(r.left + w * 0.05f, r.top + h * 0.02f, r.left + w * 0.46f, r.top + h * 0.02f + btnH)
         diffBtn.set(r.right - w * 0.46f, r.top + h * 0.02f, r.right - w * 0.05f, r.top + h * 0.02f + btnH)
-        D.rrect(c, themeBtn, btnH * 0.35f, C.white, C.outline, 2.5f)
-        D.text(c, themeNames[themeIndex], themeBtn.centerX(), themeBtn.centerY() + btnH * 0.15f, btnH * 0.42f, C.ink)
-        D.rrect(c, diffBtn, btnH * 0.35f, C.white, C.outline, 2.5f)
-        D.text(c, diffNames[diffIndex], diffBtn.centerX(), diffBtn.centerY() + btnH * 0.15f, btnH * 0.42f, C.ink)
+        val hudFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        val hudTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+        val hudAccent = if (Theme.isBunny) Theme.bWine else Theme.primary
 
-        D.text(c, "Jogadas: $moves", r.centerX(), r.top + h * 0.105f, h * 0.038f, C.ink)
+        D.rrect(c, themeBtn, btnH * 0.35f, hudFill, Theme.outline, 2f)
+        D.text(c, themeNames[themeIndex], themeBtn.centerX(), themeBtn.centerY() + btnH * 0.16f, btnH * 0.35f, hudTxt)
+        D.rrect(c, diffBtn, btnH * 0.35f, hudFill, Theme.outline, 2f)
+        D.text(c, diffNames[diffIndex], diffBtn.centerX(), diffBtn.centerY() + btnH * 0.16f, btnH * 0.35f, hudTxt)
+
+        D.text(c, "Jogadas: $moves", r.centerX(), r.top + h * 0.085f, h * 0.024f, hudTxt)
 
         val cols = 4
         val rows = totalCards / cols
-        val cs = min(r.width() * 0.21f, (r.height() * 0.65f) / rows)
+        val cs = min(r.width() * 0.20f, (r.height() * 0.62f) / rows)
         val gap = cs * 0.12f
         val gw = cols * cs + (cols - 1) * gap
         val x0 = r.centerX() - gw / 2f
-        val y0 = r.top + h * 0.14f
+        val y0 = r.top + h * 0.125f
 
         val activeList = when (themeIndex) {
             0 -> peruIds
@@ -310,23 +337,29 @@ class MemoryScreen(g: BunnyView) : Screen(g) {
             val hw = cs / 2f * k
 
             if (fl[i] > 0.5f) {
-                D.rrect(c, cx - hw, t, cx + hw, t + cs, cs * 0.15f, if (matched[i]) C.mint else C.white, C.outline, 4f)
+                val matchFill = if (Theme.isBunny) Theme.bBlueRoyal else C.mint
+                val cardFrontFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+                D.rrect(c, cx - hw, t, cx + hw, t + cs, cs * 0.15f, if (matched[i]) matchFill else cardFrontFill, Theme.outline, 2.5f)
                 if (k > 0.2f) Icons.draw(c, activeList[cards[i] % activeList.size], cx, t + cs / 2f, cs * 0.30f * k)
             } else {
-                val backColor = if (themeIndex == 0) C.peruRed else if (themeIndex == 1) C.pink else C.sky
-                D.rrect(c, cx - hw, t, cx + hw, t + cs, cs * 0.15f, backColor, C.outline, 4f)
+                val backColor = if (Theme.isCat) {
+                    if (themeIndex == 0) Theme.cPinkDark else if (themeIndex == 1) Theme.cPink else Theme.cPinkSoft
+                } else {
+                    if (themeIndex == 0) Theme.bWineDark else if (themeIndex == 1) Theme.bNavyLight else Theme.bPurple
+                }
+                D.rrect(c, cx - hw, t, cx + hw, t + cs, cs * 0.15f, backColor, Theme.outline, 2.5f)
                 if (k > 0.2f) {
-                    val backIcon = if (themeIndex == 0) Icons.LLAMA else Icons.PAW
+                    val backIcon = if (Theme.isCat) (if (themeIndex == 0) Icons.LLAMA else Icons.PAW) else (if (themeIndex == 0) Icons.LLAMA else Icons.HOP)
                     Icons.draw(c, backIcon, cx, t + cs / 2f, cs * 0.24f * k)
                 }
             }
         }
 
         if (done) {
-            D.rrect(c, r.left + r.width() * 0.12f, r.top + r.height() * 0.38f, r.right - r.width() * 0.12f, r.top + r.height() * 0.64f, r.height() * 0.04f, D.alpha(C.white, 245), C.outline, 4f)
-            D.text(c, "Parabéns!", r.centerX(), r.top + r.height() * 0.47f, r.height() * 0.055f, C.pinkD)
-            D.text(c, "+$reward moedas", r.centerX(), r.top + r.height() * 0.54f, r.height() * 0.04f, C.ink)
-            D.text(c, "Toca para jogar de novo", r.centerX(), r.top + r.height() * 0.60f, r.height() * 0.028f, C.ink)
+            D.rrect(c, r.left + r.width() * 0.12f, r.top + r.height() * 0.35f, r.right - r.width() * 0.12f, r.top + r.height() * 0.60f, r.height() * 0.035f, D.alpha(hudFill, 245), Theme.outline, 3.5f)
+            D.text(c, "Parabéns!", r.centerX(), r.top + r.height() * 0.43f, r.height() * 0.040f, hudAccent)
+            D.text(c, "+$reward moedas", r.centerX(), r.top + r.height() * 0.49f, r.height() * 0.026f, hudTxt)
+            D.text(c, "Toca para jogar de novo", r.centerX(), r.top + r.height() * 0.55f, r.height() * 0.018f, Theme.textDim)
         }
     }
 
@@ -458,44 +491,60 @@ class CarrotScreen(g: BunnyView) : Screen(g) {
             val ic = when {
                 i.kind == 1 -> Icons.GOLDEN
                 i.kind == 2 -> Icons.ROCK
+                Theme.isCat -> when (mapIndex) {
+                    1 -> Icons.ALFAJOR
+                    2 -> Icons.CUPCAKE
+                    else -> Icons.BERRY
+                }
                 mapIndex == 1 -> Icons.CHOCLO
                 mapIndex == 2 -> Icons.ALFAJOR
                 else -> Icons.CARROT
             }
-            Icons.draw(c, ic, r.left + i.x * w, r.top + i.y * h, h * 0.035f)
+            Icons.draw(c, ic, r.left + i.x * w, r.top + i.y * h, h * 0.030f)
         }
 
         val scale = Save.bunnyScale()
-        val s = h * 0.15f * scale
+        val s = h * 0.14f * scale
         val px = r.left + bx * w
-        val by = r.top + h * 0.97f
-        BunnyArt.draw(c, px, by, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        val by = r.top + h * 0.95f
+        if (Theme.isBunny) {
+            BunnyArt.draw(c, px, by, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        } else {
+            CatArt.draw(c, px, by, s, pose.t, mood = 0)
+        }
 
-        // Cesto à frente do coelho
-        D.rrect(c, px - s * 0.32f, by - s * 0.5f, px + s * 0.32f, by - s * 0.12f, s * 0.08f, C.peach, C.outline, 3f)
-        D.line(c, px - s * 0.32f, by - s * 0.38f, px + s * 0.32f, by - s * 0.38f, 3f, C.outline)
-        D.line(c, px - s * 0.32f, by - s * 0.26f, px + s * 0.32f, by - s * 0.26f, 3f, C.outline)
+        // Cesto à frente do pet adaptado ao tema
+        val basketCol = if (Theme.isBunny) Theme.bNavyLight else Theme.cPink
+        val basketLine = if (Theme.isBunny) Theme.bPurple else Theme.outline
+        D.rrect(c, px - s * 0.32f, by - s * 0.46f, px + s * 0.32f, by - s * 0.10f, s * 0.08f, basketCol, basketLine, 2.5f)
+        D.line(c, px - s * 0.32f, by - s * 0.34f, px + s * 0.32f, by - s * 0.34f, 2.5f, basketLine)
+        D.line(c, px - s * 0.32f, by - s * 0.22f, px + s * 0.32f, by - s * 0.22f, 2.5f, basketLine)
 
-        // HUD
-        D.text(c, "Pontos: $score", r.left + w * 0.05f, r.top + h * 0.06f, h * 0.04f, C.ink, android.graphics.Paint.Align.LEFT)
-        D.text(c, "${timeLeft.toInt().coerceAtLeast(0)} s", r.centerX(), r.top + h * 0.06f, h * 0.04f, C.ink)
+        // HUD compacta e adaptada
+        val hudTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+        val hudFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        val hudAccent = if (Theme.isBunny) Theme.bWine else Theme.primary
+
+        D.text(c, "Pontos: $score", r.left + w * 0.05f, r.top + h * 0.052f, h * 0.024f, hudTxt, Paint.Align.LEFT)
+        D.text(c, "${timeLeft.toInt().coerceAtLeast(0)} s", r.centerX(), r.top + h * 0.052f, h * 0.024f, hudTxt)
         for (i in 0 until lives) {
-            Icons.draw(c, Icons.HEART, r.right - w * 0.07f - i * w * 0.075f, r.top + h * 0.045f, h * 0.022f)
+            Icons.draw(c, Icons.HEART, r.right - w * 0.06f - i * w * 0.065f, r.top + h * 0.050f, h * 0.018f)
         }
 
         // Botão para mudar de mapa
-        mapBtn.set(r.centerX() - w * 0.20f, r.top + h * 0.09f, r.centerX() + w * 0.20f, r.top + h * 0.135f)
-        D.rrect(c, mapBtn, mapBtn.height() * 0.4f, C.white, C.outline, 2.5f)
-        D.text(c, mapNames[mapIndex], mapBtn.centerX(), mapBtn.centerY() + mapBtn.height() * 0.18f, mapBtn.height() * 0.42f, C.ink)
+        mapBtn.set(r.centerX() - w * 0.18f, r.top + h * 0.080f, r.centerX() + w * 0.18f, r.top + h * 0.118f)
+        D.rrect(c, mapBtn, mapBtn.height() * 0.4f, hudFill, Theme.outline, 2f)
+        D.text(c, mapNames[mapIndex], mapBtn.centerX(), mapBtn.centerY() + mapBtn.height() * 0.16f, mapBtn.height() * 0.35f, hudTxt)
 
         if (state == 0) {
-            D.text(c, "Arrasta o Bunny para apanhar cenouras!", r.centerX(), r.top + h * 0.4f, h * 0.035f, C.ink)
+            val hint = if (Theme.isCat) "Arrasta a Gatinha para apanhar delícias!" else "Arrasta o Bunny para apanhar cenouras!"
+            D.text(c, hint, r.centerX(), r.top + h * 0.40f, h * 0.022f, hudTxt)
         }
         if (state == 2) {
-            D.rrect(c, r.left + w * 0.12f, r.top + h * 0.3f, r.right - w * 0.12f, r.top + h * 0.58f, h * 0.04f, D.alpha(C.white, 242), C.outline, 4f)
-            D.text(c, "Acabou!", r.centerX(), r.top + h * 0.4f, h * 0.06f, C.pinkD)
-            D.text(c, "+$score moedas", r.centerX(), r.top + h * 0.47f, h * 0.04f, C.ink)
-            D.text(c, "Toca para jogar de novo", r.centerX(), r.top + h * 0.54f, h * 0.028f, C.ink)
+            D.rrect(c, r.left + w * 0.12f, r.top + h * 0.32f, r.right - w * 0.12f, r.top + h * 0.58f, h * 0.035f, D.alpha(hudFill, 242), Theme.outline, 3.5f)
+            D.text(c, "Acabou!", r.centerX(), r.top + h * 0.40f, h * 0.042f, hudAccent)
+            D.text(c, "+$score moedas", r.centerX(), r.top + h * 0.47f, h * 0.026f, hudTxt)
+            D.text(c, "Toca para jogar de novo", r.centerX(), r.top + h * 0.53f, h * 0.018f, Theme.textDim)
         }
     }
 
@@ -528,13 +577,16 @@ class PuzzleScreen(g: BunnyView) : Screen(g) {
 
     // Imagens: 0 Jardim Florido, 1 Machu Picchu c/ Lhama, 2 Bunny & Gatinha, 3 Quarto Estrelado
     private var imageIndex = 0
-    private val imageNames = arrayOf("Jardim", "Machu Picchu", "Gatinha", "Estrelas")
+    private val imageNames = arrayOf("Jardim", "Machu Picchu", "Juntos", "Estrelas")
+    private var lastWasCat = false
 
     // Grade: 3 (3x3 = 9 peças) ou 4 (4x4 = 16 peças)
     private var gridSize = 3
 
     override fun enter() {
-        if (bmps[imageIndex] == null) {
+        if (bmps[imageIndex] == null || lastWasCat != Theme.isCat) {
+            bmps = arrayOfNulls(4)
+            lastWasCat = Theme.isCat
             generateBitmaps()
         }
         shuffle()
@@ -549,10 +601,14 @@ class PuzzleScreen(g: BunnyView) : Screen(g) {
         D.circle(c0, 340f, 70f, 45f, C.butter)
         Icons.draw(c0, Icons.CLOUD, 90f, 80f, 50f)
         D.oval(c0, 210f, 430f, 260f, 130f, C.green)
-        BunnyArt.draw(c0, 210f, 395f, 230f, Pose(), Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        if (Theme.isBunny) {
+            BunnyArt.draw(c0, 210f, 395f, 230f, Pose(), Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        } else {
+            CatArt.draw(c0, 210f, 395f, 210f, 0f, mood = 0)
+        }
         bmps[0] = b0
 
-        // Imagem 1: Bunny no Peru em Machu Picchu com Lhama
+        // Imagem 1: Em Machu Picchu com Lhama
         val b1 = Bitmap.createBitmap(420, 420, Bitmap.Config.ARGB_8888)
         val c1 = Canvas(b1)
         D.f(Color.rgb(255, 185, 130)); c1.drawRect(0f, 0f, 420f, 420f, D.p)
@@ -560,12 +616,15 @@ class PuzzleScreen(g: BunnyView) : Screen(g) {
         // Montanhas dos Andes
         D.poly(c1, C.greenD, 0, 0f, 0f, 420f, 150f, 160f, 320f, 420f)
         D.poly(c1, C.green, 0, 0f, 180f, 420f, 320f, 210f, 420f, 420f)
-        // Bunny com poncho andino e lhama ao lado
-        BunnyArt.draw(c1, 260f, 390f, 210f, Pose(), "hat_chullo", "fit_poncho", "", "shoe_andean", Save.bunnyColor)
+        if (Theme.isBunny) {
+            BunnyArt.draw(c1, 260f, 390f, 210f, Pose(), "hat_chullo", "fit_poncho", "", "shoe_andean", Save.bunnyColor)
+        } else {
+            CatArt.draw(c1, 260f, 390f, 190f, 0f, mood = 0)
+        }
         Icons.draw(c1, Icons.LLAMA, 110f, 330f, 85f)
         bmps[1] = b1
 
-        // Imagem 2: Bunny e a Gatinha Fofinha a Brincar
+        // Imagem 2: Bunny e a Gatinha a Brincar Juntos
         val b2 = Bitmap.createBitmap(420, 420, Bitmap.Config.ARGB_8888)
         val c2 = Canvas(b2)
         D.f(Color.rgb(255, 235, 245)); c2.drawRect(0f, 0f, 420f, 420f, D.p)
@@ -576,7 +635,7 @@ class PuzzleScreen(g: BunnyView) : Screen(g) {
         Icons.draw(c2, Icons.YARN, 210f, 380f, 32f)
         bmps[2] = b2
 
-        // Imagem 3: Bunny no Quarto das Estrelas
+        // Imagem 3: No Quarto das Estrelas
         val b3 = Bitmap.createBitmap(420, 420, Bitmap.Config.ARGB_8888)
         val c3 = Canvas(b3)
         D.f(Color.rgb(38, 30, 80)); c3.drawRect(0f, 0f, 420f, 420f, D.p)
@@ -585,7 +644,11 @@ class PuzzleScreen(g: BunnyView) : Screen(g) {
             Icons.drawSpark(c3, 60f + i * 45f, 60f + (i % 3) * 40f, 16f)
         }
         D.rrect(c3, 60f, 260f, 360f, 400f, 20f, C.pink, C.outline, 4f)
-        BunnyArt.draw(c3, 190f, 350f, 180f, Pose().apply { mood = 3 }, "hat_beanie", "", "", "", Save.bunnyColor)
+        if (Theme.isBunny) {
+            BunnyArt.draw(c3, 190f, 350f, 180f, Pose().apply { mood = 3 }, "hat_beanie", "", "", "", Save.bunnyColor)
+        } else {
+            CatArt.draw(c3, 190f, 350f, 160f, 0f, mood = 0)
+        }
         bmps[3] = b3
     }
 
@@ -613,22 +676,27 @@ class PuzzleScreen(g: BunnyView) : Screen(g) {
     override fun update(dt: Float) {}
 
     override fun draw(c: Canvas, r: RectF) {
-        D.f(D.mix(C.cream, C.mint, 0.35f)); c.drawRect(r, D.p)
+        val bgCol = if (Theme.isBunny) Theme.bNavyDark else Theme.cPinkCream
+        D.f(bgCol); c.drawRect(r, D.p)
         val w = r.width(); val h = r.height()
 
+        val hudTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+        val hudFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        val hudAccent = if (Theme.isBunny) Theme.bWine else Theme.primary
+
         // Controles no topo: Imagem e Tamanho
-        val btnH = h * 0.05f
+        val btnH = h * 0.045f
         imgBtn.set(r.left + w * 0.05f, r.top + h * 0.02f, r.left + w * 0.48f, r.top + h * 0.02f + btnH)
         sizeBtn.set(r.right - w * 0.42f, r.top + h * 0.02f, r.right - w * 0.05f, r.top + h * 0.02f + btnH)
-        D.rrect(c, imgBtn, btnH * 0.35f, C.white, C.outline, 2.5f)
-        D.text(c, "Foto: ${imageNames[imageIndex]}", imgBtn.centerX(), imgBtn.centerY() + btnH * 0.16f, btnH * 0.40f, C.ink)
-        D.rrect(c, sizeBtn, btnH * 0.35f, C.white, C.outline, 2.5f)
-        D.text(c, "Grade: ${gridSize}x${gridSize}", sizeBtn.centerX(), sizeBtn.centerY() + btnH * 0.16f, btnH * 0.40f, C.ink)
+        D.rrect(c, imgBtn, btnH * 0.35f, hudFill, Theme.outline, 2f)
+        D.text(c, "Foto: ${imageNames[imageIndex]}", imgBtn.centerX(), imgBtn.centerY() + btnH * 0.16f, btnH * 0.35f, hudTxt)
+        D.rrect(c, sizeBtn, btnH * 0.35f, hudFill, Theme.outline, 2f)
+        D.text(c, "Grade: ${gridSize}x${gridSize}", sizeBtn.centerX(), sizeBtn.centerY() + btnH * 0.16f, btnH * 0.35f, hudTxt)
 
-        val bs = min(r.width() * 0.88f, r.height() * 0.62f)
-        boardRect.set(r.centerX() - bs / 2f, r.top + r.height() * 0.14f, r.centerX() + bs / 2f, r.top + r.height() * 0.14f + bs)
+        val bs = min(r.width() * 0.88f, r.height() * 0.58f)
+        boardRect.set(r.centerX() - bs / 2f, r.top + r.height() * 0.125f, r.centerX() + bs / 2f, r.top + r.height() * 0.125f + bs)
         val ts = bs / gridSize
-        D.text(c, "Puzzle · Jogadas: $moves", r.centerX(), r.top + r.height() * 0.10f, r.height() * 0.038f, C.ink)
+        D.text(c, "Puzzle · Jogadas: $moves", r.centerX(), r.top + r.height() * 0.09f, r.height() * 0.024f, hudTxt)
 
         if (bmps[imageIndex] == null) generateBitmaps()
         val b = bmps[imageIndex] ?: return
@@ -639,17 +707,18 @@ class PuzzleScreen(g: BunnyView) : Screen(g) {
             val p = tiles[k]
             val dst = RectF(boardRect.left + (k % gridSize) * ts, boardRect.top + (k / gridSize) * ts, boardRect.left + (k % gridSize + 1) * ts, boardRect.top + (k / gridSize + 1) * ts)
             if (p == total - 1 && !won) {
-                D.rrect(c, dst.left + 3f, dst.top + 3f, dst.right - 3f, dst.bottom - 3f, ts * 0.08f, D.alpha(C.outline, 85))
+                D.rrect(c, dst.left + 3f, dst.top + 3f, dst.right - 3f, dst.bottom - 3f, ts * 0.08f, D.alpha(Theme.outline, 85))
                 continue
             }
             val src = Rect((p % gridSize) * srcStep, (p / gridSize) * srcStep, (p % gridSize + 1) * srcStep, (p / gridSize + 1) * srcStep)
             c.drawBitmap(b, src, dst, null)
-            D.s(C.white, 4f); c.drawRect(dst, D.p)
+            D.s(Theme.outline, 3f); c.drawRect(dst, D.p)
         }
 
-        shuffleBtn.set(r.centerX() - r.width() * 0.28f, boardRect.bottom + r.height() * 0.03f, r.centerX() + r.width() * 0.28f, boardRect.bottom + r.height() * 0.03f + r.height() * 0.075f)
-        D.button(c, shuffleBtn, if (won) "Jogar de novo" else "Baralhar", C.pink)
-        if (won) D.text(c, "Puzzle Completo! +$reward moedas", r.centerX(), boardRect.bottom + r.height() * 0.02f, r.height() * 0.032f, C.pinkD)
+        val shH = r.height() * 0.056f
+        shuffleBtn.set(r.centerX() - r.width() * 0.28f, boardRect.bottom + r.height() * 0.025f, r.centerX() + r.width() * 0.28f, boardRect.bottom + r.height() * 0.025f + shH)
+        D.button(c, shuffleBtn, if (won) "Jogar de novo" else "Baralhar", hudAccent, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, shH * 0.35f)
+        if (won) D.text(c, "Puzzle Completo! +$reward moedas", r.centerX(), boardRect.bottom + r.height() * 0.015f, r.height() * 0.022f, hudAccent)
     }
 
     override fun down(x: Float, y: Float, r: RectF) {

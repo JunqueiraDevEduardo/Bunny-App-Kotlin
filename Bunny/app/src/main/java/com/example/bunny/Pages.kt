@@ -28,14 +28,15 @@ object Preview {
                     "food_potion_energy", "food_potion_clean" -> Icons.POTION
                     else -> Icons.APPLE
                 }
-                D.circle(c, cx, rect.centerY(), rect.height() * 0.38f, C.cream, C.outline, 2f)
+                val circleFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+                D.circle(c, cx, rect.centerY(), rect.height() * 0.38f, circleFill, Theme.outline, 2f)
                 Icons.draw(c, ic, cx, rect.centerY(), rect.height() * 0.28f)
             }
-            Items.HAT -> BunnyArt.draw(c, cx, by, s, pose, item.id, "", "", Save.shoes, Save.bunnyColor)
-            Items.OUTFIT -> BunnyArt.draw(c, cx, by, s, pose, "", item.id, "", Save.shoes, Save.bunnyColor)
-            Items.SHOES -> BunnyArt.draw(c, cx, by, s, pose, "", "", "", item.id, Save.bunnyColor)
-            Items.COLOR -> BunnyArt.draw(c, cx, by, s, pose, "", "", "", Save.shoes, item.id)
-            Items.ACC -> BunnyArt.draw(c, cx, by, s, pose, "", "", item.id, Save.shoes, Save.bunnyColor)
+            Items.HAT -> if (Theme.isBunny) BunnyArt.draw(c, cx, by, s, pose, item.id, "", "", Save.shoes, Save.bunnyColor) else CatArt.draw(c, cx, by, s, 0f, 0, hat = item.id)
+            Items.OUTFIT -> if (Theme.isBunny) BunnyArt.draw(c, cx, by, s, pose, "", item.id, "", Save.shoes, Save.bunnyColor) else CatArt.draw(c, cx, by, s, 0f, 0, outfit = item.id)
+            Items.SHOES -> if (Theme.isBunny) BunnyArt.draw(c, cx, by, s, pose, "", "", "", item.id, Save.bunnyColor) else CatArt.draw(c, cx, by, s, 0f, 0, shoes = item.id)
+            Items.COLOR -> if (Theme.isBunny) BunnyArt.draw(c, cx, by, s, pose, "", "", "", Save.shoes, item.id) else CatArt.draw(c, cx, by, s, 0f, 0, color = item.id)
+            Items.ACC -> if (Theme.isBunny) BunnyArt.draw(c, cx, by, s, pose, "", "", item.id, Save.shoes, Save.bunnyColor) else CatArt.draw(c, cx, by, s, 0f, 0, acc = item.id)
             Items.WALL -> {
                 val r = RectF(rect.left + rect.width() * 0.08f, rect.top + rect.height() * 0.05f, rect.right - rect.width() * 0.08f, rect.bottom - rect.height() * 0.05f)
                 Rooms.drawWall(c, r, item.id)
@@ -74,24 +75,27 @@ abstract class GridScreen(g: BunnyView) : Screen(g) {
     override fun update(dt: Float) { time += dt; updFx(dt) }
 
     override fun draw(c: Canvas, r: RectF) {
-        D.f(D.mix(C.cream, C.pink, 0.2f)); c.drawRect(r, D.p)
+        D.f(Theme.bg); c.drawRect(r, D.p)
         headerRect.set(r.left, r.top, r.right, r.top + headerH(r))
         drawHeader(c, headerRect)
 
-        // Separadores de categorias com texto legível
+        // Separadores de categorias com texto legível em vertical
         val n = tabNames.size
-        val th = r.height() * 0.058f
+        val th = r.height() * 0.050f
         val ty = headerRect.bottom
         tabRects.clear()
         val tw = r.width() / n
+        val tabFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
         for (i in 0 until n) {
             val tr = RectF(r.left + i * tw + 2f, ty, r.left + (i + 1) * tw - 2f, ty + th)
             tabRects.add(tr)
-            D.rrect(c, tr, th * 0.35f, if (i == tab) C.pink else C.white, C.outline, 3f)
-            D.text(c, tabNames[i], tr.centerX(), tr.centerY() + th * 0.14f, min2(th * 0.34f, tw * 0.20f), C.ink)
+            val isSel = i == tab
+            D.rrect(c, tr, th * 0.35f, if (isSel) Theme.primary else tabFill, Theme.outline, 2f)
+            val tabTxtC = if (isSel && Theme.isBunny) Theme.bSilver else if (isSel) Theme.cWhitePure else Theme.text
+            D.text(c, tabNames[i], tr.centerX(), tr.centerY() + th * 0.14f, min2(th * 0.28f, tw * 0.18f), tabTxtC)
         }
 
-        gridRect.set(r.left, ty + th + r.height() * 0.01f, r.right, r.bottom)
+        gridRect.set(r.left, ty + th + r.height() * 0.008f, r.right, r.bottom)
         cached = cells()
         val cols = 3
         val m = r.width() * 0.03f
@@ -112,7 +116,7 @@ abstract class GridScreen(g: BunnyView) : Screen(g) {
             cellRects.add(cell)
             if (cell.bottom > gridRect.top && cell.top < gridRect.bottom) drawCell(c, cell, cached[i])
         }
-        if (cached.isEmpty()) D.text(c, "Ainda não tens nada aqui.", r.centerX(), gridRect.top + r.height() * 0.1f, r.height() * 0.03f, C.ink)
+        if (cached.isEmpty()) D.text(c, "Ainda não tens nada aqui.", r.centerX(), gridRect.top + r.height() * 0.1f, r.height() * 0.024f, Theme.textDim)
         c.restore()
         drawFx(c)
     }
@@ -136,14 +140,21 @@ abstract class GridScreen(g: BunnyView) : Screen(g) {
     }
 
     protected fun cardBase(c: Canvas, cell: RectF, highlight: Boolean) {
-        D.rrect(c, cell, cell.width() * 0.1f, if (highlight) C.mint else C.white, if (highlight) C.greenD else C.outline, if (highlight) 6f else 3f)
+        val baseFill = if (Theme.isBunny) {
+            if (highlight) Theme.bNavyLight else Theme.bNavyDark
+        } else {
+            if (highlight) Theme.cPinkSoft else Theme.cWhitePure
+        }
+        val baseLine = if (highlight) Theme.primary else Theme.outline
+        D.rrect(c, cell, cell.width() * 0.1f, baseFill, baseLine, if (highlight) 5f else 2.5f)
     }
 
     protected fun previewRect(cell: RectF) =
         RectF(cell.left + cell.width() * 0.05f, cell.top + cell.height() * 0.04f, cell.right - cell.width() * 0.05f, cell.top + cell.height() * 0.68f)
 
     protected fun nameText(c: Canvas, cell: RectF, s: String) {
-        D.text(c, s, cell.centerX(), cell.top + cell.height() * 0.77f, cell.height() * 0.09f, C.ink)
+        val txtColor = if (Theme.isBunny) Theme.bSilver else Theme.text
+        D.text(c, s, cell.centerX(), cell.top + cell.height() * 0.77f, cell.height() * 0.09f, txtColor)
     }
 }
 
@@ -153,9 +164,11 @@ class ShopScreen(g: BunnyView) : GridScreen(g) {
     override fun headerH(r: RectF) = r.height() * 0.13f
 
     override fun drawHeader(c: Canvas, r: RectF) {
-        Icons.draw(c, Icons.BAG, r.left + r.width() * 0.14f, r.centerY(), r.height() * 0.3f)
-        D.text(c, "Loja do Bunny", r.centerX() + r.width() * 0.05f, r.centerY() - r.height() * 0.02f, r.height() * 0.3f, C.ink)
-        D.text(c, "Itens Peruanos, Roupas, Cores e Comida", r.centerX() + r.width() * 0.05f, r.centerY() + r.height() * 0.25f, r.height() * 0.16f, C.ink)
+        val txtColor = if (Theme.isBunny) Theme.bSilver else Theme.text
+        val shopTitle = if (Theme.isCat) "Loja da Gatinha" else "Loja do Bunny"
+        Icons.draw(c, Icons.BAG, r.left + r.width() * 0.12f, r.centerY(), r.height() * 0.28f)
+        D.text(c, shopTitle, r.centerX() + r.width() * 0.05f, r.centerY() - r.height() * 0.08f, r.height() * 0.22f, txtColor)
+        D.text(c, "Itens Peruanos, Roupas, Cores e Comida", r.centerX() + r.width() * 0.05f, r.centerY() + r.height() * 0.20f, r.height() * 0.12f, Theme.textDim)
     }
 
     override fun cells(): List<Item?> = Items.byCat(tab).filter { it.price >= 0 }
@@ -202,10 +215,16 @@ class WardrobeScreen(g: BunnyView) : GridScreen(g) {
     override fun update(dt: Float) { super.update(dt); pose.t = time }
 
     override fun drawHeader(c: Canvas, r: RectF) {
-        D.circle(c, r.centerX(), r.centerY() + r.height() * 0.08f, r.height() * 0.40f, D.alpha(C.white, 200), C.outline, 4f)
+        val circleFill = if (Theme.isBunny) Theme.bNavyLight else D.alpha(Theme.cWhitePure, 200)
+        D.circle(c, r.centerX(), r.centerY() + r.height() * 0.08f, r.height() * 0.40f, circleFill, Theme.outline, 3.5f)
         pose.mood = 0
-        BunnyArt.draw(c, r.centerX(), r.bottom - r.height() * 0.05f, r.height() * 0.5f, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
-        D.text(c, "Guarda-roupa", r.left + r.width() * 0.04f, r.top + r.height() * 0.1f, r.height() * 0.09f, C.ink, android.graphics.Paint.Align.LEFT)
+        if (Theme.isBunny) {
+            BunnyArt.draw(c, r.centerX(), r.bottom - r.height() * 0.05f, r.height() * 0.5f, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        } else {
+            CatArt.draw(c, r.centerX(), r.bottom - r.height() * 0.05f, r.height() * 0.45f, pose.t, mood = 0, hat = Save.hat, outfit = Save.outfit, shoes = Save.shoes, color = Save.petColor, acc = Save.acc)
+        }
+        val txtColor = if (Theme.isBunny) Theme.bSilver else Theme.text
+        D.text(c, "Guarda-roupa", r.left + r.width() * 0.04f, r.top + r.height() * 0.08f, r.height() * 0.08f, txtColor, Paint.Align.LEFT)
     }
 
     private fun cat(): Int = when (tab) {
@@ -220,7 +239,7 @@ class WardrobeScreen(g: BunnyView) : GridScreen(g) {
         0 -> Save.hat
         1 -> Save.outfit
         2 -> Save.shoes
-        3 -> Save.bunnyColor
+        3 -> Save.petColor
         else -> Save.acc
     }
 
@@ -253,7 +272,7 @@ class WardrobeScreen(g: BunnyView) : GridScreen(g) {
             0 -> Save.hat = id
             1 -> Save.outfit = id
             2 -> Save.shoes = id
-            3 -> Save.bunnyColor = if (id.isEmpty()) "col_white" else id
+            3 -> Save.petColor = if (id.isEmpty()) (if (Theme.isBunny) "col_sky" else "cat_col_white") else id
             else -> Save.acc = id
         }
         Save.save()

@@ -1,5 +1,9 @@
 package com.example.bunny
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -33,10 +37,13 @@ class HomeScreen(g: BunnyView) : Screen(g) {
     private val btns = Array(3) { RectF() }
     private val btnIcons = intArrayOf(Icons.BAG, Icons.HAT, Icons.HOUSE)
     private val btnNames = arrayOf("Loja", "Roupas", "Decorar")
+    private val multiBtn = RectF()
+    private val settBtn = RectF()
+    private val craftBtn = RectF()
     private var bx = 0f; private var by = 0f; private var bs = 0f
 
-    // Gatinha fofinha companheira
-    private var catX = 0f; private var catY = 0f; private var catS = 0f
+    // Companheiro(a)
+    private var compX = 0f; private var compY = 0f; private var compS = 0f
     private var catPounce = 0f
     private var catPounceV = 0f
 
@@ -67,23 +74,36 @@ class HomeScreen(g: BunnyView) : Screen(g) {
         bx = r.centerX() + r.width() * 0.06f
         by = Rooms.floorY(r) + r.height() * 0.24f
 
-        // Título e Fase do Coelho
-        val title = "Bunny · ${Save.stage()} (Nv. ${Save.level()})"
-        D.text(c, title, r.centerX(), r.top + r.height() * 0.075f, r.height() * 0.045f, D.alpha(C.white, 245))
+        // Título e Fase do Personagem Ativo compacto e elegante
+        val title = "${Save.currentPetName()} · ${Save.stage()} (Nv. ${Save.level()})"
+        val titleColor = if (Theme.isBunny) Theme.bSilver else Theme.text
+        D.text(c, title, r.centerX(), r.top + r.height() * 0.072f, r.height() * 0.024f, titleColor)
 
         pose.mood = Save.mood()
         pose.dirt = ((60f - Save.hygiene) / 60f).coerceIn(0f, 1f)
         val breathe = sin(pose.t * 2f) * 0.02f
         pose.squash += breathe
-        BunnyArt.draw(c, bx, by, bs, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+
+        // Renderiza o Pet Ativo no Centro
+        if (Theme.isBunny) {
+            BunnyArt.draw(c, bx, by, bs, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        } else {
+            CatArt.draw(c, bx, by, bs, pose.t, mood = pose.mood, pounce = pose.hop)
+        }
         pose.squash -= breathe
 
-        // Gatinha fofinha lindinha companheira ao lado do Bunny
+        // Renderiza o Companheiro ao Lado
         if (Save.hasCat) {
-            catS = r.height() * 0.20f
-            catX = bx - bs * 0.55f - catS * 0.35f
-            catY = by
-            CatArt.draw(c, catX, catY, catS, pose.t, mood = if (Save.catHappiness > 60f) 0 else 1, pounce = catPounce)
+            compS = r.height() * 0.20f
+            compX = bx - bs * 0.55f - compS * 0.35f
+            compY = by
+            if (Theme.isBunny) {
+                // No Bunny: companheira é a Gatinha
+                CatArt.draw(c, compX, compY, compS, pose.t, mood = if (Save.catHappiness > 60f) 0 else 1, pounce = catPounce, hat = Save.catHat, outfit = Save.catOutfit, shoes = Save.catShoes, color = Save.catColor, acc = Save.catAcc)
+            } else {
+                // Na Cat: companheiro é o Bunny
+                BunnyArt.draw(c, compX, compY, compS, pose, Save.bunnyHat, Save.bunnyOutfit, Save.bunnyAcc, Save.bunnyShoes, Save.bunnyColor)
+            }
         }
 
         // Balão de fala estilo Pou quando alguma necessidade está baixa
@@ -91,46 +111,79 @@ class HomeScreen(g: BunnyView) : Screen(g) {
         if (w.second < 40f) {
             val txt = arrayOf("Tenho fome!", "Preciso de banho!", "Estou com sono...", "Vamos brincar?")[w.first]
             val ic = intArrayOf(Icons.CARROT, Icons.BUBBLE, Icons.MOON, Icons.BALL)[w.first]
-            val tw = D.textW(txt, r.height() * 0.03f) + r.height() * 0.1f
+            val bTxtSize = r.height() * 0.018f
+            val tw = D.textW(txt, bTxtSize) + r.height() * 0.06f
             val x0 = bx + bs * 0.35f; val y0 = by - bs * 1.35f
-            D.rrect(c, x0 - tw * 0.1f, y0 - r.height() * 0.035f, x0 - tw * 0.1f + tw, y0 + r.height() * 0.04f, r.height() * 0.03f, C.white, C.outline, 3f)
-            Icons.draw(c, ic, x0 - tw * 0.1f + r.height() * 0.035f, y0 + r.height() * 0.003f, r.height() * 0.022f)
-            D.text(c, txt, x0 - tw * 0.1f + tw * 0.56f, y0 + r.height() * 0.012f, r.height() * 0.03f, C.ink)
+            val bubbleFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+            val bubbleTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+            D.rrect(c, x0 - tw * 0.1f, y0 - r.height() * 0.022f, x0 - tw * 0.1f + tw, y0 + r.height() * 0.025f, r.height() * 0.02f, bubbleFill, Theme.outline, 2.5f)
+            Icons.draw(c, ic, x0 - tw * 0.1f + r.height() * 0.022f, y0 + r.height() * 0.002f, r.height() * 0.015f)
+            D.text(c, txt, x0 - tw * 0.1f + tw * 0.58f, y0 + r.height() * 0.007f, bTxtSize, bubbleTxt)
         }
 
-        // Botões de Acesso (Loja, Roupas, Decorar)
-        val rad = r.width() * 0.07f
+        // Botões de Acesso à Direita (Loja, Roupas, Decorar)
+        val rad = r.width() * 0.065f
+        val btnFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        val btnTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
         for (i in 0 until 3) {
             val cx = r.right - r.width() * 0.11f
             val cy = r.top + r.height() * 0.2f + i * r.height() * 0.13f
             btns[i].set(cx - rad, cy - rad, cx + rad, cy + rad)
-            D.circle(c, cx, cy, rad, D.alpha(C.white, 235), C.outline, 3f)
-            Icons.draw(c, btnIcons[i], cx, cy - rad * 0.08f, rad * 0.55f)
-            D.text(c, btnNames[i], cx, cy + rad * 1.35f, rad * 0.48f, C.ink)
+            D.circle(c, cx, cy, rad, btnFill, Theme.outline, 2.5f)
+            Icons.draw(c, btnIcons[i], cx, cy - rad * 0.08f, rad * 0.52f)
+            D.text(c, btnNames[i], cx, cy + rad * 1.32f, rad * 0.32f, btnTxt)
         }
+
+        // Botões de Acesso à Esquerda (Multiplayer & Definições)
+        val lcx = r.left + r.width() * 0.11f
+        val multiCy = r.top + r.height() * 0.22f
+        multiBtn.set(lcx - rad, multiCy - rad, lcx + rad, multiCy + rad)
+        D.circle(c, lcx, multiCy, rad, if (Save.partnerConnected) Theme.primary else btnFill, Theme.outline, 2.5f)
+        Icons.draw(c, Icons.MULTIPLAYER, lcx, multiCy - rad * 0.08f, rad * 0.52f)
+        D.text(c, "A Dois", lcx, multiCy + rad * 1.32f, rad * 0.32f, btnTxt)
+
+        val settCy = multiCy + r.height() * 0.13f
+        settBtn.set(lcx - rad, settCy - rad, lcx + rad, settCy + rad)
+        D.circle(c, lcx, settCy, rad, btnFill, Theme.outline, 2.5f)
+        Icons.draw(c, Icons.SETTINGS, lcx, settCy - rad * 0.08f, rad * 0.52f)
+        D.text(c, "Ajustes", lcx, settCy + rad * 1.32f, rad * 0.32f, btnTxt)
+
+        // Botão direto para CatBunnyCraft 3D
+        val craftCy = settCy + r.height() * 0.13f
+        craftBtn.set(lcx - rad, craftCy - rad, lcx + rad, craftCy + rad)
+        D.circle(c, lcx, craftCy, rad, btnFill, Theme.outline, 2.5f)
+        Icons.draw(c, Icons.CRAFT, lcx, craftCy - rad * 0.08f, rad * 0.52f)
+        D.text(c, "Craft ⛏️", lcx, craftCy + rad * 1.32f, rad * 0.32f, btnTxt)
 
         drawFx(c)
     }
 
     override fun down(x: Float, y: Float, r: RectF) {
         for (i in 0 until 3) if (btns[i].contains(x, y)) { g.go(Nav.SHOP + i); return }
+        if (multiBtn.contains(x, y)) { g.go(Nav.MULTIPLAYER); return }
+        if (settBtn.contains(x, y)) { g.go(Nav.SETTINGS); return }
+        if (craftBtn.contains(x, y)) { g.go(Nav.CRAFT); return }
 
-        // Carinho no Bunny
+        // Carinho no Pet Principal
         if (hypot(x - bx, y - (by - bs * 0.6f)) < bs * 0.6f) {
             hopStart(pose, hv)
             Save.joy = min(100f, Save.joy + 3f)
             burst(bx, by - bs * 1.1f, Icons.HEART, 4, bs * 0.07f)
-            g.say("Bunny adorou o carinho! ♥")
+            SoundFx.playPlay(Theme.isCat)
+            val happyMsg = if (Theme.isBunny) "Bunny adorou o teu carinho! ♥" else "Miau! :3 A gatinha ronrona feliz!"
+            g.say(happyMsg)
             return
         }
 
-        // Carinho na Gatinha fofinha
-        if (Save.hasCat && hypot(x - catX, y - (catY - catS * 0.5f)) < catS * 0.6f) {
+        // Carinho no Companheiro
+        if (Save.hasCat && hypot(x - compX, y - (compY - compS * 0.5f)) < compS * 0.6f) {
             catPounceV = 2.2f; catPounce = 0.01f
             Save.catHappiness = min(100f, Save.catHappiness + 8f)
             Save.joy = min(100f, Save.joy + 2f)
-            burst(catX, catY - catS * 0.9f, Icons.HEART, 4, catS * 0.08f)
-            g.say("Miau! :3 A gatinha ronrona feliz!")
+            burst(compX, compY - compS * 0.9f, Icons.HEART, 4, compS * 0.08f)
+            SoundFx.playPlay(!Theme.isCat)
+            val compMsg = if (Theme.isBunny) "Miau! A gatinha adorou brincar contigo!" else "Bunny deu um pulinho de alegria!"
+            g.say(compMsg)
         }
     }
 }
@@ -189,19 +242,26 @@ class EatScreen(g: BunnyView) : Screen(g) {
         val by = Rooms.floorY(r) + r.height() * 0.20f
         pose.mood = if (Save.mood() == 3) 1 else Save.mood()
         pose.dirt = ((60f - Save.hygiene) / 60f).coerceIn(0f, 1f)
-        BunnyArt.draw(c, bx, by, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+
+        if (Theme.isBunny) {
+            BunnyArt.draw(c, bx, by, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        } else {
+            CatArt.draw(c, bx, by, s, pose.t, mood = pose.mood, dirt = pose.dirt, mouth = pose.mouth)
+        }
         hx = bx; hy = by - s * 0.72f; hr = s * 0.5f
 
         // Bandeja de comida na cozinha
         val tray = RectF(r.left + r.width() * 0.04f, r.bottom - r.height() * 0.19f, r.right - r.width() * 0.04f, r.bottom - r.height() * 0.02f)
-        D.rrect(c, tray, tray.height() * 0.25f, C.peach, C.outline, 4f)
+        D.rrect(c, tray, tray.height() * 0.25f, Theme.card, Theme.outline, 4f)
 
         // Botões de navegação da bandeja
         val btnW = tray.width() * 0.10f
         prevBtn.set(tray.left + 8f, tray.top + 8f, tray.left + btnW, tray.bottom - 8f)
         nextBtn.set(tray.right - btnW, tray.top + 8f, tray.right - 8f, tray.bottom - 8f)
-        D.button(c, prevBtn, "<", C.white, C.ink, prevBtn.height() * 0.4f)
-        D.button(c, nextBtn, ">", C.white, C.ink, nextBtn.height() * 0.4f)
+        val navBtnFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        val navBtnTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+        D.button(c, prevBtn, "<", navBtnFill, navBtnTxt, prevBtn.height() * 0.4f)
+        D.button(c, nextBtn, ">", navBtnFill, navBtnTxt, nextBtn.height() * 0.4f)
 
         val startIdx = page * pageSize
         val foodAreaW = (nextBtn.left - prevBtn.right)
@@ -213,14 +273,15 @@ class EatScreen(g: BunnyView) : Screen(g) {
             if (idx < allFoods.size) {
                 val item = allFoods[idx]
                 if (i != drag) {
-                    D.rrect(c, slots[i], slots[i].height() * 0.18f, C.white, C.outline, 2f)
-                    Icons.draw(c, item.icon, slots[i].centerX(), slots[i].top + slots[i].height() * 0.42f, slots[i].height() * 0.28f)
-                    D.text(c, item.name, slots[i].centerX(), slots[i].bottom - slots[i].height() * 0.12f, slots[i].height() * 0.16f, C.ink)
+                    val slotFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+                    D.rrect(c, slots[i], slots[i].height() * 0.18f, slotFill, Theme.outline, 2f)
+                    // Conforme solicitado: o nome do alimento NÃO aparece na bandeja de dar comida (apenas na loja)!
+                    Icons.draw(c, item.icon, slots[i].centerX(), slots[i].centerY(), slots[i].height() * 0.35f)
                 }
             }
         }
 
-        D.text(c, "Arrasta a comida peruana até ao Bunny!", r.centerX(), tray.top - r.height() * 0.015f, r.height() * 0.026f, C.ink)
+        D.text(c, "Arrasta a comida até à boca do pet!", r.centerX(), tray.top - r.height() * 0.015f, r.height() * 0.026f, navBtnTxt)
 
         // Desenha o item arrastado
         if (drag >= 0 && (startIdx + drag) < allFoods.size) {
@@ -273,6 +334,7 @@ class EatScreen(g: BunnyView) : Screen(g) {
                 shake = 1f
                 g.say("Estou cheio! Não cabe mais nada!")
             } else {
+                SoundFx.playEat(Theme.isCat)
                 Save.hunger = min(100f, Save.hunger + food.nutri)
                 Save.joy = min(100f, Save.joy + food.joy)
                 eatT = 1.3f
@@ -312,6 +374,7 @@ class BathScreen(g: BunnyView) : Screen(g) {
             for (i in 0 until 4) {
                 fx.add(Fx(sx + (Random.nextFloat() - 0.5f) * bs * 0.5f, shower.bottom + 10f, 0f, bs * 2.8f, 0.65f, Icons.BUBBLE, bs * 0.032f))
             }
+            if (Random.nextFloat() < 0.15f) SoundFx.playBath(Theme.isCat)
             if (foam <= 0.02f && rinsedBonus) {
                 rinsedBonus = false
                 Save.hygiene = min(100f, Save.hygiene + 12f)
@@ -326,10 +389,12 @@ class BathScreen(g: BunnyView) : Screen(g) {
 
     override fun draw(c: Canvas, r: RectF) {
         // Azulejos do banheiro
-        D.f(C.sky); c.drawRect(r, D.p)
+        val tileBase = if (Theme.isBunny) Theme.bNavyDark else Theme.cPinkCream
+        val tileAccent = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        D.f(tileBase); c.drawRect(r, D.p)
         val n = 6; val tw = r.width() / n
         for (j in 0 until (r.height() / tw).toInt() + 1) for (i in 0 until n) {
-            D.rrect(c, r.left + i * tw + 3f, r.top + j * tw + 3f, r.left + (i + 1) * tw - 3f, r.top + (j + 1) * tw - 3f, tw * 0.12f, if ((i + j) % 2 == 0) C.white else D.alpha(C.sky, 140))
+            D.rrect(c, r.left + i * tw + 3f, r.top + j * tw + 3f, r.left + (i + 1) * tw - 3f, r.top + (j + 1) * tw - 3f, tw * 0.12f, if ((i + j) % 2 == 0) tileAccent else D.alpha(tileBase, 140))
         }
 
         val scale = Save.bunnyScale()
@@ -338,31 +403,39 @@ class BathScreen(g: BunnyView) : Screen(g) {
         by = r.top + r.height() * 0.66f
 
         // Banheira (fundo)
+        val tubFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
         val tub = RectF(r.left + r.width() * 0.08f, r.top + r.height() * 0.55f, r.right - r.width() * 0.08f, r.top + r.height() * 0.88f)
-        D.rrect(c, tub, tub.height() * 0.35f, C.white, C.outline, 5f)
+        D.rrect(c, tub, tub.height() * 0.35f, tubFill, Theme.outline, 5f)
 
-        BunnyArt.draw(c, bx, by, bs, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        if (Theme.isBunny) {
+            BunnyArt.draw(c, bx, by, bs, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        } else {
+            CatArt.draw(c, bx, by, bs, pose.t, mood = pose.mood, dirt = pose.dirt, foam = pose.foam)
+        }
 
         // Água e rebordo da banheira
+        val waterFill = if (Theme.isBunny) Theme.bBlueSky else Theme.cPinkSoft
         val water = RectF(tub.left + 6f, by - bs * 0.15f, tub.right - 6f, tub.bottom - 6f)
-        D.rrect(c, water, tub.height() * 0.3f, D.alpha(C.sky, 190))
-        D.rrect(c, tub.left, tub.top + tub.height() * 0.38f, tub.right, tub.top + tub.height() * 0.5f, tub.height() * 0.06f, C.white, C.outline, 4f)
-        for (i in 0 until 5) D.circle(c, tub.left + (i + 0.5f) * tub.width() / 5f, tub.top + tub.height() * 0.7f, tub.height() * 0.04f, D.alpha(C.white, 200))
+        D.rrect(c, water, tub.height() * 0.3f, D.alpha(waterFill, 190))
+        D.rrect(c, tub.left, tub.top + tub.height() * 0.38f, tub.right, tub.top + tub.height() * 0.5f, tub.height() * 0.06f, tubFill, Theme.outline, 4f)
 
         // =================================================================
-        // CHUVEIRO: NO CENTRO EM CIMA DA CABEÇA DO COELHO!
+        // CHUVEIRO: NO CENTRO EM CIMA DA CABEÇA DO PET!
         // =================================================================
         val shW = r.width() * 0.26f
         val shH = r.height() * 0.15f
         shower.set(bx - shW / 2f, r.top + r.height() * 0.03f, bx + shW / 2f, r.top + r.height() * 0.03f + shH)
 
         // Cano que desce do teto até ao chuveiro no centro
-        D.line(c, bx, r.top, bx, shower.top + shH * 0.2f, 8f, Color.rgb(170, 195, 220))
+        val pipeC = if (Theme.isBunny) Theme.bBlueRoyal else Color.rgb(230, 185, 205)
+        D.line(c, bx, r.top, bx, shower.top + shH * 0.2f, 8f, pipeC)
 
         // Cabeça do chuveiro arredondada no centro
-        D.circle(c, shower.centerX(), shower.centerY(), shower.height() * 0.48f, D.alpha(if (rinsing) C.blue else C.white, 235), C.outline, 3.5f)
+        val shFill = if (rinsing) (if (Theme.isBunny) Theme.bWine else Theme.cPinkDark) else tubFill
+        D.circle(c, shower.centerX(), shower.centerY(), shower.height() * 0.48f, D.alpha(shFill, 235), Theme.outline, 3.5f)
         Icons.draw(c, Icons.SHOWER, shower.centerX(), shower.centerY(), shower.height() * 0.34f)
-        D.text(c, if (rinsing) "A enxaguar..." else "Mantém no chuveiro para enxaguar", bx, shower.bottom + r.height() * 0.035f, r.height() * 0.024f, C.ink)
+        val txtColor = if (Theme.isBunny) Theme.bSilver else Theme.text
+        D.text(c, if (rinsing) "A enxaguar..." else "Mantém no chuveiro para enxaguar", bx, shower.bottom + r.height() * 0.035f, r.height() * 0.024f, txtColor)
 
         // Esponja de sabão
         if (!spongeOn) {
@@ -371,7 +444,7 @@ class BathScreen(g: BunnyView) : Screen(g) {
         }
         sponge.set(spongeX - bs * 0.28f, spongeY - bs * 0.18f, spongeX + bs * 0.28f, spongeY + bs * 0.18f)
         Icons.draw(c, Icons.SPONGE, spongeX, spongeY, bs * 0.26f)
-        if (!spongeOn) D.text(c, "Esfrega com a esponja!", spongeX, spongeY + bs * 0.38f, r.height() * 0.024f, C.ink)
+        if (!spongeOn) D.text(c, "Esfrega com a esponja!", spongeX, spongeY + bs * 0.38f, r.height() * 0.024f, txtColor)
 
         drawFx(c)
     }
@@ -395,6 +468,7 @@ class BathScreen(g: BunnyView) : Screen(g) {
             if (Random.nextFloat() < 0.45f) {
                 fx.add(Fx(x, y, (Random.nextFloat() - 0.5f) * bs * 0.8f, -bs * 0.6f, 0.8f, Icons.BUBBLE, bs * 0.045f))
             }
+            if (Random.nextFloat() < 0.12f) SoundFx.playBath(Theme.isCat)
         }
     }
 
@@ -448,18 +522,30 @@ class SleepScreen(g: BunnyView) : Screen(g) {
         Rooms.draw(c, r, 1, g.night, g.time)
         val w = r.width(); val h = r.height()
 
-        // Cama fofinha
+        // Cama fofinha respeitando a paleta do personagem ativo
         val bed = RectF(r.left + w * 0.08f, Rooms.floorY(r) - h * 0.02f, r.right - w * 0.08f, Rooms.floorY(r) + h * 0.3f)
-        D.rrect(c, bed.left, bed.top - h * 0.16f, bed.left + w * 0.12f, bed.bottom, w * 0.04f, C.peach, C.outline, 4f)
-        D.rrect(c, bed, h * 0.04f, C.pink, C.outline, 4f)
-        D.rrect(c, bed.left + w * 0.04f, bed.top - h * 0.04f, bed.left + w * 0.4f, bed.top + h * 0.06f, h * 0.04f, C.white, C.outline, 4f)
+        val headFill = if (Theme.isBunny) Theme.bNavyDark else Theme.cPinkCream
+        val matFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cPinkSoft
+        val pilFill = if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure
+
+        D.rrect(c, bed.left, bed.top - h * 0.16f, bed.left + w * 0.12f, bed.bottom, w * 0.04f, headFill, Theme.outline, 4f)
+        D.rrect(c, bed, h * 0.04f, matFill, Theme.outline, 4f)
+        D.rrect(c, bed.left + w * 0.04f, bed.top - h * 0.04f, bed.left + w * 0.4f, bed.top + h * 0.06f, h * 0.04f, pilFill, Theme.outline, 4f)
 
         val scale = Save.bunnyScale()
         val s = h * 0.25f * scale
-        BunnyArt.draw(c, bed.left + w * 0.28f, bed.top + h * 0.12f, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        val petX = bed.left + w * 0.28f
+        val petY = bed.top + h * 0.12f
+        if (Theme.isBunny) {
+            BunnyArt.draw(c, petX, petY, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        } else {
+            CatArt.draw(c, petX, petY, s, pose.t, mood = 3)
+        }
 
         // Cobertor com estrelas
-        D.rrect(c, bed.left + w * 0.12f, bed.top + h * 0.06f, bed.right - w * 0.02f, bed.bottom - h * 0.01f, h * 0.04f, C.lav, C.outline, 4f)
+        val blanketFill = if (Theme.isBunny) Theme.bPurple else Theme.cPinkCream
+        val starFill = if (Theme.isBunny) Theme.bBlueIce else C.gold
+        D.rrect(c, bed.left + w * 0.12f, bed.top + h * 0.06f, bed.right - w * 0.02f, bed.bottom - h * 0.01f, h * 0.04f, blanketFill, Theme.outline, 4f)
         for (i in 0 until 5) Icons.draw(c, Icons.STAR, bed.left + w * (0.25f + i * 0.14f), bed.top + h * 0.17f, h * 0.012f)
 
         // Escuridão / Modo noturno ao apagar a luz
@@ -473,18 +559,21 @@ class SleepScreen(g: BunnyView) : Screen(g) {
         // Interruptor / Candeeiro
         val rad = w * 0.075f
         lamp.set(r.right - w * 0.17f, r.top + h * 0.04f, r.right - w * 0.03f, r.top + h * 0.04f + w * 0.14f)
-        D.circle(c, lamp.centerX(), lamp.centerY(), rad, if (lightOn) C.butter else C.white, C.outline, 3f)
+        val lampFill = if (lightOn) C.butter else (if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure)
+        D.circle(c, lamp.centerX(), lamp.centerY(), rad, lampFill, Theme.outline, 3f)
         Icons.draw(c, Icons.LAMP, lamp.centerX(), lamp.centerY(), rad * 0.55f)
-        D.text(c, if (lightOn) "Apagar luz" else "Acender luz", lamp.centerX(), lamp.bottom + h * 0.04f, h * 0.024f, if (dark > 0.5f) C.white else C.ink)
+        val txtCol = if (dark > 0.5f) (if (Theme.isBunny) Theme.bSilver else C.white) else (if (Theme.isBunny) Theme.bSilver else C.ink)
+        D.text(c, if (lightOn) "Apagar luz" else "Acender luz", lamp.centerX(), lamp.bottom + h * 0.04f, h * 0.024f, txtCol)
 
         // Temporizador de sono (2 minutos completos de 0 a 100%)
         if (Save.sleeping) {
             val remainSec = ((100f - Save.energy) / (100f / 120f)).toInt().coerceAtLeast(0)
             val min = remainSec / 60
             val sec = remainSec % 60
-            val sleepTxt = if (remainSec > 0) "A dormir... (Faltam ${min}m ${sec}s para 100%)" else "Energia máxima atingida!"
-            D.text(c, sleepTxt, r.centerX(), r.top + h * 0.09f, h * 0.032f, C.white)
-            D.text(c, "Energia: ${Save.energy.toInt()}%", r.centerX(), r.top + h * 0.13f, h * 0.026f, C.butter)
+            val petName = Save.currentPetName()
+            val sleepTxt = if (remainSec > 0) "$petName a dormir... (${min}m ${sec}s para 100%)" else "Energia a 100%!"
+            D.text(c, sleepTxt, r.centerX(), r.top + h * 0.09f, h * 0.032f, if (Theme.isBunny) Theme.bSilver else C.white)
+            D.text(c, "Energia: ${Save.energy.toInt()}%", r.centerX(), r.top + h * 0.13f, h * 0.026f, if (Theme.isBunny) Theme.bBlueSky else C.butter)
         }
     }
 
@@ -492,11 +581,12 @@ class SleepScreen(g: BunnyView) : Screen(g) {
         if (lamp.contains(x, y)) {
             lightOn = !lightOn
             Save.sleeping = !lightOn
+            val petName = Save.currentPetName()
             if (Save.sleeping) {
                 Save.sleepStartTime = System.currentTimeMillis()
-                g.say("Boa noite Bunny! Recupera em 2 minutos.")
+                g.say("Boa noite $petName! Recupera em 2 minutos.")
             } else {
-                g.say("Bom dia Bunny!")
+                g.say("Bom dia $petName!")
             }
             Save.save()
         }
@@ -516,8 +606,8 @@ class PlayScreen(g: BunnyView) : Screen(g) {
     private var gy = 0f
     private var ready = false
 
-    // Posições da Gatinha e do Bunny no quarto de brincar
-    private var catX = 0f; private var catY = 0f; private var catS = 0f
+    // Posições dos personagens no quarto de brincar
+    private var compX = 0f; private var compY = 0f; private var compS = 0f
     private var catPounce = 0f
     private var catPounceV = 0f
 
@@ -553,12 +643,12 @@ class PlayScreen(g: BunnyView) : Screen(g) {
                 }
                 t.vx *= 0.992f
 
-                // Reação da Gatinha aos brinquedos próximos
-                if (Save.hasCat && hypot(t.x - catX, t.y - (catY - catS * 0.4f)) < catS * 0.85f && abs(t.vy) > 10f) {
+                // Reação aos brinquedos próximos
+                if (Save.hasCat && hypot(t.x - compX, t.y - (compY - compS * 0.4f)) < compS * 0.85f && abs(t.vy) > 10f) {
                     catPounceV = 2.4f; catPounce = 0.01f
-                    t.vx = (t.x - catX) * 4f + (Random.nextFloat() - 0.5f) * g.width * 0.3f
+                    t.vx = (t.x - compX) * 4f + (Random.nextFloat() - 0.5f) * g.width * 0.3f
                     t.vy = -g.height * 0.65f
-                    burst(catX, catY - catS * 0.7f, Icons.SPARK, 3, catS * 0.08f)
+                    burst(compX, compY - compS * 0.7f, Icons.SPARK, 3, compS * 0.08f)
                     Save.joy = min(100f, Save.joy + 0.8f)
                 }
             }
@@ -581,14 +671,17 @@ class PlayScreen(g: BunnyView) : Screen(g) {
         val s = r.height() * 0.30f * scale
         val bx = r.centerX() + r.width() * 0.12f
         val by = Rooms.floorY(r) + r.height() * 0.20f
-        BunnyArt.draw(c, bx, by, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
 
-        // Gatinha fofinha no quarto de brincar
-        if (Save.hasCat) {
-            catS = r.height() * 0.20f
-            catX = r.left + r.width() * 0.22f
-            catY = by
-            CatArt.draw(c, catX, catY, catS, pose.t, mood = 0, pounce = catPounce)
+        compS = r.height() * 0.20f
+        compX = r.left + r.width() * 0.22f
+        compY = by
+
+        if (Theme.isBunny) {
+            BunnyArt.draw(c, bx, by, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+            if (Save.hasCat) CatArt.draw(c, compX, compY, compS, pose.t, mood = 0, pounce = catPounce, hat = Save.catHat, outfit = Save.catOutfit, shoes = Save.catShoes, color = Save.catColor, acc = Save.catAcc)
+        } else {
+            CatArt.draw(c, bx, by, s, pose.t, mood = 0, pounce = pose.hop, hat = Save.hat, outfit = Save.outfit, shoes = Save.shoes, color = Save.petColor, acc = Save.acc)
+            if (Save.hasCat) BunnyArt.draw(c, compX, compY, compS, pose, Save.bunnyHat, Save.bunnyOutfit, Save.bunnyAcc, Save.bunnyShoes, Save.bunnyColor)
         }
 
         // Desenha todos os brinquedos no ecrã
@@ -599,20 +692,21 @@ class PlayScreen(g: BunnyView) : Screen(g) {
         // Barra inferior para escolher e lançar brinquedos novos
         val barH = r.height() * 0.09f
         val bw = r.width() / 5f
+        val btnFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
+        val btnTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
         for (i in 0 until 5) {
             toyButtons[i].set(r.left + i * bw + 4f, r.bottom - barH, r.left + (i + 1) * bw - 4f, r.bottom - 4f)
-            D.rrect(c, toyButtons[i], barH * 0.35f, C.white, C.outline, 3f)
+            D.rrect(c, toyButtons[i], barH * 0.35f, btnFill, Theme.outline, 3f)
             Icons.draw(c, toyIcons[i], toyButtons[i].centerX(), toyButtons[i].top + barH * 0.38f, barH * 0.24f)
-            D.text(c, toyNames[i], toyButtons[i].centerX(), toyButtons[i].bottom - barH * 0.14f, barH * 0.18f, C.ink)
+            D.text(c, toyNames[i], toyButtons[i].centerX(), toyButtons[i].bottom - barH * 0.14f, barH * 0.18f, btnTxt)
         }
 
-        D.text(c, "Toca nos brinquedos ou escolhe em baixo!", r.centerX(), r.bottom - barH - r.height() * 0.015f, r.height() * 0.026f, C.ink)
+        D.text(c, "Toca nos brinquedos ou escolhe em baixo!", r.centerX(), r.bottom - barH - r.height() * 0.015f, r.height() * 0.026f, btnTxt)
 
         drawFx(c)
     }
 
     override fun down(x: Float, y: Float, r: RectF) {
-        // Toca num botão de brinquedo em baixo para adicionar/lançar
         for (i in 0 until 5) {
             if (toyButtons[i].contains(x, y)) {
                 val newToy = Toy(r.centerX() + (Random.nextFloat() - 0.5f) * r.width() * 0.4f, r.top + r.height() * 0.18f, toyIcons[i], toyNames[i])
@@ -620,6 +714,7 @@ class PlayScreen(g: BunnyView) : Screen(g) {
                 newToy.vx = (Random.nextFloat() - 0.5f) * g.width * 0.5f
                 if (toys.size >= 4) toys.removeAt(0)
                 toys.add(newToy)
+                SoundFx.playPlay(Theme.isCat)
                 burst(newToy.x, newToy.y, Icons.SPARK, 4, r.width() * 0.03f)
                 hopStart(pose, hv, 2.0f)
                 g.say("Novo brinquedo: ${toyNames[i]}!")
@@ -627,13 +722,13 @@ class PlayScreen(g: BunnyView) : Screen(g) {
             }
         }
 
-        // Toca num brinquedo existente para o atirar / chutar
         for (t in toys) {
             if (hypot(x - t.x, y - t.y) < r.width() * 0.13f) {
                 t.vy = -g.height * 0.95f
                 t.vx = (t.x - x) * 6f + (Random.nextFloat() - 0.5f) * g.width * 0.4f
                 Save.joy = min(100f, Save.joy + 1.5f)
                 taps++
+                SoundFx.playPlay(Theme.isCat)
                 hopStart(pose, hv, 2.2f)
                 burst(t.x, t.y, Icons.SPARK, 3, r.width() * 0.02f)
                 if (taps % 8 == 0) {
@@ -642,6 +737,715 @@ class PlayScreen(g: BunnyView) : Screen(g) {
                 }
                 break
             }
+        }
+    }
+}
+
+// ================================================================= AUTENTICAÇÃO
+class AuthScreen(g: BunnyView) : Screen(g) {
+    override val fullBleed = true
+    private var inputMode = 0 // 0: Nome, 1: Senha
+    private var nameText = ""
+    private var passText = ""
+    private var animT = 0f
+
+    private val langPtBtn = RectF()
+    private val langEsBtn = RectF()
+    private val settingsBtn = RectF()
+    private val quickBunnyBtn = RectF()
+    private val quickCatBtn = RectF()
+    private val nameFieldBox = RectF()
+    private val passFieldBox = RectF()
+    private val loginActionBtn = RectF()
+    private val keyBtns = Array(12) { RectF() }
+    private val keyLabels = arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "Limpar", "0", "⌫")
+
+    override fun update(dt: Float) {
+        animT += dt
+        updFx(dt)
+    }
+
+    override fun draw(c: Canvas, r: RectF) {
+        val bgCol = if (Theme.isBunny) Theme.bNavyDark else Theme.cPinkCream
+        D.f(bgCol); c.drawRect(r, D.p)
+
+        // Barra Superior: Idioma e Definições
+        val barH = r.height() * 0.050f
+        langPtBtn.set(r.left + r.width() * 0.06f, r.top + r.height() * 0.035f, r.left + r.width() * 0.30f, r.top + r.height() * 0.035f + barH)
+        langEsBtn.set(langPtBtn.right + r.width() * 0.025f, langPtBtn.top, langPtBtn.right + r.width() * 0.265f, langPtBtn.bottom)
+        settingsBtn.set(r.right - r.width() * 0.15f, langPtBtn.top, r.right - r.width() * 0.05f, langPtBtn.bottom)
+
+        val activeLang = Save.language
+        val langTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+        D.button(c, langPtBtn, "🇵🇹 PT", if (activeLang == "pt") Theme.primary else Theme.card, langTxt, barH * 0.32f)
+        D.button(c, langEsBtn, "🇪🇸 ES", if (activeLang == "es") Theme.primary else Theme.card, langTxt, barH * 0.32f)
+        D.rrect(c, settingsBtn, barH * 0.35f, Theme.card, Theme.outline, 2f)
+        Icons.draw(c, Icons.SETTINGS, settingsBtn.centerX(), settingsBtn.centerY(), barH * 0.32f)
+
+        // Avatar animado de Coelhinho e Gatinha juntos com o logótipo oficial TOGETHER
+        val petY = r.top + r.height() * 0.17f
+        val petS = r.height() * 0.13f
+        val floatHop = sin(animT * 2.5f) * 0.03f
+        CatArt.draw(c, r.centerX() - r.width() * 0.18f, petY, petS, animT, mood = 0)
+        val p = Pose().apply { squash = floatHop }
+        BunnyArt.draw(c, r.centerX() + r.width() * 0.18f, petY, petS, p, "", "", "")
+        Icons.drawTogetherLogo(c, r.centerX(), petY - petS * 0.35f, petS * 1.10f)
+
+        // Título e Subtítulo
+        D.text(c, I18n.t("app_title"), r.centerX(), petY + r.height() * 0.042f, r.height() * 0.024f, Theme.text)
+        D.text(c, I18n.t("auth_sub"), r.centerX(), petY + r.height() * 0.070f, r.height() * 0.016f, Theme.textDim)
+
+        // Campos de Texto / PIN Manual Misterioso (sem sugestões)
+        val fH = r.height() * 0.052f
+        val fY = petY + r.height() * 0.095f
+        nameFieldBox.set(r.left + r.width() * 0.08f, fY, r.right - r.width() * 0.08f, fY + fH)
+        passFieldBox.set(nameFieldBox.left, nameFieldBox.bottom + r.height() * 0.012f, nameFieldBox.right, nameFieldBox.bottom + r.height() * 0.012f + fH)
+
+        // Campo Nome
+        D.rrect(c, nameFieldBox, fH * 0.3f, Theme.card, if (inputMode == 0) Theme.primary else Theme.outline, if (inputMode == 0) 3f else 1.8f)
+        val displayN = if (nameText.isEmpty()) "👤 " + I18n.t("user_label") else "👤 $nameText"
+        D.text(c, displayN, nameFieldBox.centerX(), nameFieldBox.centerY() + fH * 0.18f, fH * 0.28f, if (nameText.isEmpty()) Theme.textDim else Theme.text)
+
+        // Campo Senha
+        D.rrect(c, passFieldBox, fH * 0.3f, Theme.card, if (inputMode == 1) Theme.primary else Theme.outline, if (inputMode == 1) 3f else 1.8f)
+        val hiddenPass = if (passText.isEmpty()) "🔒 " + I18n.t("pass_label") else "🔒 " + "●".repeat(passText.length)
+        D.text(c, hiddenPass, passFieldBox.centerX(), passFieldBox.centerY() + fH * 0.18f, fH * 0.28f, if (passText.isEmpty()) Theme.textDim else Theme.text)
+
+        // Botão Entrar
+        loginActionBtn.set(nameFieldBox.left, passFieldBox.bottom + r.height() * 0.016f, nameFieldBox.right, passFieldBox.bottom + r.height() * 0.016f + fH * 1.15f)
+        D.button(c, loginActionBtn, "✨ ${I18n.t("login_btn")} ✨", Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, fH * 0.32f)
+
+        // Teclado numérico rápido para PIN
+        val keyPadTop = loginActionBtn.bottom + r.height() * 0.014f
+        val keyPadH = r.bottom - keyPadTop - r.height() * 0.014f
+        val kw = (r.width() * 0.84f) / 3f
+        val kh = keyPadH / 4f
+        for (row in 0 until 4) {
+            for (col in 0 until 3) {
+                val idx = row * 3 + col
+                val kx = r.left + r.width() * 0.08f + col * kw
+                val ky = keyPadTop + row * kh
+                keyBtns[idx].set(kx + 4f, ky + 3f, kx + kw - 4f, ky + kh - 3f)
+                D.rrect(c, keyBtns[idx], kh * 0.32f, Theme.card, Theme.outline, 1.5f)
+                D.text(c, keyLabels[idx], keyBtns[idx].centerX(), keyBtns[idx].centerY() + kh * 0.18f, kh * 0.32f, Theme.text)
+            }
+        }
+
+        drawFx(c)
+    }
+
+    private fun tryLogin(targetName: String, targetPass: String) {
+        val n = targetName.trim().lowercase()
+        val p = targetPass.trim()
+        if (n == "meu coelhinho" && p == "150225") {
+            Save.activeChar = "bunny"
+            Save.loggedIn = true
+            Save.save()
+            burst(g.width / 2f, g.height / 2f, Icons.HEART, 10, g.width * 0.04f)
+            g.say("Bem-vindo, Meu Coelhinho! 🐰♥")
+            if (!Save.reportDoneBunny) g.go(Nav.REPORT) else g.go(Nav.HOME)
+        } else if (n == "minha gatinha" && p == "150225") {
+            Save.activeChar = "cat"
+            Save.loggedIn = true
+            Save.save()
+            burst(g.width / 2f, g.height / 2f, Icons.HEART, 10, g.width * 0.04f)
+            g.say("Bem-vinda, Minha Gatinha! 🐱♥")
+            if (!Save.reportDoneCat) g.go(Nav.REPORT) else g.go(Nav.HOME)
+        } else {
+            g.say(I18n.t("login_error"))
+        }
+    }
+
+    override fun down(x: Float, y: Float, r: RectF) {
+        if (langPtBtn.contains(x, y)) {
+            Save.language = "pt"; Save.save(); g.say("Idioma: Português 🇵🇹"); return
+        }
+        if (langEsBtn.contains(x, y)) {
+            Save.language = "es"; Save.save(); g.say("Idioma: Español 🇪🇸"); return
+        }
+        if (settingsBtn.contains(x, y)) {
+            g.go(Nav.SETTINGS); return
+        }
+        if (nameFieldBox.contains(x, y)) {
+            inputMode = 0
+            val act = g.context as? android.app.Activity
+            act?.runOnUiThread {
+                val input = android.widget.EditText(g.context).apply {
+                    setText(nameText)
+                    hint = "Escreve aqui..."
+                    isSingleLine = true
+                }
+                android.app.AlertDialog.Builder(g.context)
+                    .setTitle(I18n.t("user_label"))
+                    .setView(input)
+                    .setPositiveButton("OK") { _, _ ->
+                        nameText = input.text.toString().trim()
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+            return
+        }
+        if (passFieldBox.contains(x, y)) {
+            inputMode = 1; return
+        }
+        if (loginActionBtn.contains(x, y)) {
+            tryLogin(nameText, passText); return
+        }
+
+        for (i in 0 until 12) {
+            if (keyBtns[i].contains(x, y)) {
+                val lbl = keyLabels[i]
+                if (lbl == "Limpar") {
+                    passText = ""
+                } else if (lbl == "⌫") {
+                    if (passText.isNotEmpty()) passText = passText.substring(0, passText.length - 1)
+                } else {
+                    if (passText.length < 8) passText += lbl
+                }
+                burst(keyBtns[i].centerX(), keyBtns[i].centerY(), Icons.SPARK, 2, r.width() * 0.02f)
+                return
+            }
+        }
+    }
+}
+
+// ================================================================= DEFINIÇÕES
+class SettingsScreen(g: BunnyView) : Screen(g) {
+    override val fullBleed = true
+    private val backBtn = RectF()
+    private val ptBtn = RectF()
+    private val esBtn = RectF()
+    private val soundBtn = RectF()
+    private val reminderBtn = RectF()
+    private val multiBtn = RectF()
+    private val logoutBtn = RectF()
+    private val editReportBtn = RectF()
+
+    override fun update(dt: Float) {
+        updFx(dt)
+    }
+
+    override fun draw(c: Canvas, r: RectF) {
+        D.f(Theme.bg); c.drawRect(r, D.p)
+
+        val topH = r.height() * 0.065f
+        backBtn.set(r.left + r.width() * 0.05f, r.top + r.height() * 0.035f, r.left + r.width() * 0.24f, r.top + r.height() * 0.035f + topH * 0.70f)
+        D.button(c, backBtn, "← " + I18n.t("home"), Theme.card, Theme.text, backBtn.height() * 0.32f)
+
+        D.text(c, I18n.t("settings"), r.centerX(), r.top + r.height() * 0.072f, r.height() * 0.026f, Theme.text)
+
+        val cardH = r.height() * 0.065f
+        var curY = r.top + r.height() * 0.125f
+        val w = r.width() * 0.88f
+        val left = r.left + r.width() * 0.06f
+
+        // 1. Idioma
+        D.text(c, I18n.t("language"), left + w * 0.5f, curY, r.height() * 0.018f, Theme.textDim)
+        curY += r.height() * 0.022f
+        ptBtn.set(left, curY, left + w * 0.48f, curY + cardH * 0.75f)
+        esBtn.set(left + w * 0.52f, curY, left + w, curY + cardH * 0.75f)
+        val langTxt = if (Theme.isBunny) Theme.bSilver else Theme.text
+        D.button(c, ptBtn, "🇵🇹 Português", if (Save.language == "pt") Theme.primary else Theme.card, langTxt, ptBtn.height() * 0.30f)
+        D.button(c, esBtn, "🇪🇸 Español", if (Save.language == "es") Theme.primary else Theme.card, langTxt, esBtn.height() * 0.30f)
+
+        // 2. Som
+        curY += cardH * 0.90f
+        soundBtn.set(left, curY, left + w, curY + cardH * 0.75f)
+        val sndTxt = if (Save.soundEnabled) "🔊 ${I18n.t("sound")}: Ligado" else "🔇 ${I18n.t("sound")}: Desligado"
+        D.button(c, soundBtn, sndTxt, Theme.card, Theme.text, soundBtn.height() * 0.30f)
+
+        // 3. Lembretes
+        curY += cardH * 0.85f
+        reminderBtn.set(left, curY, left + w, curY + cardH * 0.75f)
+        val remTxt = if (Save.remindersEnabled) "🔔 ${I18n.t("reminders")}: Sim" else "🔕 ${I18n.t("reminders")}: Não"
+        D.button(c, reminderBtn, remTxt, Theme.card, Theme.text, reminderBtn.height() * 0.30f)
+
+        // 4. Ficha / Relatório do Pet
+        curY += cardH * 0.85f
+        editReportBtn.set(left, curY, left + w, curY + cardH * 0.75f)
+        D.button(c, editReportBtn, "📝 Ver / Editar Ficha do Pet", Theme.cardAccent, Theme.text, editReportBtn.height() * 0.30f)
+
+        // 5. Multiplayer Conexão
+        curY += cardH * 0.85f
+        multiBtn.set(left, curY, left + w, curY + cardH * 0.75f)
+        D.button(c, multiBtn, "💑 ${I18n.t("multiplayer")} (Sala ${Save.roomCode})", Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, multiBtn.height() * 0.30f)
+
+        // 6. Logout
+        curY += cardH * 0.90f
+        logoutBtn.set(left, curY, left + w, curY + cardH * 0.75f)
+        D.button(c, logoutBtn, "🚪 ${I18n.t("logout")}", if (Theme.isBunny) Theme.bWineDark else Theme.cPinkDark, Theme.cWhitePure, logoutBtn.height() * 0.30f)
+
+        drawFx(c)
+    }
+
+    override fun down(x: Float, y: Float, r: RectF) {
+        if (backBtn.contains(x, y)) {
+            if (Save.loggedIn) g.go(Nav.HOME) else g.go(Nav.AUTH)
+            return
+        }
+        if (ptBtn.contains(x, y)) {
+            Save.language = "pt"; Save.save(); g.say("Idioma alterado para Português 🇵🇹"); return
+        }
+        if (esBtn.contains(x, y)) {
+            Save.language = "es"; Save.save(); g.say("Idioma cambiado a Español 🇪🇸"); return
+        }
+        if (soundBtn.contains(x, y)) {
+            Save.soundEnabled = !Save.soundEnabled; Save.save()
+            g.say(if (Save.soundEnabled) "Som ativado!" else "Som desativado!")
+            return
+        }
+        if (reminderBtn.contains(x, y)) {
+            Save.remindersEnabled = !Save.remindersEnabled; Save.save()
+            g.say(if (Save.remindersEnabled) "Lembretes ativados!" else "Lembretes pausados!")
+            return
+        }
+        if (editReportBtn.contains(x, y)) {
+            g.go(Nav.REPORT); return
+        }
+        if (multiBtn.contains(x, y)) {
+            g.go(Nav.MULTIPLAYER); return
+        }
+        if (logoutBtn.contains(x, y)) {
+            Save.loggedIn = false
+            Save.save()
+            g.say("Sessão terminada!")
+            g.go(Nav.AUTH)
+            return
+        }
+    }
+}
+
+// ================================================================= FICHA / RELATÓRIO
+class ReportScreen(g: BunnyView) : Screen(g) {
+    override val fullBleed = true
+    private var page = 0
+    private var isCelebrating = false
+    private var celebrateT = 0f
+    private var t = 0f
+    private val pose = Pose()
+
+    private var repName = if (Theme.isBunny) Save.bunnyName else Save.catName
+    private var repLikes = if (Theme.isBunny) Save.bunnyLikes else Save.catLikes
+    private var repDislikes = if (Theme.isBunny) Save.bunnyDislikes else Save.catDislikes
+    private var repColor = if (Theme.isBunny) Save.bunnyFavColor else Save.catFavColor
+    private var repFood = if (Theme.isBunny) Save.bunnyFavFood else Save.catFavFood
+    private var repMsg = if (Theme.isBunny) Save.bunnyMessage else Save.catMessage
+
+    private val nameOptions = if (Theme.isBunny) {
+        arrayOf("Meu Coelhinho", "O Meu Amor", "Bunny Fofinho", "Meu Príncipe Encantado")
+    } else {
+        arrayOf("Minha Gatinha", "A Minha Princesa", "Gatinha Linda", "Meu Amorzinho Doce")
+    }
+
+    private val likesOptions = arrayOf(
+        "Dar abraços e beijinhos quentinhos ♥",
+        "Comer coisas deliciosas juntos 🥟",
+        "Dormir abraçadinhos quentinhos 💤",
+        "Ver filmes e séries no sofá 🎬",
+        "Passear de mãos dadas ao sol 🌸"
+    )
+
+    private val dislikesOptions = arrayOf(
+        "Ficar com saudades longe de ti 💔",
+        "Tempo frio e chuvoso ❄",
+        "Acordar cedo com pressa ⏰",
+        "Esperar quando estou com pressa ⌛",
+        "Discussões ou caras tristes 🥺"
+    )
+
+    // Cores estritamente respeitando as regras por personagem:
+    // Bunny: azul, vinho, roxo (sem rosa, sem branco)
+    // Cat: rosa, branco (sem azul, sem vinho, sem roxo)
+    private val colorOptions = if (Theme.isBunny) {
+        arrayOf("Azul Celestial 🌊", "Vinho Paixão 🍷", "Roxo Andino 🔮", "Azul Royal 🌌")
+    } else {
+        arrayOf("Rosa Algodão Doce 🌸", "Branco Nuvem ☁", "Rosa Choque 🎀", "Branco Pérola 🤍")
+    }
+
+    private val foodOptions = arrayOf(
+        "Ceviche Peruano 🐟",
+        "Alfajores com Doce de Leite 🍪",
+        "Lomo Saltado Andino 🥩",
+        "Chicha Morada com Canela 🍇",
+        "Cenouras Docinhas Crocantes 🥕"
+    )
+
+    private val msgOptions = arrayOf(
+        "Amo-te daqui até à lua e volta! ♥",
+        "És o melhor que me aconteceu na vida! ✨",
+        "O meu coração é para sempre teu! 💖",
+        "Quero estar juntinho a ti para sempre! 💑"
+    )
+
+    private val optButtons = Array(5) { RectF() }
+    private val nextBtn = RectF()
+    private val prevBtn = RectF()
+    private val finishBtn = RectF()
+
+    override fun update(dt: Float) {
+        t += dt
+        pose.t += dt
+        if (isCelebrating) {
+            celebrateT -= dt
+            pose.squash = sin(t * 12f) * 0.15f
+            if (Random.nextFloat() < 0.6f) {
+                burst(g.width * Random.nextFloat(), g.height * Random.nextFloat(), Icons.HEART, 4, g.width * 0.04f)
+                burst(g.width * Random.nextFloat(), g.height * Random.nextFloat(), Icons.STAR, 4, g.width * 0.04f)
+            }
+            if (celebrateT <= 0f) {
+                if (Theme.isBunny) {
+                    Save.bunnyName = repName
+                    Save.bunnyLikes = repLikes
+                    Save.bunnyDislikes = repDislikes
+                    Save.bunnyFavColor = repColor
+                    Save.bunnyFavFood = repFood
+                    Save.bunnyMessage = repMsg
+                    Save.reportDoneBunny = true
+                } else {
+                    Save.catName = repName
+                    Save.catLikes = repLikes
+                    Save.catDislikes = repDislikes
+                    Save.catFavColor = repColor
+                    Save.catFavFood = repFood
+                    Save.catMessage = repMsg
+                    Save.reportDoneCat = true
+                }
+                Save.save()
+                Save.syncOnline()
+                g.go(Nav.HOME)
+            }
+        }
+        updFx(dt)
+    }
+
+    override fun draw(c: Canvas, r: RectF) {
+        D.f(Theme.bg); c.drawRect(r, D.p)
+
+        if (isCelebrating) {
+            val scale = if (Theme.isBunny) Save.bunnyScale() else 0.85f
+            val s = r.height() * 0.28f * scale
+            val bx = r.centerX()
+            val by = r.centerY() + r.height() * 0.08f
+            if (Theme.isBunny) {
+                BunnyArt.draw(c, bx, by, s, pose, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+            } else {
+                CatArt.draw(c, bx, by, s, t, mood = 0, pounce = abs(sin(t * 8f) * 0.4f))
+            }
+
+            val banW = r.width() * 0.86f
+            val banH = r.height() * 0.12f
+            val ban = RectF(r.centerX() - banW / 2f, r.top + r.height() * 0.18f, r.centerX() + banW / 2f, r.top + r.height() * 0.18f + banH)
+            D.rrect(c, ban, banH * 0.3f, Theme.primary, Theme.outline, 4f)
+            D.text(c, "✨ " + I18n.t("rep_done_anim") + " ✨", ban.centerX(), ban.centerY() + banH * 0.15f, banH * 0.32f, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure)
+            D.text(c, "A entrar na tua casinha fofa...", r.centerX(), ban.bottom + r.height() * 0.05f, r.height() * 0.026f, Theme.textDim)
+
+            drawFx(c)
+            return
+        }
+
+        val topTitle = if (Theme.isBunny) I18n.t("report_title_bunny") else I18n.t("report_title_cat")
+        D.text(c, topTitle, r.centerX(), r.top + r.height() * 0.060f, r.height() * 0.024f, Theme.text)
+        D.text(c, I18n.t("report_sub"), r.centerX(), r.top + r.height() * 0.088f, r.height() * 0.016f, Theme.textDim)
+
+        val indY = r.top + r.height() * 0.115f
+        for (i in 0 until 6) {
+            val ix = r.centerX() + (i - 2.5f) * r.width() * 0.07f
+            val active = i == page
+            D.circle(c, ix, indY, if (active) r.width() * 0.020f else r.width() * 0.013f, if (active) Theme.primary else Theme.card, Theme.outline, 1.8f)
+        }
+
+        val (qTitle, currentVal, curOptions) = when (page) {
+            0 -> Triple(I18n.t("rep_name"), repName, nameOptions)
+            1 -> Triple(I18n.t("rep_likes"), repLikes, likesOptions)
+            2 -> Triple(I18n.t("rep_dislikes"), repDislikes, dislikesOptions)
+            3 -> Triple(I18n.t("rep_color"), repColor, colorOptions)
+            4 -> Triple(I18n.t("rep_food"), repFood, foodOptions)
+            else -> Triple(I18n.t("rep_msg"), repMsg, msgOptions)
+        }
+
+        val cardW = r.width() * 0.90f
+        val cardH = r.height() * 0.095f
+        val qCard = RectF(r.centerX() - cardW / 2f, r.top + r.height() * 0.138f, r.centerX() + cardW / 2f, r.top + r.height() * 0.138f + cardH)
+        D.rrect(c, qCard, cardH * 0.22f, Theme.card, Theme.outline, 2.5f)
+        D.text(c, qTitle, qCard.centerX(), qCard.top + cardH * 0.35f, cardH * 0.22f, Theme.textDim)
+        D.text(c, currentVal, qCard.centerX(), qCard.bottom - cardH * 0.24f, cardH * 0.26f, Theme.text)
+
+        val optTop = qCard.bottom + r.height() * 0.014f
+        val optH = r.height() * 0.058f
+        val nOpts = curOptions.size
+        for (i in 0 until nOpts) {
+            val oy = optTop + i * (optH + r.height() * 0.009f)
+            optButtons[i].set(r.left + r.width() * 0.06f, oy, r.right - r.width() * 0.06f, oy + optH)
+            val isSelected = currentVal == curOptions[i]
+            val fill = if (isSelected) Theme.primary else Theme.card
+            val txtC = if (isSelected) (if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure) else Theme.text
+            D.button(c, optButtons[i], curOptions[i], fill, txtC, optH * 0.26f)
+        }
+
+        val navY = r.bottom - r.height() * 0.088f
+        val navH = r.height() * 0.052f
+
+        if (page > 0) {
+            prevBtn.set(r.left + r.width() * 0.06f, navY, r.left + r.width() * 0.32f, navY + navH)
+            D.button(c, prevBtn, "← Anterior", Theme.card, Theme.text, navH * 0.30f)
+        } else {
+            prevBtn.setEmpty()
+        }
+
+        if (page < 5) {
+            nextBtn.set(r.right - r.width() * 0.36f, navY, r.right - r.width() * 0.06f, navY + navH)
+            D.button(c, nextBtn, "Seguinte →", Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, navH * 0.30f)
+            finishBtn.setEmpty()
+        } else {
+            nextBtn.setEmpty()
+            finishBtn.set(r.right - r.width() * 0.60f, navY, r.right - r.width() * 0.06f, navY + navH)
+            D.button(c, finishBtn, I18n.t("rep_finish"), Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, navH * 0.30f)
+        }
+
+        drawFx(c)
+    }
+
+    override fun down(x: Float, y: Float, r: RectF) {
+        if (isCelebrating) return
+
+        val curOptions = when (page) {
+            0 -> nameOptions; 1 -> likesOptions; 2 -> dislikesOptions
+            3 -> colorOptions; 4 -> foodOptions; else -> msgOptions
+        }
+        for (i in 0 until curOptions.size) {
+            if (optButtons[i].contains(x, y)) {
+                when (page) {
+                    0 -> repName = curOptions[i]
+                    1 -> repLikes = curOptions[i]
+                    2 -> repDislikes = curOptions[i]
+                    3 -> repColor = curOptions[i]
+                    4 -> repFood = curOptions[i]
+                    5 -> repMsg = curOptions[i]
+                }
+                burst(x, y, Icons.HEART, 4, r.width() * 0.03f)
+                return
+            }
+        }
+
+        if (prevBtn.contains(x, y)) {
+            page = max(0, page - 1); return
+        }
+        if (nextBtn.contains(x, y)) {
+            page = min(5, page + 1); return
+        }
+        if (finishBtn.contains(x, y)) {
+            isCelebrating = true
+            celebrateT = 2.4f
+            burst(r.centerX(), r.centerY(), Icons.HEART, 12, r.width() * 0.05f)
+            burst(r.centerX(), r.centerY(), Icons.STAR, 10, r.width() * 0.05f)
+        }
+    }
+}
+
+// ================================================================= MULTIPLAYER / AMOR A DOIS
+class MultiplayerScreen(g: BunnyView) : Screen(g) {
+    private var t = 0f
+    private val poseB = Pose()
+    private val backBtn = RectF()
+    private val craftGameBtn = RectF()
+    private val sendKissBtn = RectF()
+    private val sendFoodBtn = RectF()
+    private val sendLetterBtn = RectF()
+    private val copyCodeBtn = RectF()
+    private val shareAppBtn = RectF()
+    private val pasteCodeBtn = RectF()
+    private val syncCloudBtn = RectF()
+
+    override fun update(dt: Float) {
+        t += dt
+        poseB.t += dt
+        updFx(dt)
+    }
+
+    override fun draw(c: Canvas, r: RectF) {
+        D.f(Theme.bg); c.drawRect(r, D.p)
+
+        backBtn.set(r.left + r.width() * 0.05f, r.top + r.height() * 0.032f, r.left + r.width() * 0.22f, r.top + r.height() * 0.032f + r.height() * 0.045f)
+        D.button(c, backBtn, "← " + I18n.t("home"), Theme.card, Theme.text, backBtn.height() * 0.32f)
+
+        D.text(c, I18n.t("multiplayer"), r.centerX(), r.top + r.height() * 0.068f, r.height() * 0.024f, Theme.text)
+
+        // Desenha Coelhinho e Gatinha juntos
+        val petY = r.top + r.height() * 0.18f
+        val petS = r.height() * 0.14f
+        val catX = r.centerX() - r.width() * 0.16f
+        val bunX = r.centerX() + r.width() * 0.16f
+
+        CatArt.draw(c, catX, petY, petS, t, mood = 0)
+        BunnyArt.draw(c, bunX, petY, petS, poseB, Save.hat, Save.outfit, Save.acc, Save.shoes, Save.bunnyColor)
+        Icons.draw(c, Icons.HEART, r.centerX(), petY - petS * 0.50f, petS * 0.28f)
+
+        // Estado da Ligação
+        val statusText = if (Save.partnerConnected) {
+            "♥ ${I18n.t("partner_conn")} (${Save.partnerName} · Nv. ${Save.partnerLvl})"
+        } else {
+            I18n.t("partner_wait")
+        }
+        D.text(c, statusText, r.centerX(), petY + r.height() * 0.038f, r.height() * 0.018f, if (Save.partnerConnected) Theme.primary else Theme.textDim)
+
+        // Cartão com Resumo do Parceiro
+        val cardW = r.width() * 0.90f
+        val cardH = r.height() * 0.13f
+        val partnerCard = RectF(r.centerX() - cardW / 2f, petY + r.height() * 0.055f, r.centerX() + cardW / 2f, petY + r.height() * 0.055f + cardH)
+        D.rrect(c, partnerCard, cardH * 0.2f, Theme.card, Theme.outline, 2f)
+
+        if (Save.partnerConnected) {
+            val pLikes = if (Save.partnerLikes.isNotEmpty()) Save.partnerLikes else "Estar juntinhos"
+            val pFood = if (Save.partnerFavFood.isNotEmpty()) Save.partnerFavFood else "Alfajor Peruano"
+            val pMsg = if (Save.partnerMessage.isNotEmpty()) Save.partnerMessage else "Amo-te muito! ♥"
+            D.text(c, "💌 Ficha de ${Save.partnerName}:", partnerCard.centerX(), partnerCard.top + cardH * 0.22f, cardH * 0.18f, Theme.primary)
+            D.text(c, "Gosta: $pLikes · Comida: $pFood", partnerCard.centerX(), partnerCard.top + cardH * 0.50f, cardH * 0.15f, Theme.text)
+            D.text(c, "\"$pMsg\"", partnerCard.centerX(), partnerCard.top + cardH * 0.76f, cardH * 0.16f, if (Theme.isBunny) Theme.bSilver else Theme.text)
+        } else {
+            D.text(c, "Partilha o teu código ou cola o do parceiro", partnerCard.centerX(), partnerCard.top + cardH * 0.38f, cardH * 0.17f, Theme.text)
+            D.text(c, "para conectarem os dois telemóveis à distância!", partnerCard.centerX(), partnerCard.top + cardH * 0.66f, cardH * 0.15f, Theme.textDim)
+        }
+
+        // Cartão em destaque para o jogo estilo Minecraft: CatBunnyCraft em Machu Picchu
+        val craftH = r.height() * 0.072f
+        val craftY = partnerCard.bottom + r.height() * 0.010f
+        craftGameBtn.set(partnerCard.left, craftY, partnerCard.right, craftY + craftH)
+        val craftFill = if (Theme.isBunny) Color.rgb(26, 36, 68) else Color.rgb(255, 235, 244)
+        val craftLine = if (Theme.isBunny) Color.rgb(255, 205, 45) else Color.rgb(222, 72, 122)
+        D.rrect(c, craftGameBtn, craftH * 0.35f, craftFill, craftLine, 2.5f)
+        Icons.draw(c, Icons.CRAFT, craftGameBtn.left + craftH * 0.65f, craftGameBtn.centerY(), craftH * 0.36f)
+        val craftTitleCol = if (Theme.isBunny) Color.rgb(255, 225, 80) else Color.rgb(222, 72, 122)
+        D.text(c, I18n.t("catbunnycraft"), craftGameBtn.centerX() + craftH * 0.25f, craftGameBtn.centerY() - craftH * 0.08f, craftH * 0.30f, craftTitleCol)
+        D.text(c, I18n.t("craft_sub"), craftGameBtn.centerX() + craftH * 0.25f, craftGameBtn.centerY() + craftH * 0.30f, craftH * 0.18f, Theme.textDim)
+
+        // Botões de Ações de Amor (Beijinho, Comida, Carta)
+        val actW = (cardW - r.width() * 0.04f) / 3f
+        val actH = r.height() * 0.050f
+        val actY = craftGameBtn.bottom + r.height() * 0.010f
+
+        sendKissBtn.set(partnerCard.left, actY, partnerCard.left + actW, actY + actH)
+        sendFoodBtn.set(sendKissBtn.right + r.width() * 0.02f, actY, sendKissBtn.right + r.width() * 0.02f + actW, actY + actH)
+        sendLetterBtn.set(sendFoodBtn.right + r.width() * 0.02f, actY, partnerCard.right, actY + actH)
+
+        D.button(c, sendKissBtn, "💋 Beijinho", Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, actH * 0.28f)
+        D.button(c, sendFoodBtn, "🥟 Comida", Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, actH * 0.28f)
+        D.button(c, sendLetterBtn, "💌 Carta", Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, actH * 0.28f)
+
+        // Botões de Transferência de Conexão
+        val connH = r.height() * 0.050f
+        val connW = (cardW - r.width() * 0.03f) / 2f
+        val cY1 = sendKissBtn.bottom + r.height() * 0.014f
+
+        copyCodeBtn.set(partnerCard.left, cY1, partnerCard.left + connW, cY1 + connH)
+        shareAppBtn.set(copyCodeBtn.right + r.width() * 0.03f, cY1, partnerCard.right, cY1 + connH)
+
+        D.button(c, copyCodeBtn, I18n.t("copy_code"), Theme.card, Theme.text, connH * 0.26f)
+        D.button(c, shareAppBtn, I18n.t("share_code"), Theme.card, Theme.text, connH * 0.26f)
+
+        val cY2 = copyCodeBtn.bottom + r.height() * 0.010f
+        pasteCodeBtn.set(partnerCard.left, cY2, partnerCard.left + connW, cY2 + connH)
+        syncCloudBtn.set(pasteCodeBtn.right + r.width() * 0.03f, cY2, partnerCard.right, cY2 + connH)
+
+        D.button(c, pasteCodeBtn, I18n.t("paste_code"), Theme.cardAccent, Theme.text, connH * 0.26f)
+        D.button(c, syncCloudBtn, I18n.t("sync_cloud"), Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, connH * 0.26f)
+
+        drawFx(c)
+    }
+
+    private fun copyCode() {
+        val code = Save.exportSyncCode()
+        try {
+            val cm = g.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            cm.setPrimaryClip(ClipData.newPlainText("BunnyLink", code))
+            burst(g.width / 2f, g.height / 2f, Icons.SPARK, 6, g.width * 0.03f)
+            g.say("Código copiado! Podes enviar no WhatsApp para o parceiro!")
+        } catch (e: Exception) {
+            g.say("Código pronto: " + code.take(15) + "...")
+        }
+    }
+
+    private fun shareViaWhatsApp() {
+        val code = Save.exportSyncCode()
+        val text = "Olá meu amor! ♥ Aqui está o meu código de conexão do Bunny & Cat:\n$code\nAbre a app e clica em 'Colar Código' para nos conectarmos!"
+        try {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            g.context.startActivity(Intent.createChooser(intent, "Partilhar com o meu amor"))
+        } catch (e: Exception) {
+            copyCode()
+        }
+    }
+
+    private fun pasteCode() {
+        try {
+            val cm = g.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val item = cm.primaryClip?.getItemAt(0)
+            val clipText = item?.text?.toString() ?: ""
+            if (clipText.isNotEmpty()) {
+                val ok = Save.importSyncCode(clipText)
+                if (ok) {
+                    burst(g.width / 2f, g.height / 2f, Icons.HEART, 10, g.width * 0.04f)
+                    g.say("Conectado com sucesso a ${Save.partnerName}!")
+                } else {
+                    g.say("Código inválido na área de transferência!")
+                }
+            } else {
+                g.say("A área de transferência está vazia!")
+            }
+        } catch (e: Exception) {
+            g.say("Não foi possível ler a área de transferência.")
+        }
+    }
+
+    override fun down(x: Float, y: Float, r: RectF) {
+        if (backBtn.contains(x, y)) {
+            g.go(Nav.HOME); return
+        }
+        if (craftGameBtn.contains(x, y)) {
+            g.go(Nav.CRAFT); return
+        }
+        if (sendKissBtn.contains(x, y)) {
+            Save.partnerLastGift = "kiss"
+            SoundFx.playKiss()
+            burst(r.centerX(), r.centerY(), Icons.KISS, 8, r.width() * 0.04f)
+            Save.syncOnline { _, _ -> }
+            g.say(I18n.t("gift_sent") + " 💋")
+            return
+        }
+        if (sendFoodBtn.contains(x, y)) {
+            Save.partnerLastGift = "food"
+            SoundFx.playEat(Theme.isCat)
+            burst(r.centerX(), r.centerY(), Icons.ALFAJOR, 6, r.width() * 0.04f)
+            Save.syncOnline { _, _ -> }
+            g.say("Comidinha peruana enviada quentinha! 🥟")
+            return
+        }
+        if (sendLetterBtn.contains(x, y)) {
+            Save.partnerLastGift = "letter"
+            burst(r.centerX(), r.centerY(), Icons.LETTER, 6, r.width() * 0.04f)
+            Save.syncOnline { _, _ -> }
+            g.say("Cartinha de amor enviada com carinho! 💌")
+            return
+        }
+        if (copyCodeBtn.contains(x, y)) {
+            copyCode(); return
+        }
+        if (shareAppBtn.contains(x, y)) {
+            shareViaWhatsApp(); return
+        }
+        if (pasteCodeBtn.contains(x, y)) {
+            pasteCode(); return
+        }
+        if (syncCloudBtn.contains(x, y)) {
+            g.say("A sincronizar com a nuvem...")
+            Save.syncOnline { ok, msg ->
+                g.say(if (ok) "Nuvem sincronizada com sucesso! ♥" else "Modo offline. Usa o código de partilha!")
+            }
+            return
         }
     }
 }

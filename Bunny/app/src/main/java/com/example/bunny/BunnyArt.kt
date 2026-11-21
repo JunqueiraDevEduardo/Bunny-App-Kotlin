@@ -31,14 +31,17 @@ object BunnyArt {
         floatArrayOf(0.22f, -0.2f, 0.07f), floatArrayOf(-0.1f, -0.9f, 0.06f)
     )
 
-    fun furPalette(colorId: String): Triple<Int, Int, Int> = when (colorId) {
-        "col_caramel" -> Triple(Color.rgb(215, 150, 95), Color.rgb(248, 222, 192), Color.rgb(235, 175, 145))
-        "col_grey" -> Triple(Color.rgb(192, 198, 208), Color.rgb(238, 240, 246), Color.rgb(220, 185, 200))
-        "col_pink" -> Triple(Color.rgb(255, 195, 215), Color.rgb(255, 232, 242), Color.rgb(245, 155, 185))
-        "col_gold" -> Triple(Color.rgb(250, 200, 70), Color.rgb(255, 235, 160), Color.rgb(240, 165, 80))
-        "col_cocoa" -> Triple(Color.rgb(130, 85, 62), Color.rgb(180, 135, 108), Color.rgb(160, 105, 95))
-        "col_sky" -> Triple(Color.rgb(185, 218, 245), Color.rgb(230, 244, 255), Color.rgb(215, 185, 225))
-        else -> Triple(C.white, Color.rgb(255, 240, 244), C.pink) // col_white default
+    fun furPalette(colorId: String): Triple<Int, Int, Int> {
+        // No Bunny: estritamente azuis, cores de vinho e roxo. Nunca rosa nem branco!
+        return when (colorId) {
+            "col_caramel" -> Triple(Theme.bWineLight, Color.rgb(85, 30, 50), Theme.bPurple)
+            "col_grey" -> Triple(Theme.bSilver, Theme.bBlueIce, Theme.bPurple)
+            "col_pink" -> Triple(Theme.bWine, Color.rgb(75, 18, 38), Theme.bPurpleLight)
+            "col_gold" -> Triple(Theme.bBlueSky, Theme.bBlueIce, Theme.bWine)
+            "col_cocoa" -> Triple(Theme.bPurpleDark, Color.rgb(45, 15, 60), Theme.bWineDark)
+            "col_sky" -> Triple(Theme.bBlueRoyal, Theme.bBlueIce, Theme.bWine)
+            else -> Triple(Theme.bSilver, Theme.bBlueIce, Theme.bWine) // Celestial Ice/Silver com orelha vinho
+        }
     }
 
     fun draw(
@@ -46,7 +49,7 @@ object BunnyArt {
         hat: String, outfit: String, acc: String,
         shoes: String = Save.shoes, bunnyColor: String = Save.bunnyColor
     ) {
-        val ol = C.outline
+        val ol = Theme.bPurpleDark
         val lw = max(1.5f, s * 0.014f)
         val (furC, bellyC, earInnerC) = furPalette(bunnyColor)
 
@@ -54,9 +57,9 @@ object BunnyArt {
         c.translate(cx, baseY - ps.hop * s)
         c.scale(1f + ps.squash * 0.08f, 1f - ps.squash * 0.08f)
 
-        // Capa (atrás do coelho)
+        // Capa (atrás do coelho) em tom vinho nobre
         if (outfit == "fit_cape") {
-            D.poly(c, C.pinkD, ol, lw, -0.28f * s, -0.58f * s, 0.28f * s, -0.58f * s, 0.46f * s, -0.02f * s, -0.46f * s, -0.02f * s)
+            D.poly(c, Theme.bWine, ol, lw, -0.28f * s, -0.58f * s, 0.28f * s, -0.58f * s, 0.46f * s, -0.02f * s, -0.46f * s, -0.02f * s)
         }
         // Cauda
         D.circle(c, 0.30f * s, -0.2f * s, 0.1f * s, furC, ol, lw)
@@ -154,11 +157,11 @@ object BunnyArt {
         }
         if (outfit == "fit_cape") D.circle(c, 0f, -0.5f * s, 0.035f * s, C.gold, ol, lw)
 
-        // Bochechas rosadas
-        D.circle(c, -0.26f * s, -0.70f * s, 0.065f * s, D.alpha(C.pinkD, 120))
-        D.circle(c, 0.26f * s, -0.70f * s, 0.065f * s, D.alpha(C.pinkD, 120))
+        // Bochechas em tom suave de vinho nobre (sem rosa)
+        D.circle(c, -0.26f * s, -0.70f * s, 0.065f * s, D.alpha(Theme.bWine, 85))
+        D.circle(c, 0.26f * s, -0.70f * s, 0.065f * s, D.alpha(Theme.bWine, 85))
 
-        // Olhos
+        // Olhos (brilho em azul gelo celestial, sem branco)
         val ey = -0.81f * s
         val ex = 0.155f * s
         val blink = (ps.t % 4.2f) < 0.12f
@@ -166,24 +169,24 @@ object BunnyArt {
             val x = sg * ex
             if (ps.mood == 3 || blink) {
                 D.path.reset(); D.path.moveTo(x - 0.05f * s, ey); D.path.quadTo(x, ey + 0.05f * s, x + 0.05f * s, ey)
-                D.s(C.ink, lw * 1.6f); c.drawPath(D.path, D.p)
+                D.s(Theme.bNavyDark, lw * 1.6f); c.drawPath(D.path, D.p)
             } else {
-                D.circle(c, x + ps.look * 0.02f * s, ey, 0.058f * s, C.ink)
-                D.circle(c, x + ps.look * 0.02f * s - 0.02f * s, ey - 0.022f * s, 0.022f * s, C.white)
-                D.circle(c, x + ps.look * 0.02f * s + 0.018f * s, ey + 0.02f * s, 0.012f * s, C.white)
+                D.circle(c, x + ps.look * 0.02f * s, ey, 0.058f * s, Theme.bNavyDark)
+                D.circle(c, x + ps.look * 0.02f * s - 0.02f * s, ey - 0.022f * s, 0.022f * s, Theme.bBlueIce)
+                D.circle(c, x + ps.look * 0.02f * s + 0.018f * s, ey + 0.02f * s, 0.012f * s, Theme.bBlueIce)
             }
             if (ps.mood == 2) {
                 val outer = x + sg * 0.06f * s
                 val inner = x - sg * 0.05f * s
-                D.line(c, outer, ey - 0.085f * s, inner, ey - 0.125f * s, lw * 1.4f, C.ink)
+                D.line(c, outer, ey - 0.085f * s, inner, ey - 0.125f * s, lw * 1.4f, Theme.bNavyDark)
             }
         }
 
-        // Narizinho
-        D.oval(c, 0f, -0.735f * s, 0.032f * s, 0.024f * s, C.pinkD)
+        // Narizinho em tom vinho nobre
+        D.oval(c, 0f, -0.735f * s, 0.032f * s, 0.024f * s, Theme.bWine)
 
         // =================================================================
-        // BOCA E DENTES: DENTES PARA BAIXO!
+        // BOCA E DENTES: DENTES PARA BAIXO! (Em tom prateado/gelo, sem branco)
         // Os dentes de coelho penduram-se do lábio superior e descem para baixo!
         // =================================================================
         val my = -0.665f * s
@@ -193,17 +196,17 @@ object BunnyArt {
         if (ps.mouth > 0.05f) {
             // Boca aberta a comer (com dentes pendurados no bordo superior para baixo)
             val openH = (0.025f + 0.05f * ps.mouth) * s
-            D.oval(c, 0f, my + openH * 0.4f, 0.055f * s, openH, C.pinkD, ol, lw)
-            // Dentes para baixo no topo da boca aberta
-            D.rrect(c, -0.026f * s, my - 0.01f * s, -0.002f * s, my + 0.035f * s, 0.008f * s, C.white, ol, lw * 0.7f)
-            D.rrect(c, 0.002f * s, my - 0.01f * s, 0.026f * s, my + 0.035f * s, 0.008f * s, C.white, ol, lw * 0.7f)
+            D.oval(c, 0f, my + openH * 0.4f, 0.055f * s, openH, Theme.bWineDark, ol, lw)
+            // Dentes para baixo no topo da boca aberta (prateados)
+            D.rrect(c, -0.026f * s, my - 0.01f * s, -0.002f * s, my + 0.035f * s, 0.008f * s, Theme.bSilver, ol, lw * 0.7f)
+            D.rrect(c, 0.002f * s, my - 0.01f * s, 0.026f * s, my + 0.035f * s, 0.008f * s, Theme.bSilver, ol, lw * 0.7f)
         } else {
             // Dentes de coelho pendurados para baixo a partir do lábio superior
             if (ps.mood <= 1) {
                 val toothTop = my - 0.004f * s
                 val toothBottom = my + 0.052f * s // Estão nitidamente PARA BAIXO!
-                D.rrect(c, -0.026f * s, toothTop, -0.002f * s, toothBottom, 0.008f * s, C.white, ol, lw * 0.8f)
-                D.rrect(c, 0.002f * s, toothTop, 0.026f * s, toothBottom, 0.008f * s, C.white, ol, lw * 0.8f)
+                D.rrect(c, -0.026f * s, toothTop, -0.002f * s, toothBottom, 0.008f * s, Theme.bSilver, ol, lw * 0.8f)
+                D.rrect(c, 0.002f * s, toothTop, 0.026f * s, toothBottom, 0.008f * s, Theme.bSilver, ol, lw * 0.8f)
             }
             // Linha do sorriso / lábio superior
             D.path.reset()
@@ -226,30 +229,30 @@ object BunnyArt {
             D.line(c, sg * 0.22f * s, -0.70f * s, sg * 0.42f * s, -0.68f * s, lw * 0.8f, D.alpha(ol, 180))
         }
 
-        // Espuma de banho
+        // Espuma de banho em azul gelo e azul royal
         val nf = (ps.foam * foamSpots.size).toInt()
         for (i in 0 until nf) {
             val f = foamSpots[i]
-            D.circle(c, f[0] * s, f[1] * s, f[2] * s, D.alpha(C.white, 235), D.alpha(C.sky, 255), lw)
+            D.circle(c, f[0] * s, f[1] * s, f[2] * s, D.alpha(Theme.bBlueIce, 235), D.alpha(Theme.bBlueRoyal, 255), lw)
         }
 
         // Acessórios
         when (acc) {
             "acc_glasses" -> {
-                D.s(C.ink, lw * 1.3f)
+                D.s(Theme.bNavyDark, lw * 1.3f)
                 c.drawCircle(-ex, ey, 0.085f * s, D.p)
                 c.drawCircle(ex, ey, 0.085f * s, D.p)
-                D.line(c, -ex + 0.085f * s, ey, ex - 0.085f * s, ey, lw * 1.3f, C.ink)
+                D.line(c, -ex + 0.085f * s, ey, ex - 0.085f * s, ey, lw * 1.3f, Theme.bNavyDark)
             }
             "acc_bow" -> {
-                D.poly(c, C.lav, ol, lw, 0f, -0.45f * s, -0.12f * s, -0.52f * s, -0.12f * s, -0.38f * s)
-                D.poly(c, C.lav, ol, lw, 0f, -0.45f * s, 0.12f * s, -0.52f * s, 0.12f * s, -0.38f * s)
-                D.circle(c, 0f, -0.45f * s, 0.035f * s, C.pinkD, ol, lw)
+                D.poly(c, Theme.bPurple, ol, lw, 0f, -0.45f * s, -0.12f * s, -0.52f * s, -0.12f * s, -0.38f * s)
+                D.poly(c, Theme.bPurple, ol, lw, 0f, -0.45f * s, 0.12f * s, -0.52f * s, 0.12f * s, -0.38f * s)
+                D.circle(c, 0f, -0.45f * s, 0.035f * s, Theme.bWine, ol, lw)
             }
             "acc_pearls" -> {
                 for (i in 0 until 7) {
                     val a = -0.24f + i * 0.08f
-                    D.circle(c, a * s, (-0.46f + 0.07f * (1f - (a / 0.24f) * (a / 0.24f))) * s, 0.027f * s, C.white, ol, lw * 0.7f)
+                    D.circle(c, a * s, (-0.46f + 0.07f * (1f - (a / 0.24f) * (a / 0.24f))) * s, 0.027f * s, Theme.bSilver, ol, lw * 0.7f)
                 }
             }
         }
