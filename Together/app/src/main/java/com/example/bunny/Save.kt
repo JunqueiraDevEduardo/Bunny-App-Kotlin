@@ -290,8 +290,12 @@ object Save {
     var bunnyName = "Meu Coelhinho"
     var bunnyLikes = "Dar abraços e mimos quentinhos"
     var bunnyDislikes = "Ficar com saudades"
-    var bunnyFavColor = "Azul Celestial"
-    var bunnyFavFood = "Ceviche Peruano"
+    var bunnyFavColor = "Azul Celestial 🌊"
+    var bunnyFavFood = "Ceviche Peruano 🐟"
+    var bunnyPersonality = "Doce & Carinhoso 🥰"
+    var bunnySeason = "Primavera Florida 🌸"
+    var bunnyHobby = "Corridas no TogetherKart 🏎️"
+    var bunnyPower = "Abraço Mágico que Cura Tudo 🫂"
     var bunnyMessage = "Amo-te daqui até à lua! ♥"
 
     // Ficha / Relatório da Cat (Gatinha)
@@ -299,8 +303,12 @@ object Save {
     var catName = "Minha Gatinha"
     var catLikes = "Ronronar e receber carinhos fofos"
     var catDislikes = "Frio e banhos frios"
-    var catFavColor = "Rosa Algodão Doce"
-    var catFavFood = "Alfajores com Doce de Leite"
+    var catFavColor = "Rosa Algodão Doce 🌸"
+    var catFavFood = "Alfajores com Doce de Leite 🍪"
+    var catPersonality = "Doce & Carinhosa 🥰"
+    var catSeason = "Primavera Florida 🌸"
+    var catHobby = "Corridas no TogetherKart 🏎️"
+    var catPower = "Abraço Mágico que Cura Tudo 🫂"
     var catMessage = "És o amor da minha vida! ♥"
 
     // Conexão a Dois / Multiplayer à distância
@@ -310,8 +318,12 @@ object Save {
     var partnerLvl = 1
     var partnerLikes = "Estar juntos e rir"
     var partnerDislikes = "Distância"
-    var partnerFavColor = "Rosa"
-    var partnerFavFood = "Doces"
+    var partnerFavColor = "Rosa Algodão Doce 🌸"
+    var partnerFavFood = "Alfajores com Doce de Leite 🍪"
+    var partnerPersonality = "Doce & Carinhosa 🥰"
+    var partnerSeason = "Primavera Florida 🌸"
+    var partnerHobby = "Corridas no TogetherKart 🏎️"
+    var partnerPower = "Abraço Mágico que Cura Tudo 🫂"
     var partnerMessage = "Saudades tuas! ♥"
     var partnerLastGift = ""
     var partnerLastGiftTime = 0L
@@ -437,6 +449,34 @@ object Save {
     val decor: HashSet<String>
         get() = if (activeChar == "bunny") bunnyDecor else catDecor
 
+    // Propriedades Dinâmicas Expandidas da Ficha
+    val activePersonality: String
+        get() = if (activeChar == "bunny") bunnyPersonality else catPersonality
+
+    val activeSeason: String
+        get() {
+            val s = if (activeChar == "bunny") bunnySeason else catSeason
+            return when {
+                s.contains("Primavera", ignoreCase = true) -> "Primavera"
+                s.contains("Verão", ignoreCase = true) || s.contains("Verao", ignoreCase = true) -> "Verão"
+                s.contains("Outono", ignoreCase = true) -> "Outono"
+                s.contains("Inverno", ignoreCase = true) -> "Inverno"
+                else -> "Primavera"
+            }
+        }
+
+    val activeHobby: String
+        get() = if (activeChar == "bunny") bunnyHobby else catHobby
+
+    val activePower: String
+        get() = if (activeChar == "bunny") bunnyPower else catPower
+
+    val activeFavFood: String
+        get() = if (activeChar == "bunny") bunnyFavFood else catFavFood
+
+    val activeFavColor: String
+        get() = if (activeChar == "bunny") bunnyFavColor else catFavColor
+
     // CatBunnyCraft - Mundo 3D dos Amigos em Machu Picchu
     val craftBlocks = ArrayList<CraftBlock>()
 
@@ -539,6 +579,10 @@ object Save {
             json.put("dislikes", if (activeChar == "bunny") bunnyDislikes else catDislikes)
             json.put("color", if (activeChar == "bunny") bunnyFavColor else catFavColor)
             json.put("food", if (activeChar == "bunny") bunnyFavFood else catFavFood)
+            json.put("personality", if (activeChar == "bunny") bunnyPersonality else catPersonality)
+            json.put("season", if (activeChar == "bunny") bunnySeason else catSeason)
+            json.put("hobby", if (activeChar == "bunny") bunnyHobby else catHobby)
+            json.put("power", if (activeChar == "bunny") bunnyPower else catPower)
             json.put("msg", if (activeChar == "bunny") bunnyMessage else catMessage)
             json.put("gift", partnerLastGift)
             json.put("craft", craftBlocksToJson())
@@ -564,6 +608,10 @@ object Save {
             partnerDislikes = json.optString("dislikes", "")
             partnerFavColor = json.optString("color", "")
             partnerFavFood = json.optString("food", "")
+            partnerPersonality = json.optString("personality", "Doce & Carinhoso(a) 🥰")
+            partnerSeason = json.optString("season", "Primavera Florida 🌸")
+            partnerHobby = json.optString("hobby", "Corridas no TogetherKart 🏎️")
+            partnerPower = json.optString("power", "Abraço Mágico que Cura Tudo 🫂")
             partnerMessage = json.optString("msg", "")
             val g = json.optString("gift", "")
             if (g.isNotEmpty() && g != partnerLastGift) {
@@ -600,6 +648,10 @@ object Save {
                 json.put("dislikes", if (activeChar == "bunny") bunnyDislikes else catDislikes)
                 json.put("color", if (activeChar == "bunny") bunnyFavColor else catFavColor)
                 json.put("food", if (activeChar == "bunny") bunnyFavFood else catFavFood)
+                json.put("personality", if (activeChar == "bunny") bunnyPersonality else catPersonality)
+                json.put("season", if (activeChar == "bunny") bunnySeason else catSeason)
+                json.put("hobby", if (activeChar == "bunny") bunnyHobby else catHobby)
+                json.put("power", if (activeChar == "bunny") bunnyPower else catPower)
                 json.put("msg", if (activeChar == "bunny") bunnyMessage else catMessage)
                 json.put("gift", partnerLastGift)
                 json.put("craft", craftBlocksToJson())
@@ -642,8 +694,12 @@ object Save {
         bunnyName = prefs.getString("bunnyName", "Meu Coelhinho") ?: "Meu Coelhinho"
         bunnyLikes = prefs.getString("bunnyLikes", "Dar abraços e mimos quentinhos") ?: "Dar abraços e mimos quentinhos"
         bunnyDislikes = prefs.getString("bunnyDislikes", "Ficar com saudades") ?: "Ficar com saudades"
-        bunnyFavColor = prefs.getString("bunnyFavColor", "Azul Celestial") ?: "Azul Celestial"
-        bunnyFavFood = prefs.getString("bunnyFavFood", "Ceviche Peruano") ?: "Ceviche Peruano"
+        bunnyFavColor = prefs.getString("bunnyFavColor", "Azul Celestial 🌊") ?: "Azul Celestial 🌊"
+        bunnyFavFood = prefs.getString("bunnyFavFood", "Ceviche Peruano 🐟") ?: "Ceviche Peruano 🐟"
+        bunnyPersonality = prefs.getString("bunnyPersonality", "Doce & Carinhoso 🥰") ?: "Doce & Carinhoso 🥰"
+        bunnySeason = prefs.getString("bunnySeason", "Primavera Florida 🌸") ?: "Primavera Florida 🌸"
+        bunnyHobby = prefs.getString("bunnyHobby", "Corridas no TogetherKart 🏎️") ?: "Corridas no TogetherKart 🏎️"
+        bunnyPower = prefs.getString("bunnyPower", "Abraço Mágico que Cura Tudo 🫂") ?: "Abraço Mágico que Cura Tudo 🫂"
         bunnyMessage = prefs.getString("bunnyMessage", "Amo-te daqui até à lua! ♥") ?: "Amo-te daqui até à lua! ♥"
 
         // Ficha Cat
@@ -651,8 +707,12 @@ object Save {
         catName = prefs.getString("catName", "Minha Gatinha") ?: "Minha Gatinha"
         catLikes = prefs.getString("catLikes", "Ronronar e receber carinhos fofos") ?: "Ronronar e receber carinhos fofos"
         catDislikes = prefs.getString("catDislikes", "Frio e banhos frios") ?: "Frio e banhos frios"
-        catFavColor = prefs.getString("catFavColor", "Rosa Algodão Doce") ?: "Rosa Algodão Doce"
-        catFavFood = prefs.getString("catFavFood", "Alfajores com Doce de Leite") ?: "Alfajores com Doce de Leite"
+        catFavColor = prefs.getString("catFavColor", "Rosa Algodão Doce 🌸") ?: "Rosa Algodão Doce 🌸"
+        catFavFood = prefs.getString("catFavFood", "Alfajores com Doce de Leite 🍪") ?: "Alfajores com Doce de Leite 🍪"
+        catPersonality = prefs.getString("catPersonality", "Doce & Carinhosa 🥰") ?: "Doce & Carinhosa 🥰"
+        catSeason = prefs.getString("catSeason", "Primavera Florida 🌸") ?: "Primavera Florida 🌸"
+        catHobby = prefs.getString("catHobby", "Corridas no TogetherKart 🏎️") ?: "Corridas no TogetherKart 🏎️"
+        catPower = prefs.getString("catPower", "Abraço Mágico que Cura Tudo 🫂") ?: "Abraço Mágico que Cura Tudo 🫂"
         catMessage = prefs.getString("catMessage", "És o amor da minha vida! ♥") ?: "És o amor da minha vida! ♥"
 
         // Conexão / Parceiro
@@ -662,8 +722,12 @@ object Save {
         partnerLvl = prefs.getInt("partnerLvl", 1)
         partnerLikes = prefs.getString("partnerLikes", "") ?: ""
         partnerDislikes = prefs.getString("partnerDislikes", "") ?: ""
-        partnerFavColor = prefs.getString("partnerFavColor", "") ?: ""
-        partnerFavFood = prefs.getString("partnerFavFood", "") ?: ""
+        partnerFavColor = prefs.getString("partnerFavColor", "Rosa Algodão Doce 🌸") ?: "Rosa Algodão Doce 🌸"
+        partnerFavFood = prefs.getString("partnerFavFood", "Alfajores com Doce de Leite 🍪") ?: "Alfajores com Doce de Leite 🍪"
+        partnerPersonality = prefs.getString("partnerPersonality", "Doce & Carinhoso(a) 🥰") ?: "Doce & Carinhoso(a) 🥰"
+        partnerSeason = prefs.getString("partnerSeason", "Primavera Florida 🌸") ?: "Primavera Florida 🌸"
+        partnerHobby = prefs.getString("partnerHobby", "Corridas no TogetherKart 🏎️") ?: "Corridas no TogetherKart 🏎️"
+        partnerPower = prefs.getString("partnerPower", "Abraço Mágico que Cura Tudo 🫂") ?: "Abraço Mágico que Cura Tudo 🫂"
         partnerMessage = prefs.getString("partnerMessage", "") ?: ""
         partnerLastGift = prefs.getString("partnerLastGift", "") ?: ""
 
@@ -779,6 +843,10 @@ object Save {
             .putString("bunnyDislikes", bunnyDislikes)
             .putString("bunnyFavColor", bunnyFavColor)
             .putString("bunnyFavFood", bunnyFavFood)
+            .putString("bunnyPersonality", bunnyPersonality)
+            .putString("bunnySeason", bunnySeason)
+            .putString("bunnyHobby", bunnyHobby)
+            .putString("bunnyPower", bunnyPower)
             .putString("bunnyMessage", bunnyMessage)
             .putBoolean("reportDoneCat", reportDoneCat)
             .putString("catName", catName)
@@ -786,6 +854,10 @@ object Save {
             .putString("catDislikes", catDislikes)
             .putString("catFavColor", catFavColor)
             .putString("catFavFood", catFavFood)
+            .putString("catPersonality", catPersonality)
+            .putString("catSeason", catSeason)
+            .putString("catHobby", catHobby)
+            .putString("catPower", catPower)
             .putString("catMessage", catMessage)
             // Conexão
             .putBoolean("partnerConnected", partnerConnected)
@@ -796,6 +868,10 @@ object Save {
             .putString("partnerDislikes", partnerDislikes)
             .putString("partnerFavColor", partnerFavColor)
             .putString("partnerFavFood", partnerFavFood)
+            .putString("partnerPersonality", partnerPersonality)
+            .putString("partnerSeason", partnerSeason)
+            .putString("partnerHobby", partnerHobby)
+            .putString("partnerPower", partnerPower)
             .putString("partnerMessage", partnerMessage)
             .putString("partnerLastGift", partnerLastGift)
             // Companhia
@@ -846,29 +922,41 @@ object Save {
     }
 
     fun tick(dt: Float) {
+        // Dinâmica baseada na Personalidade da Ficha do Bunny
+        val bSleepRate = if (bunnyPersonality.contains("Soneca")) (100f / 80f) else (100f / 120f)
+        val bJoyDecay = if (bunnyPersonality.contains("Doce") || bunnyPersonality.contains("Romântic")) 0.011f else 0.017f
+        val bHungerDecay = if (bunnyPersonality.contains("Protetor")) 0.015f else 0.020f
+        val bHygieneDecay = if (bunnyPersonality.contains("Protetor")) 0.010f else 0.013f
+
         // Atualiza Bunny
         if (bunnySleeping) {
-            bunnyEnergy = (bunnyEnergy + (100f / 120f) * dt).coerceIn(0f, 100f)
+            bunnyEnergy = (bunnyEnergy + bSleepRate * dt).coerceIn(0f, 100f)
             bunnyHunger = (bunnyHunger - 0.005f * dt).coerceIn(0f, 100f)
             bunnyHygiene = (bunnyHygiene - 0.003f * dt).coerceIn(0f, 100f)
             if (bunnyEnergy >= 100f) bunnySleeping = false
         } else {
-            bunnyHunger = (bunnyHunger - 0.020f * dt).coerceIn(0f, 100f)
-            bunnyHygiene = (bunnyHygiene - 0.013f * dt).coerceIn(0f, 100f)
-            bunnyJoy = (bunnyJoy - 0.017f * dt).coerceIn(0f, 100f)
+            bunnyHunger = (bunnyHunger - bHungerDecay * dt).coerceIn(0f, 100f)
+            bunnyHygiene = (bunnyHygiene - bHygieneDecay * dt).coerceIn(0f, 100f)
+            bunnyJoy = (bunnyJoy - bJoyDecay * dt).coerceIn(0f, 100f)
             bunnyEnergy = (bunnyEnergy - 0.010f * dt).coerceIn(0f, 100f)
         }
 
+        // Dinâmica baseada na Personalidade da Ficha da Cat
+        val cSleepRate = if (catPersonality.contains("Soneca")) (100f / 80f) else (100f / 120f)
+        val cJoyDecay = if (catPersonality.contains("Doce") || catPersonality.contains("Romântic")) 0.011f else 0.017f
+        val cHungerDecay = if (catPersonality.contains("Protetor")) 0.015f else 0.020f
+        val cHygieneDecay = if (catPersonality.contains("Protetor")) 0.010f else 0.013f
+
         // Atualiza Cat
         if (catSleeping) {
-            catEnergy = (catEnergy + (100f / 120f) * dt).coerceIn(0f, 100f)
+            catEnergy = (catEnergy + cSleepRate * dt).coerceIn(0f, 100f)
             catHunger = (catHunger - 0.005f * dt).coerceIn(0f, 100f)
             catHygiene = (catHygiene - 0.003f * dt).coerceIn(0f, 100f)
             if (catEnergy >= 100f) catSleeping = false
         } else {
-            catHunger = (catHunger - 0.020f * dt).coerceIn(0f, 100f)
-            catHygiene = (catHygiene - 0.013f * dt).coerceIn(0f, 100f)
-            catJoy = (catJoy - 0.017f * dt).coerceIn(0f, 100f)
+            catHunger = (catHunger - cHungerDecay * dt).coerceIn(0f, 100f)
+            catHygiene = (catHygiene - cHygieneDecay * dt).coerceIn(0f, 100f)
+            catJoy = (catJoy - cJoyDecay * dt).coerceIn(0f, 100f)
             catEnergy = (catEnergy - 0.010f * dt).coerceIn(0f, 100f)
         }
 

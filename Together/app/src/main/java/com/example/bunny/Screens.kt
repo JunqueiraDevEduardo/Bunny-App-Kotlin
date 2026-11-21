@@ -345,17 +345,23 @@ class EatScreen(g: BunnyView) : Screen(g) {
                 g.say("Estou cheio! Não cabe mais nada!")
             } else {
                 SoundFx.playEat(Theme.isCat)
+                val isFavFood = Save.activeFavFood.isNotEmpty() && food.name.contains(Save.activeFavFood.substringBefore(" "), ignoreCase = true)
+                val bonusJoy = if (isFavFood) 15f else 0f
                 Save.hunger = min(100f, Save.hunger + food.nutri)
-                Save.joy = min(100f, Save.joy + food.joy)
+                Save.joy = min(100f, Save.joy + food.joy + bonusJoy)
                 eatT = 1.3f
-                burst(hx, hy - hr * 0.5f, Icons.HEART, 5, hr * 0.15f)
-                val msg = when (food.icon) {
-                    Icons.CEVICHE -> "Nham nham! Ceviche peruano delicioso!"
-                    Icons.LOMO_SALTADO -> "Uau! Lomo Saltado saboroso!"
-                    Icons.CHICHA_MORADA -> "Que chicha morada fresquinha!"
-                    Icons.ALFAJOR -> "Alfajor andino docinho!"
-                    Icons.CAUSA -> "Causa Limeña cremosa!"
-                    else -> "Nham nham! Que bom!"
+                burst(hx, hy - hr * 0.5f, Icons.HEART, if (isFavFood) 10 else 5, hr * 0.15f)
+                val msg = if (isFavFood) {
+                    "É a minha comida favorita da Ficha! ♥ (+15 Alegria extra!)"
+                } else {
+                    when (food.icon) {
+                        Icons.CEVICHE -> "Nham nham! Ceviche peruano delicioso!"
+                        Icons.LOMO_SALTADO -> "Uau! Lomo Saltado saboroso!"
+                        Icons.CHICHA_MORADA -> "Que chicha morada fresquinha!"
+                        Icons.ALFAJOR -> "Alfajor andino docinho!"
+                        Icons.CAUSA -> "Causa Limeña cremosa!"
+                        else -> "Nham nham! Que bom!"
+                    }
                 }
                 g.say(msg)
             }
@@ -535,9 +541,9 @@ class SleepScreen(g: BunnyView) : Screen(g) {
 
         // Cama fofinha respeitando a paleta do personagem ativo
         val bed = RectF(r.left + w * 0.08f, Rooms.floorY(r) - h * 0.02f, r.right - w * 0.08f, Rooms.floorY(r) + h * 0.3f)
-        val headFill = if (Theme.isBunny) Theme.bNavyDark else Theme.cPinkCream
-        val matFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cPinkSoft
-        val pilFill = if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure
+        val headFill = if (Theme.isBunny) Theme.bWineDark else Theme.cPinkCream
+        val matFill = if (Theme.isBunny) Theme.bBlueIce else Theme.cPinkSoft
+        val pilFill = if (Theme.isBunny) Theme.bBlueIce else Theme.cWhitePure
 
         D.rrect(c, bed.left, bed.top - h * 0.16f, bed.left + w * 0.12f, bed.bottom, w * 0.04f, headFill, Theme.outline, 4f)
         D.rrect(c, bed, h * 0.04f, matFill, Theme.outline, 4f)
@@ -554,8 +560,8 @@ class SleepScreen(g: BunnyView) : Screen(g) {
         }
 
         // Cobertor com estrelas
-        val blanketFill = if (Theme.isBunny) Theme.bPurple else Theme.cPinkCream
-        val starFill = if (Theme.isBunny) Theme.bBlueIce else C.gold
+        val blanketFill = if (Theme.isBunny) Theme.bWine else Theme.cPinkCream
+        val starFill = if (Theme.isBunny) Theme.bWineLight else C.gold
         D.rrect(c, bed.left + w * 0.12f, bed.top + h * 0.06f, bed.right - w * 0.02f, bed.bottom - h * 0.01f, h * 0.04f, blanketFill, Theme.outline, 4f)
         for (i in 0 until 5) Icons.draw(c, Icons.STAR, bed.left + w * (0.25f + i * 0.14f), bed.top + h * 0.17f, h * 0.012f)
 
@@ -570,20 +576,21 @@ class SleepScreen(g: BunnyView) : Screen(g) {
         // Interruptor / Candeeiro
         val rad = w * 0.075f
         lamp.set(r.right - w * 0.17f, r.top + h * 0.04f, r.right - w * 0.03f, r.top + h * 0.04f + w * 0.14f)
-        val lampFill = if (lightOn) C.butter else (if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure)
+        val lampFill = if (lightOn) C.butter else (if (Theme.isBunny) Theme.bWineDark else Theme.cWhitePure)
         D.circle(c, lamp.centerX(), lamp.centerY(), rad, lampFill, Theme.outline, 3f)
         Icons.draw(c, Icons.LAMP, lamp.centerX(), lamp.centerY(), rad * 0.55f)
-        val txtCol = if (dark > 0.5f) (if (Theme.isBunny) Theme.bSilver else C.white) else (if (Theme.isBunny) Theme.bSilver else C.ink)
+        val txtCol = if (dark > 0.5f) (if (Theme.isBunny) Theme.bBlueIce else C.white) else Theme.text
         D.text(c, if (lightOn) "Apagar luz" else "Acender luz", lamp.centerX(), lamp.bottom + h * 0.04f, h * 0.024f, txtCol)
 
-        // Temporizador de sono (2 minutos completos de 0 a 100%)
+        // Temporizador de sono
         if (Save.sleeping) {
-            val remainSec = ((100f - Save.energy) / (100f / 120f)).toInt().coerceAtLeast(0)
+            val sleepRate = if (Save.activePersonality.contains("Soneca")) (100f / 80f) else (100f / 120f)
+            val remainSec = ((100f - Save.energy) / sleepRate).toInt().coerceAtLeast(0)
             val min = remainSec / 60
             val sec = remainSec % 60
             val petName = Save.currentPetName()
             val sleepTxt = if (remainSec > 0) "$petName a dormir... (${min}m ${sec}s para 100%)" else "Energia a 100%!"
-            D.text(c, sleepTxt, r.centerX(), r.top + h * 0.09f, h * 0.032f, if (Theme.isBunny) Theme.bSilver else C.white)
+            D.text(c, sleepTxt, r.centerX(), r.top + h * 0.09f, h * 0.032f, if (Theme.isBunny) Theme.bBlueIce else C.white)
             D.text(c, "Energia: ${Save.energy.toInt()}%", r.centerX(), r.top + h * 0.13f, h * 0.026f, if (Theme.isBunny) Theme.bBlueSky else C.butter)
         }
     }
@@ -1042,12 +1049,16 @@ class ReportScreen(g: BunnyView) : Screen(g) {
     private var repDislikes = if (Theme.isBunny) Save.bunnyDislikes else Save.catDislikes
     private var repColor = if (Theme.isBunny) Save.bunnyFavColor else Save.catFavColor
     private var repFood = if (Theme.isBunny) Save.bunnyFavFood else Save.catFavFood
+    private var repPersonality = if (Theme.isBunny) Save.bunnyPersonality else Save.catPersonality
+    private var repSeason = if (Theme.isBunny) Save.bunnySeason else Save.catSeason
+    private var repHobby = if (Theme.isBunny) Save.bunnyHobby else Save.catHobby
+    private var repPower = if (Theme.isBunny) Save.bunnyPower else Save.catPower
     private var repMsg = if (Theme.isBunny) Save.bunnyMessage else Save.catMessage
 
     private val nameOptions = if (Theme.isBunny) {
-        arrayOf("Meu Coelhinho", "O Meu Amor", "Bunny Fofinho", "Meu Príncipe Encantado")
+        arrayOf("Meu Coelhinho 🐰", "O Meu Amor 💖", "Bunny Fofinho 🐾", "Meu Príncipe 👑")
     } else {
-        arrayOf("Minha Gatinha", "A Minha Princesa", "Gatinha Linda", "Meu Amorzinho Doce")
+        arrayOf("Minha Gatinha 🐱", "A Minha Princesa 👑", "Gatinha Linda 💖", "Amorzinho Doce 🌸")
     }
 
     private val likesOptions = arrayOf(
@@ -1083,6 +1094,46 @@ class ReportScreen(g: BunnyView) : Screen(g) {
         "Cenouras Docinhas Crocantes 🥕"
     )
 
+    private val personalityOptions = if (Theme.isBunny) {
+        arrayOf(
+            "Doce & Carinhoso 🥰",
+            "Brincalhão & Alegre 🐾",
+            "Soneca & Aconchegante 💤",
+            "Protetor & Fiel 🛡️",
+            "Romântico Incurável 💖"
+        )
+    } else {
+        arrayOf(
+            "Doce & Carinhosa 🥰",
+            "Brincalhona & Fofa 🐾",
+            "Soneca & Aconchegante 💤",
+            "Protetora & Fiel 🛡️",
+            "Romântica Incurável 💖"
+        )
+    }
+
+    private val seasonOptions = arrayOf(
+        "Primavera Florida 🌸",
+        "Verão Radiante ☀️",
+        "Outono Dourado 🍂",
+        "Inverno Aconchegante ❄️"
+    )
+
+    private val hobbyOptions = arrayOf(
+        "Corridas no TogetherKart 🏎️",
+        "Construir no CatBunnyCraft 🏰",
+        "Filmes & Mimos no Sofá 🎬",
+        "Passear sob as Estrelas ✨",
+        "Cozinhar Jantares a Dois 🍲"
+    )
+
+    private val powerOptions = arrayOf(
+        "Abraço Mágico que Cura Tudo 🫂",
+        "Fazer o Outro Sorrir Sempre 😊",
+        "Telepatia de Amor & Sintonia 🧠💖",
+        "Amor Eterno sem Fim ♾️"
+    )
+
     private val msgOptions = arrayOf(
         "Amo-te daqui até à lua e volta! ♥",
         "És o melhor que me aconteceu na vida! ✨",
@@ -1112,6 +1163,10 @@ class ReportScreen(g: BunnyView) : Screen(g) {
                     Save.bunnyDislikes = repDislikes
                     Save.bunnyFavColor = repColor
                     Save.bunnyFavFood = repFood
+                    Save.bunnyPersonality = repPersonality
+                    Save.bunnySeason = repSeason
+                    Save.bunnyHobby = repHobby
+                    Save.bunnyPower = repPower
                     Save.bunnyMessage = repMsg
                     Save.reportDoneBunny = true
                 } else {
@@ -1120,6 +1175,10 @@ class ReportScreen(g: BunnyView) : Screen(g) {
                     Save.catDislikes = repDislikes
                     Save.catFavColor = repColor
                     Save.catFavFood = repFood
+                    Save.catPersonality = repPersonality
+                    Save.catSeason = repSeason
+                    Save.catHobby = repHobby
+                    Save.catPower = repPower
                     Save.catMessage = repMsg
                     Save.reportDoneCat = true
                 }
@@ -1161,10 +1220,10 @@ class ReportScreen(g: BunnyView) : Screen(g) {
         D.text(c, I18n.t("report_sub"), r.centerX(), r.top + r.height() * 0.088f, r.height() * 0.016f, Theme.textDim)
 
         val indY = r.top + r.height() * 0.115f
-        for (i in 0 until 6) {
-            val ix = r.centerX() + (i - 2.5f) * r.width() * 0.07f
+        for (i in 0 until 10) {
+            val ix = r.centerX() + (i - 4.5f) * r.width() * 0.046f
             val active = i == page
-            D.circle(c, ix, indY, if (active) r.width() * 0.020f else r.width() * 0.013f, if (active) Theme.primary else Theme.card, Theme.outline, 1.8f)
+            D.circle(c, ix, indY, if (active) r.width() * 0.016f else r.width() * 0.010f, if (active) Theme.primary else Theme.card, Theme.outline, 1.6f)
         }
 
         val (qTitle, currentVal, curOptions) = when (page) {
@@ -1173,6 +1232,10 @@ class ReportScreen(g: BunnyView) : Screen(g) {
             2 -> Triple(I18n.t("rep_dislikes"), repDislikes, dislikesOptions)
             3 -> Triple(I18n.t("rep_color"), repColor, colorOptions)
             4 -> Triple(I18n.t("rep_food"), repFood, foodOptions)
+            5 -> Triple(I18n.t("rep_personality"), repPersonality, personalityOptions)
+            6 -> Triple(I18n.t("rep_season"), repSeason, seasonOptions)
+            7 -> Triple(I18n.t("rep_hobby"), repHobby, hobbyOptions)
+            8 -> Triple(I18n.t("rep_power"), repPower, powerOptions)
             else -> Triple(I18n.t("rep_msg"), repMsg, msgOptions)
         }
 
@@ -1205,7 +1268,7 @@ class ReportScreen(g: BunnyView) : Screen(g) {
             prevBtn.setEmpty()
         }
 
-        if (page < 5) {
+        if (page < 9) {
             nextBtn.set(r.right - r.width() * 0.36f, navY, r.right - r.width() * 0.06f, navY + navH)
             D.button(c, nextBtn, "Seguinte →", Theme.primary, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure, navH * 0.30f)
             finishBtn.setEmpty()
@@ -1223,7 +1286,9 @@ class ReportScreen(g: BunnyView) : Screen(g) {
 
         val curOptions = when (page) {
             0 -> nameOptions; 1 -> likesOptions; 2 -> dislikesOptions
-            3 -> colorOptions; 4 -> foodOptions; else -> msgOptions
+            3 -> colorOptions; 4 -> foodOptions; 5 -> personalityOptions
+            6 -> seasonOptions; 7 -> hobbyOptions; 8 -> powerOptions
+            else -> msgOptions
         }
         for (i in 0 until curOptions.size) {
             if (optButtons[i].contains(x, y)) {
@@ -1233,7 +1298,11 @@ class ReportScreen(g: BunnyView) : Screen(g) {
                     2 -> repDislikes = curOptions[i]
                     3 -> repColor = curOptions[i]
                     4 -> repFood = curOptions[i]
-                    5 -> repMsg = curOptions[i]
+                    5 -> repPersonality = curOptions[i]
+                    6 -> repSeason = curOptions[i]
+                    7 -> repHobby = curOptions[i]
+                    8 -> repPower = curOptions[i]
+                    9 -> repMsg = curOptions[i]
                 }
                 burst(x, y, Icons.HEART, 4, r.width() * 0.03f)
                 return
@@ -1244,7 +1313,7 @@ class ReportScreen(g: BunnyView) : Screen(g) {
             page = max(0, page - 1); return
         }
         if (nextBtn.contains(x, y)) {
-            page = min(5, page + 1); return
+            page = min(9, page + 1); return
         }
         if (finishBtn.contains(x, y)) {
             isCelebrating = true
@@ -1311,10 +1380,12 @@ class MultiplayerScreen(g: BunnyView) : Screen(g) {
         if (Save.partnerConnected) {
             val pLikes = if (Save.partnerLikes.isNotEmpty()) Save.partnerLikes else "Estar juntinhos"
             val pFood = if (Save.partnerFavFood.isNotEmpty()) Save.partnerFavFood else "Alfajor Peruano"
+            val pPerson = if (Save.partnerPersonality.isNotEmpty()) Save.partnerPersonality else "Doce 🥰"
+            val pPower = if (Save.partnerPower.isNotEmpty()) Save.partnerPower else "Abraço Mágico 🫂"
             val pMsg = if (Save.partnerMessage.isNotEmpty()) Save.partnerMessage else "Amo-te muito! ♥"
-            D.text(c, "💌 Ficha de ${Save.partnerName}:", partnerCard.centerX(), partnerCard.top + cardH * 0.22f, cardH * 0.18f, Theme.primary)
-            D.text(c, "Gosta: $pLikes · Comida: $pFood", partnerCard.centerX(), partnerCard.top + cardH * 0.50f, cardH * 0.15f, Theme.text)
-            D.text(c, "\"$pMsg\"", partnerCard.centerX(), partnerCard.top + cardH * 0.76f, cardH * 0.16f, if (Theme.isBunny) Theme.bSilver else Theme.text)
+            D.text(c, "💌 Ficha de ${Save.partnerName} ($pPerson)", partnerCard.centerX(), partnerCard.top + cardH * 0.20f, cardH * 0.18f, Theme.primary)
+            D.text(c, "Poder: $pPower · Gosta: $pLikes", partnerCard.centerX(), partnerCard.top + cardH * 0.48f, cardH * 0.14f, Theme.text)
+            D.text(c, "\"$pMsg\"", partnerCard.centerX(), partnerCard.top + cardH * 0.76f, cardH * 0.15f, if (Theme.isBunny) Theme.bSilver else Theme.text)
         } else {
             D.text(c, "Partilha o teu código ou cola o do parceiro", partnerCard.centerX(), partnerCard.top + cardH * 0.38f, cardH * 0.17f, Theme.text)
             D.text(c, "para conectarem os dois telemóveis à distância!", partnerCard.centerX(), partnerCard.top + cardH * 0.66f, cardH * 0.15f, Theme.textDim)

@@ -323,10 +323,13 @@ class KartScreen(g: BunnyView) : Screen(g) {
             currentLap++
             if (currentLap > totalLaps) {
                 state = State.FINISH
-                g.earn(50)
+                val hasBonus = Save.activePersonality.contains("Brincalh") || Save.activeHobby.contains("TogetherKart")
+                val coinsEarned = if (hasBonus) 75 else 50
+                g.earn(coinsEarned)
                 SoundFx.playKiss()
                 burst(g.width / 2f, g.height / 2f, Icons.HEART, 15, 20f)
-                g.say("🏁 Corrida Concluída! +50 moedas! ${if (playerPlace == 1) "🏆 Vitória a dois!" else "Grande corrida!"}")
+                val bonusNote = if (hasBonus) " (Bónus Ficha: +25! 🏎️)" else ""
+                g.say("🏁 Corrida Concluída! +$coinsEarned moedas!$bonusNote ${if (playerPlace == 1) "🏆 Vitória a dois!" else "Grande corrida!"}")
             } else {
                 g.say("Volta $currentLap / $totalLaps!")
                 SoundFx.playPlay(Theme.isCat)

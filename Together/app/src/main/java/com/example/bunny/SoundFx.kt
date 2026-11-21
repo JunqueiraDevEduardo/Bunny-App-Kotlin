@@ -155,22 +155,23 @@ object SoundFx {
             }
             postPcm(buf)
         } else {
-            // Coelho a dormir: "Tooth Purring" real de coelho feliz e relaxado
-            // Pequenos cliques suaves de dentes e sopros quentes ritmados
-            val duration = 0.65f
+            // Bunny a dormir: Ronromar rítmico suave, profundo e reconfortante ("rum... rum... rum...")
+            // Sem estalidos de dentes nem ruídos: purr harmónico doce e relaxante com modulação suave
+            val duration = 0.78f
             val count = (SAMPLE_RATE * duration).toInt()
             val buf = ShortArray(count)
-            val rnd = Random(19)
             for (i in 0 until count) {
                 val t = i / SAMPLE_RATE.toFloat()
-                val breathCycle = sin(PI * (t / duration)).toFloat()
-                // Micro-estalidos rítmicos de contentamento
-                val clickT = t % 0.09f
-                val clickEnv = exp(-clickT * 60.0).toFloat()
-                val click = (rnd.nextFloat() * 2f - 1f) * clickEnv * 0.35f
-                val softPuff = sin(2.0 * PI * 180.0 * t).toFloat() * 0.20f
-                val s = (click + softPuff) * breathCycle
-                buf[i] = (s * 17000f).toInt().coerceIn(-32767, 32767).toShort()
+                // Ciclo respiratório suave e calmante
+                val breatheEnv = (0.30f + 0.70f * sin(2.0 * PI * 1.25 * t).toFloat().coerceAtLeast(0f))
+                // Vibração de ronronar quente (22 Hz)
+                val flutter = (0.5f + 0.5f * sin(2.0 * PI * 22.0 * t).toFloat())
+                // Frequências fundamentais graves e quentes (65 Hz + harmónicos ricos)
+                val fundamental = sin(2.0 * PI * 65.0 * t).toFloat()
+                val harm2 = 0.42f * sin(2.0 * PI * 130.0 * t).toFloat()
+                val harm3 = 0.16f * sin(2.0 * PI * 195.0 * t).toFloat()
+                val purr = (fundamental + harm2 + harm3) * flutter * breatheEnv
+                buf[i] = (purr * 21000f).toInt().coerceIn(-32767, 32767).toShort()
             }
             postPcm(buf)
         }

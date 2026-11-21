@@ -15,13 +15,13 @@ object Rooms {
     fun drawWall(c: Canvas, r: RectF, id: String) {
         val baseRaw = when (id) {
             "wall_mint" -> Color.rgb(212, 240, 226)
-            "wall_sky" -> if (Theme.isBunny) Theme.bNavyLight else Color.rgb(211, 233, 250)
-            "wall_lav", "wall_purple" -> if (Theme.isBunny) Theme.bPurpleDark else Color.rgb(227, 217, 246)
-            "wall_navy" -> Theme.bNavyDark
-            "wall_stripes" -> if (Theme.isBunny) Theme.bNavyDark else C.cream
-            "wall_stars" -> if (Theme.isBunny) Theme.bNavyDark else Color.rgb(214, 200, 240)
-            "wall_inca" -> if (Theme.isBunny) Color.rgb(32, 42, 75) else Color.rgb(228, 218, 202)
-            "wall_aguayo" -> if (Theme.isBunny) Theme.bNavyDark else C.cream
+            "wall_sky" -> if (Theme.isBunny) Color.rgb(218, 235, 252) else Color.rgb(211, 233, 250)
+            "wall_lav", "wall_purple" -> if (Theme.isBunny) Color.rgb(226, 220, 248) else Color.rgb(227, 217, 246)
+            "wall_navy" -> if (Theme.isBunny) Color.rgb(198, 220, 246) else Color.rgb(210, 225, 240)
+            "wall_stripes" -> if (Theme.isBunny) Color.rgb(235, 244, 255) else C.cream
+            "wall_stars" -> if (Theme.isBunny) Color.rgb(225, 238, 255) else Color.rgb(214, 200, 240)
+            "wall_inca" -> if (Theme.isBunny) Color.rgb(224, 236, 250) else Color.rgb(228, 218, 202)
+            "wall_aguayo" -> if (Theme.isBunny) Color.rgb(232, 242, 254) else C.cream
             "wall_azulejos_pt" -> Color.rgb(238, 244, 255)
             "cat_wall_azulejos_rosa" -> Color.rgb(255, 242, 248)
             "wall_marmore_wc_azul" -> Color.rgb(225, 238, 252)
@@ -37,7 +37,7 @@ object Rooms {
             "cat_wall_stripes" -> Color.rgb(255, 228, 238)
             "cat_wall_renda_sintra" -> Color.rgb(255, 235, 245)
             "cat_wall_nuvens_douradas" -> Color.rgb(255, 225, 240)
-            else -> if (Theme.isBunny) Theme.bNavyDark else Color.rgb(255, 217, 228)
+            else -> if (Theme.isBunny) Color.rgb(230, 240, 254) else Color.rgb(255, 217, 228)
         }
         val base = Theme.sanitize(baseRaw)
         D.f(base); c.drawRect(r, D.p)
@@ -91,7 +91,7 @@ object Rooms {
             "wall_inca" -> {
                 val rows = 6
                 val rh = r.height() / rows
-                val lineCol = if (Theme.isBunny) Theme.bPurple else Color.rgb(180, 168, 150)
+                val lineCol = if (Theme.isBunny) Theme.bWineDark else Color.rgb(180, 168, 150)
                 for (j in 1 until rows) {
                     D.line(c, r.left, r.top + j * rh, r.right, r.top + j * rh, 3f, lineCol)
                     val cols = 5
@@ -178,11 +178,13 @@ object Rooms {
     fun drawFloor(c: Canvas, r: RectF, id: String) {
         when (id) {
             "floor_inca" -> {
-                D.f(Color.rgb(205, 195, 180)); c.drawRect(r, D.p)
+                val baseStone = if (Theme.isBunny) Color.rgb(232, 228, 220) else Color.rgb(205, 195, 180)
+                D.f(baseStone); c.drawRect(r, D.p)
                 val rows = 5
                 val rh = r.height() / rows
+                val lineCol = if (Theme.isBunny) Color.rgb(205, 196, 185) else Color.rgb(165, 155, 140)
                 for (j in 0 until rows) {
-                    D.line(c, r.left, r.top + j * rh, r.right, r.top + j * rh, 3f, Color.rgb(165, 155, 140))
+                    D.line(c, r.left, r.top + j * rh, r.right, r.top + j * rh, 3f, lineCol)
                     val cols = 6
                     for (i in 0 until cols) {
                         val shift = (j * 0.35f) % 1f
@@ -272,8 +274,8 @@ object Rooms {
                 for (j in 1 until rows) D.line(c, r.left, r.top + j * r.height() / rows, r.right, r.top + j * r.height() / rows, 3f, Color.rgb(230, 220, 230))
             }
             else -> {
-                val woodBase = if (Theme.isBunny) Color.rgb(90, 65, 55) else Color.rgb(235, 203, 159)
-                val woodLine = if (Theme.isBunny) Color.rgb(65, 45, 38) else Color.rgb(214, 176, 130)
+                val woodBase = if (Theme.isBunny) Color.rgb(238, 230, 220) else Color.rgb(235, 203, 159)
+                val woodLine = if (Theme.isBunny) Color.rgb(215, 198, 186) else Color.rgb(214, 176, 130)
                 D.f(woodBase); c.drawRect(r, D.p)
                 val rows = 5
                 for (j in 1 until rows) D.line(c, r.left, r.top + j * r.height() / rows, r.right, r.top + j * r.height() / rows, 3f, woodLine)
@@ -492,23 +494,82 @@ object Rooms {
                 }
             }
             "dec_window" -> {
-                D.rrect(c, cx - u * 0.55f, cy - u * 0.6f, cx + u * 0.55f, cy + u * 0.6f, u * 0.08f, C.white, ol, lw)
-                D.rrect(c, cx - u * 0.47f, cy - u * 0.52f, cx + u * 0.47f, cy + u * 0.52f, u * 0.05f, D.mix(C.sky, Color.rgb(30, 35, 80), nightNow))
+                val winFrame = if (Theme.isBunny) Color.rgb(220, 235, 252) else C.white
+                val winBorder = if (Theme.isBunny) Theme.bWineDark else ol
+                D.rrect(c, cx - u * 0.55f, cy - u * 0.6f, cx + u * 0.55f, cy + u * 0.6f, u * 0.08f, winFrame, winBorder, lw)
+                val skyCol = if (nightNow > 0.4f) {
+                    D.mix(C.sky, Color.rgb(25, 30, 75), nightNow)
+                } else {
+                    when (Save.activeSeason) {
+                        "Primavera" -> Color.rgb(215, 240, 255)
+                        "Verão" -> Color.rgb(175, 220, 255)
+                        "Outono" -> Color.rgb(255, 230, 205)
+                        "Inverno" -> Color.rgb(208, 228, 248)
+                        else -> C.sky
+                    }
+                }
+                D.rrect(c, cx - u * 0.47f, cy - u * 0.52f, cx + u * 0.47f, cy + u * 0.52f, u * 0.05f, skyCol)
                 if (nightNow > 0.4f) {
                     Icons.draw(c, Icons.MOON, cx + u * 0.15f, cy - u * 0.2f, u * 0.2f)
                     Icons.drawSpark(c, cx - u * 0.25f, cy - u * 0.3f, u * 0.07f)
                     Icons.drawSpark(c, cx - u * 0.1f, cy + u * 0.1f, u * 0.05f)
                 } else {
-                    D.circle(c, cx + u * 0.18f, cy - u * 0.2f, u * 0.13f, C.butter)
-                    Icons.draw(c, Icons.CLOUD, cx - u * 0.15f, cy + u * 0.1f, u * 0.17f)
+                    // Dinâmica baseada na Estação Favorita da Ficha do Pet
+                    when (Save.activeSeason) {
+                        "Primavera" -> {
+                            D.circle(c, cx + u * 0.20f, cy - u * 0.24f, u * 0.11f, C.butter)
+                            val petCols = if (Theme.isBunny) intArrayOf(Theme.bWineLight, Theme.bBlueSky, Theme.bPurpleLight) else intArrayOf(C.pinkD, C.pink, C.white)
+                            for (k in 0..4) {
+                                val px = cx - u * 0.30f + k * u * 0.14f
+                                val py = cy - u * 0.10f + (k % 3) * u * 0.16f
+                                D.oval(c, px, py, u * 0.038f, u * 0.024f, petCols[k % petCols.size])
+                            }
+                        }
+                        "Verão" -> {
+                            val scx = cx + u * 0.18f; val scy = cy - u * 0.22f
+                            D.circle(c, scx, scy, u * 0.15f, C.gold)
+                            D.circle(c, scx, scy, u * 0.10f, Color.rgb(255, 245, 140))
+                            Icons.draw(c, Icons.CLOUD, cx - u * 0.16f, cy + u * 0.12f, u * 0.18f)
+                        }
+                        "Outono" -> {
+                            D.circle(c, cx + u * 0.18f, cy - u * 0.15f, u * 0.13f, Color.rgb(255, 168, 65))
+                            val leafCols = intArrayOf(Color.rgb(215, 110, 40), Color.rgb(238, 168, 50), Color.rgb(195, 75, 40))
+                            for (k in 0..4) {
+                                val lx = cx - u * 0.28f + k * u * 0.14f
+                                val ly = cy - u * 0.06f + (k % 3) * u * 0.15f
+                                D.oval(c, lx, ly, u * 0.042f, u * 0.022f, leafCols[k % leafCols.size])
+                            }
+                        }
+                        "Inverno" -> {
+                            D.circle(c, cx + u * 0.20f, cy - u * 0.22f, u * 0.10f, Color.rgb(235, 242, 255))
+                            for (k in 0..5) {
+                                val sx = cx - u * 0.32f + k * u * 0.13f
+                                val sy = cy - u * 0.24f + ((k * 3) % 5) * u * 0.14f
+                                Icons.drawSpark(c, sx, sy, u * 0.045f)
+                            }
+                        }
+                        else -> {
+                            D.circle(c, cx + u * 0.18f, cy - u * 0.2f, u * 0.13f, C.butter)
+                            Icons.draw(c, Icons.CLOUD, cx - u * 0.15f, cy + u * 0.1f, u * 0.17f)
+                        }
+                    }
                 }
-                D.line(c, cx, cy - u * 0.52f, cx, cy + u * 0.52f, lw * 1.5f, C.white)
-                D.line(c, cx - u * 0.47f, cy, cx + u * 0.47f, cy, lw * 1.5f, C.white)
+                D.line(c, cx, cy - u * 0.52f, cx, cy + u * 0.52f, lw * 1.5f, winFrame)
+                D.line(c, cx - u * 0.47f, cy, cx + u * 0.47f, cy, lw * 1.5f, winFrame)
             }
             "dec_rug" -> {
-                D.oval(c, cx, cy, u * 1.0f, u * 0.2f, C.pink, ol, lw)
-                D.oval(c, cx, cy, u * 0.72f, u * 0.14f, C.cream)
-                D.oval(c, cx, cy, u * 0.42f, u * 0.08f, C.lav)
+                if (Theme.isBunny) {
+                    val outer = Theme.bWine
+                    val mid = Theme.bBlueSky
+                    val inner = Theme.bWineLight
+                    D.oval(c, cx, cy, u * 1.0f, u * 0.2f, outer, ol, lw)
+                    D.oval(c, cx, cy, u * 0.72f, u * 0.14f, mid)
+                    D.oval(c, cx, cy, u * 0.42f, u * 0.08f, inner)
+                } else {
+                    D.oval(c, cx, cy, u * 1.0f, u * 0.2f, C.pink, ol, lw)
+                    D.oval(c, cx, cy, u * 0.72f, u * 0.14f, C.cream)
+                    D.oval(c, cx, cy, u * 0.42f, u * 0.08f, C.lav)
+                }
             }
             "dec_plant" -> {
                 D.oval(c, cx - u * 0.18f, cy - u * 0.5f, u * 0.14f, u * 0.3f, C.green, ol, lw)

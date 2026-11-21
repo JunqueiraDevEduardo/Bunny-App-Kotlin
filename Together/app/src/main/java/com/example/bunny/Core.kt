@@ -54,6 +54,10 @@ object I18n {
         "rep_dislikes" to "O que não gostas de fazer:",
         "rep_color" to "A tua cor favorita:",
         "rep_food" to "A tua comida favorita:",
+        "rep_personality" to "Personalidade Única do Pet:",
+        "rep_season" to "A Nossa Estação Favorita:",
+        "rep_hobby" to "O Nosso Passatempo a Dois:",
+        "rep_power" to "O Nosso Super Poder do Amor:",
         "rep_msg" to "Mensagem de amor para o parceiro:",
         "rep_finish" to "Concluir Ficha & Entrar! ✨",
         "rep_done_anim" to "Ficha gravada com muito carinho! ♥",
@@ -102,6 +106,10 @@ object I18n {
         "rep_dislikes" to "Lo que no te gusta hacer:",
         "rep_color" to "Tu color favorito:",
         "rep_food" to "Tu comida favorita:",
+        "rep_personality" to "Personalidad Única de la Mascota:",
+        "rep_season" to "Nuestra Estación Favorita:",
+        "rep_hobby" to "Nuestro Pasatiempo Juntos:",
+        "rep_power" to "Nuestro Súper Poder de Amor:",
         "rep_msg" to "Mensaje de amor para tu pareja:",
         "rep_finish" to "¡Completar Ficha y Entrar! ✨",
         "rep_done_anim" to "¡Ficha guardada con mucho cariño! ♥",
@@ -137,20 +145,23 @@ object Theme {
     val isBunny: Boolean get() = Save.activeChar == "bunny"
     val isCat: Boolean get() = Save.activeChar == "cat"
 
-    // Cores Bunny (Azuis, Vinho, Roxo - Sem Rosa e Sem Branco)
-    val bNavyDark = Color.rgb(18, 24, 48)
-    val bNavy = Color.rgb(26, 36, 68)
-    val bNavyLight = Color.rgb(40, 52, 92)
-    val bBlueRoyal = Color.rgb(42, 92, 172)
+    // Cores Bunny (Azuis elegantes, celestiais e leves, Vinho-Tinto nobre, Roxo - Sem Rosa e Sem Branco)
+    val bNavyDark = Color.rgb(24, 34, 66)
+    val bNavy = Color.rgb(35, 48, 88)
+    val bNavyLight = Color.rgb(52, 70, 118)
+    val bBlueRoyal = Color.rgb(46, 96, 185)
     val bBlueSky = Color.rgb(85, 148, 222)
-    val bBlueIce = Color.rgb(205, 225, 248)  // Substitui o branco com tom celestial azulado
-    val bSilver = Color.rgb(212, 224, 240)   // Prateado azulado (substitui o branco)
-    val bWineDark = Color.rgb(82, 14, 34)
-    val bWine = Color.rgb(125, 24, 52)
-    val bWineLight = Color.rgb(162, 42, 75)
-    val bPurpleDark = Color.rgb(62, 18, 76)
-    val bPurple = Color.rgb(102, 38, 118)
-    val bPurpleLight = Color.rgb(142, 70, 160)
+    val bBlueSoft = Color.rgb(226, 238, 252)  // Fundo celestial suave, luminoso e acolhedor
+    val bBlueIce = Color.rgb(238, 246, 255)   // Azul gelo super leve (substitui o branco puro)
+    val bSilver = Color.rgb(215, 228, 245)    // Prateado azulado
+    val bWineDark = Color.rgb(96, 18, 44)     // Vinho-tinto nobre escuro
+    val bWine = Color.rgb(138, 28, 62)        // Vinho-tinto aveludado e rico
+    val bWineLight = Color.rgb(178, 48, 88)   // Vinho-tinto rubi luminoso
+    val bPurpleDark = Color.rgb(65, 20, 80)
+    val bPurple = Color.rgb(108, 42, 126)
+    val bPurpleLight = Color.rgb(148, 75, 168)
+    val bText = Color.rgb(24, 34, 68)         // Tinta azul índigo profunda (alto contraste sobre fundos leves)
+    val bTextDim = Color.rgb(68, 92, 138)     // Azul ardósia elegante
 
     // Cores Cat (Rosa, Brancos - Sem Azul, Sem Vinho, Sem Roxo)
     val cPinkDark = Color.rgb(222, 72, 122)
@@ -161,29 +172,29 @@ object Theme {
     val cWhiteCream = Color.rgb(255, 250, 252)
     val cPeach = Color.rgb(255, 220, 200)
 
-    // Elementos dinâmicos da Interface
-    val bg: Int get() = if (isBunny) bNavyDark else cPinkCream
-    val surface: Int get() = if (isBunny) bNavy else cWhitePure
-    val card: Int get() = if (isBunny) bNavyLight else cWhiteCream
-    val cardAccent: Int get() = if (isBunny) bPurpleDark else cPinkSoft
-    val outline: Int get() = if (isBunny) bPurple else Color.rgb(245, 185, 208)
+    // Elementos dinâmicos da Interface (Com cores leves, azuis celestes e vinho-tinto no Bunny)
+    val bg: Int get() = if (isBunny) bBlueSoft else cPinkCream
+    val surface: Int get() = if (isBunny) bBlueIce else cWhitePure
+    val card: Int get() = if (isBunny) Color.rgb(244, 249, 255) else cWhiteCream
+    val cardAccent: Int get() = if (isBunny) Color.rgb(216, 232, 252) else cPinkSoft
+    val outline: Int get() = if (isBunny) bWine else Color.rgb(245, 185, 208)
     val primary: Int get() = if (isBunny) bWine else cPink
     val primaryDark: Int get() = if (isBunny) bWineDark else cPinkDark
     val secondary: Int get() = if (isBunny) bBlueRoyal else cWhitePure
-    val accent: Int get() = if (isBunny) bPurpleLight else cPinkDark
-    val text: Int get() = if (isBunny) bSilver else Color.rgb(115, 65, 80)
-    val textDim: Int get() = if (isBunny) bBlueSky else Color.rgb(175, 125, 140)
-    val bannerTop: Int get() = if (isBunny) bPurpleDark else cPink
-    val bannerBottom: Int get() = if (isBunny) bNavyLight else cPinkSoft
-    val stripBg: Int get() = if (isBunny) Color.rgb(22, 32, 60) else cWhiteCream
+    val accent: Int get() = if (isBunny) bWineLight else cPinkDark
+    val text: Int get() = if (isBunny) bText else Color.rgb(115, 65, 80)
+    val textDim: Int get() = if (isBunny) bTextDim else Color.rgb(175, 125, 140)
+    val bannerTop: Int get() = if (isBunny) bWine else cPink
+    val bannerBottom: Int get() = if (isBunny) bWineDark else cPinkSoft
+    val stripBg: Int get() = if (isBunny) Color.rgb(228, 238, 252) else cWhiteCream
 
     /** Sanitiza qualquer cor para cumprir com 100% de rigor as regras de cor do usuário. */
     fun sanitize(color: Int): Int {
         val r = Color.red(color); val g = Color.green(color); val b = Color.blue(color)
         if (isBunny) {
             // No Bunny: PROIBIDO cor de rosa e branco!
-            // Se for branco ou perto de branco -> converter para Azul Gelo / Prateado
-            if (r > 215 && g > 215 && b > 215) return bSilver
+            // Se for branco ou perto de branco -> converter para Azul Gelo
+            if (r > 215 && g > 215 && b > 215) return bBlueIce
             // Se for rosa (vermelho alto, azul moderado/alto, verde baixo) -> converter para Vinho
             if (r > 190 && b > 140 && g < 225 && r > g) return bWine
             return color
