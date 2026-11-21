@@ -46,6 +46,15 @@ class MainActivity : Activity() {
         return super.dispatchGenericMotionEvent(event)
     }
 
+    @Suppress("DEPRECATION")
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (this::game.isInitialized && game.handleBack()) {
+            return
+        }
+        super.onBackPressed()
+    }
+
     override fun onResume() {
         super.onResume()
         Save.load(this)

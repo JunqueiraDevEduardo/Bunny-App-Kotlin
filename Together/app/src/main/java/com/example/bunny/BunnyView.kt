@@ -327,6 +327,19 @@ class BunnyView(ctx: Context) : View(ctx) {
         return false
     }
 
+    fun handleBack(): Boolean {
+        if (current != Nav.HOME && current != Nav.AUTH) {
+            go(Nav.HOME)
+            return true
+        }
+        return false
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
+    }
+
     override fun onTouchEvent(e: MotionEvent): Boolean {
         val x = e.x; val y = e.y
         val isFull = current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT || current == Nav.KART || current == Nav.WIDGETS || current == Nav.PROFILE
@@ -341,7 +354,12 @@ class BunnyView(ctx: Context) : View(ctx) {
                 if (!inBanner) screen.move(x, y, x - lastX, y - lastY, target)
                 lastX = x; lastY = y
             }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+            MotionEvent.ACTION_UP -> {
+                if (!inBanner) screen.up(x, y, target)
+                inBanner = false
+                performClick()
+            }
+            MotionEvent.ACTION_CANCEL -> {
                 if (!inBanner) screen.up(x, y, target)
                 inBanner = false
             }

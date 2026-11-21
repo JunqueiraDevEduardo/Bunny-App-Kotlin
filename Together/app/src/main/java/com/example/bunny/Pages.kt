@@ -291,27 +291,30 @@ class WardrobeScreen(g: BunnyView) : GridScreen(g) {
 // ================================================================= DECORAR
 class DecorScreen(g: BunnyView) : GridScreen(g) {
     private var room = 0
-    private val roomRects = Array(3) { RectF() }
+    private val roomRects = Array(4) { RectF() }
     override val tabNames: List<String> get() = listOf("Paredes", "Chão", "Objetos")
     override fun headerH(r: RectF) = r.height() * 0.4f
 
     override fun drawHeader(c: Canvas, r: RectF) {
         val th = r.height() * 0.15f
-        val tw = r.width() / 3f
-        for (i in 0 until 3) {
-            roomRects[i].set(r.left + i * tw + 4f, r.top + 4f, r.left + (i + 1) * tw - 4f, r.top + th)
-            D.rrect(c, roomRects[i], th * 0.4f, if (i == room) C.lav else C.white, C.outline, 3f)
-            D.text(c, Rooms.names[i], roomRects[i].centerX(), roomRects[i].centerY() + th * 0.12f, th * 0.42f, C.ink)
+        val tw = r.width() / 4f
+        for (i in 0 until 4) {
+            roomRects[i].set(r.left + i * tw + 3f, r.top + 4f, r.left + (i + 1) * tw - 3f, r.top + th)
+            val isSel = i == room
+            val tabCol = if (Theme.isBunny) (if (isSel) Theme.bWine else Theme.bNavyLight) else (if (isSel) Theme.primary else Theme.cWhitePure)
+            D.rrect(c, roomRects[i], th * 0.35f, tabCol, Theme.outline, 2.5f)
+            val txtCol = if (Theme.isBunny) Theme.bSilver else (if (isSel) Theme.cWhitePure else Theme.text)
+            D.text(c, Rooms.names[i], roomRects[i].centerX(), roomRects[i].centerY() + th * 0.14f, th * 0.38f, txtCol)
         }
         val pr = RectF(r.left + r.width() * 0.04f, r.top + th + 10f, r.right - r.width() * 0.04f, r.bottom - 4f)
         c.save(); c.clipRect(pr)
         Rooms.draw(c, pr, room, 0f, 0f)
         c.restore()
-        D.s(C.outline, 5f); c.drawRect(pr, D.p)
+        D.s(Theme.outline, 4f); c.drawRect(pr, D.p)
     }
 
     override fun headerTap(x: Float, y: Float): Boolean {
-        for (i in 0 until 3) if (roomRects[i].contains(x, y)) { room = i; return true }
+        for (i in 0 until 4) if (roomRects[i].contains(x, y)) { room = i; return true }
         return false
     }
 

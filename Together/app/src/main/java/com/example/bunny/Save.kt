@@ -352,8 +352,8 @@ object Save {
     var bunnyBirthTime = 0L
     var bunnyBonusLevels = 0
     val bunnyOwned = HashSet<String>()
-    val bunnyWall = arrayOf("wall_inca", "wall_inca", "wall_inca")
-    val bunnyFloor = arrayOf("floor_inca", "floor_inca", "floor_inca")
+    val bunnyWall = arrayOf("wall_inca", "wall_inca", "wall_inca", "wall_marmore_wc_azul")
+    val bunnyFloor = arrayOf("floor_inca", "floor_inca", "floor_inca", "floor_marmore_wc_azul")
     val bunnyDecor = HashSet<String>()
 
     // =======================================================
@@ -374,8 +374,8 @@ object Save {
     var catBirthTime = 0L
     var catBonusLevels = 0
     val catOwned = HashSet<String>()
-    val catWall = arrayOf("cat_wall_pink", "cat_wall_pink", "cat_wall_pink")
-    val catFloor = arrayOf("cat_floor_cloud", "cat_floor_cloud", "cat_floor_cloud")
+    val catWall = arrayOf("cat_wall_pink", "cat_wall_pink", "cat_wall_pink", "cat_wall_marmore_wc_rosa")
+    val catFloor = arrayOf("cat_floor_cloud", "cat_floor_cloud", "cat_floor_cloud", "cat_floor_marmore_wc_rosa")
     val catDecor = HashSet<String>()
 
     // =======================================================
@@ -754,13 +754,15 @@ object Save {
         bunnyOwned.clear()
         bunnyOwned.addAll(prefs.getStringSet("bunny_owned", emptySet()) ?: emptySet())
         if (bunnyOwned.isEmpty()) {
-            bunnyOwned.addAll(listOf("wall_inca", "floor_inca", "col_sky", "food_carrot", "food_ceviche"))
+            bunnyOwned.addAll(listOf("wall_inca", "floor_inca", "wall_marmore_wc_azul", "floor_marmore_wc_azul", "col_sky", "food_carrot", "food_ceviche"))
         }
         bunnyDecor.clear()
         bunnyDecor.addAll(prefs.getStringSet("bunny_decor", emptySet()) ?: emptySet())
-        for (i in 0 until 3) {
-            bunnyWall[i] = prefs.getString("bunny_wall$i", "wall_inca") ?: "wall_inca"
-            bunnyFloor[i] = prefs.getString("bunny_floor$i", "floor_inca") ?: "floor_inca"
+        for (i in 0 until 4) {
+            val defWall = if (i == 3) "wall_marmore_wc_azul" else "wall_inca"
+            val defFloor = if (i == 3) "floor_marmore_wc_azul" else "floor_inca"
+            bunnyWall[i] = prefs.getString("bunny_wall$i", defWall) ?: defWall
+            bunnyFloor[i] = prefs.getString("bunny_floor$i", defFloor) ?: defFloor
         }
 
         // 2. CARREGAR CAT (perfil completamente independente)
@@ -782,13 +784,15 @@ object Save {
         catOwned.clear()
         catOwned.addAll(prefs.getStringSet("cat_owned", emptySet()) ?: emptySet())
         if (catOwned.isEmpty()) {
-            catOwned.addAll(listOf("cat_wall_pink", "cat_floor_cloud", "cat_col_white", "food_alfajor", "food_cupcake"))
+            catOwned.addAll(listOf("cat_wall_pink", "cat_floor_cloud", "cat_wall_marmore_wc_rosa", "cat_floor_marmore_wc_rosa", "cat_col_white", "food_alfajor", "food_cupcake"))
         }
         catDecor.clear()
         catDecor.addAll(prefs.getStringSet("cat_decor", emptySet()) ?: emptySet())
-        for (i in 0 until 3) {
-            catWall[i] = prefs.getString("cat_wall$i", "cat_wall_pink") ?: "cat_wall_pink"
-            catFloor[i] = prefs.getString("cat_floor$i", "cat_floor_cloud") ?: "cat_floor_cloud"
+        for (i in 0 until 4) {
+            val defWall = if (i == 3) "cat_wall_marmore_wc_rosa" else "cat_wall_pink"
+            val defFloor = if (i == 3) "cat_floor_marmore_wc_rosa" else "cat_floor_cloud"
+            catWall[i] = prefs.getString("cat_wall$i", defWall) ?: defWall
+            catFloor[i] = prefs.getString("cat_floor$i", defFloor) ?: defFloor
         }
 
         loadCraftBlocksFromJson(prefs.getString("craftBlocks", "") ?: "")
@@ -894,8 +898,8 @@ object Save {
             .putInt("bunny_bonusLevels", bunnyBonusLevels)
             .putStringSet("bunny_owned", HashSet(bunnyOwned))
             .putStringSet("bunny_decor", HashSet(bunnyDecor))
-            .putString("bunny_wall0", bunnyWall[0]).putString("bunny_wall1", bunnyWall[1]).putString("bunny_wall2", bunnyWall[2])
-            .putString("bunny_floor0", bunnyFloor[0]).putString("bunny_floor1", bunnyFloor[1]).putString("bunny_floor2", bunnyFloor[2])
+            .putString("bunny_wall0", bunnyWall[0]).putString("bunny_wall1", bunnyWall[1]).putString("bunny_wall2", bunnyWall[2]).putString("bunny_wall3", bunnyWall[3])
+            .putString("bunny_floor0", bunnyFloor[0]).putString("bunny_floor1", bunnyFloor[1]).putString("bunny_floor2", bunnyFloor[2]).putString("bunny_floor3", bunnyFloor[3])
             // 2. GRAVAR DADOS DA CAT
             .putInt("cat_coins", catCoins)
             .putFloat("cat_hunger", catHunger)
@@ -913,8 +917,8 @@ object Save {
             .putInt("cat_bonusLevels", catBonusLevels)
             .putStringSet("cat_owned", HashSet(catOwned))
             .putStringSet("cat_decor", HashSet(catDecor))
-            .putString("cat_wall0", catWall[0]).putString("cat_wall1", catWall[1]).putString("cat_wall2", catWall[2])
-            .putString("cat_floor0", catFloor[0]).putString("cat_floor1", catFloor[1]).putString("cat_floor2", catFloor[2])
+            .putString("cat_wall0", catWall[0]).putString("cat_wall1", catWall[1]).putString("cat_wall2", catWall[2]).putString("cat_wall3", catWall[3])
+            .putString("cat_floor0", catFloor[0]).putString("cat_floor1", catFloor[1]).putString("cat_floor2", catFloor[2]).putString("cat_floor3", catFloor[3])
             // CatBunnyCraft
             .putString("craftBlocks", craftBlocksToJson())
             .putLong("last", System.currentTimeMillis())

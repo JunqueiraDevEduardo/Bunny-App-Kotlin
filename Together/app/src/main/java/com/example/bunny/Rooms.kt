@@ -6,7 +6,7 @@ import android.graphics.RectF
 import kotlin.math.max
 
 object Rooms {
-    val names = listOf("Sala", "Quarto", "Cozinha")
+    val names = listOf("Sala", "Quarto", "Cozinha", "Banho")
     private var nightNow = 0f
     private val rf = RectF()
 

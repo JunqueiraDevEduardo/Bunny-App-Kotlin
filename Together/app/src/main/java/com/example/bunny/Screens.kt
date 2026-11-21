@@ -442,11 +442,10 @@ class BathScreen(g: BunnyView) : Screen(g) {
             for (i in 0 until 4) {
                 fx.add(Fx(sx + (Random.nextFloat() - 0.5f) * bs * 0.5f, shower.bottom + 10f, 0f, bs * 2.8f, 0.65f, Icons.BUBBLE, bs * 0.032f))
             }
-            if (Random.nextFloat() < 0.15f) SoundFx.playBath(Theme.isCat)
             if (foam <= 0.02f && rinsedBonus) {
                 rinsedBonus = false
                 Save.hygiene = min(100f, Save.hygiene + 12f)
-                g.say("Bunny ficou cheiroso e feliz!")
+                g.say("${Save.currentPetName()} ficou cheiroso(a) e feliz!")
             }
         }
         pose.mood = if (Save.mood() == 3) 0 else Save.mood()
@@ -456,14 +455,8 @@ class BathScreen(g: BunnyView) : Screen(g) {
     }
 
     override fun draw(c: Canvas, r: RectF) {
-        // Azulejos do banheiro
-        val tileBase = if (Theme.isBunny) Theme.bNavyDark else Theme.cPinkCream
-        val tileAccent = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
-        D.f(tileBase); c.drawRect(r, D.p)
-        val n = 6; val tw = r.width() / n
-        for (j in 0 until (r.height() / tw).toInt() + 1) for (i in 0 until n) {
-            D.rrect(c, r.left + i * tw + 3f, r.top + j * tw + 3f, r.left + (i + 1) * tw - 3f, r.top + (j + 1) * tw - 3f, tw * 0.12f, if ((i + j) % 2 == 0) tileAccent else D.alpha(tileBase, 140))
-        }
+        // Casa de Banho decorada pelo utilizador (Divisão 3)
+        Rooms.draw(c, r, 3, g.night, g.time, false)
 
         val scale = Save.bunnyScale()
         bs = r.height() * 0.30f * scale
@@ -512,7 +505,7 @@ class BathScreen(g: BunnyView) : Screen(g) {
         }
         sponge.set(spongeX - bs * 0.28f, spongeY - bs * 0.18f, spongeX + bs * 0.28f, spongeY + bs * 0.18f)
         Icons.draw(c, Icons.SPONGE, spongeX, spongeY, bs * 0.26f)
-        if (!spongeOn) D.text(c, "Esfrega com a esponja!", spongeX, spongeY + bs * 0.38f, r.height() * 0.024f, txtColor)
+        if (!spongeOn) D.text(c, "Esfrega com a esponja!", min(spongeX, r.right - r.width() * 0.18f), spongeY + bs * 0.38f, r.height() * 0.020f, txtColor)
 
         drawFx(c)
     }
