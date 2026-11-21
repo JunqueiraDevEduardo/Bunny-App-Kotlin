@@ -278,7 +278,8 @@ class KartScreen(g: BunnyView) : Screen(g) {
         else speed = max(curMax, speed - maxSpeed * 0.5 * dtd)
 
         val pct = speed / maxSpeed
-        val dx = dtd * 2.2 * pct
+        // Direção muito mais responsiva e ágil
+        val dx = dtd * 3.4 * max(0.45, pct)
         var steer = 0.0
         if (racing) {
             if (leftDown) steer -= 1.0
@@ -286,18 +287,34 @@ class KartScreen(g: BunnyView) : Screen(g) {
             if (abs(ps4SteerX) > 0.15f) steer += ps4SteerX
             steer = steer.coerceIn(-1.0, 1.0)
         }
-        steerVis += (steer - steerVis) * min(1.0, dtd * 8.0)
+        steerVis += (steer - steerVis) * min(1.0, dtd * 10.0)
         playerX += steer * dx
 
         val pSeg = seg(d)
-        playerX -= dx * pct * pSeg.curve * 0.32
+        // Redução suave da força centrífuga: curvas acentuadas já não atiram o jogador fora da pista!
+        playerX -= dx * pct * pSeg.curve * 0.065
         skyOff += pSeg.curve * 0.000035 * speed * dtd
 
-        // Atrito fora da pista
-        if ((playerX < -1.05 || playerX > 1.05) && speed > maxSpeed / 3.8) {
-            speed = max(maxSpeed / 3.8, speed - maxSpeed * 0.85 * dtd)
+        // Auto-Assist de Estabilização: centra suavemente o kart na faixa quando não se vira ativamente
+        if (racing && abs(steer) < 0.1) {
+            playerX -= playerX * dtd * 1.3
         }
-        playerX = playerX.coerceIn(-2.2, 2.2)
+
+        // Bumper Físico 3D de Proteção nas Paredes:
+        // Mantém o jogador 100% dentro da pista com ressalto arcade elástico e seguro!
+        val wallBound = 0.86
+        if (playerX > wallBound) {
+            playerX = wallBound - 0.02
+            speed = max(maxSpeed * 0.70, speed * 0.96)
+            burst(g.width * 0.75f, g.height * 0.85f, Icons.SPARK, 4, 12f)
+            if (Random.nextInt(4) == 0) SoundFx.playBuild()
+        } else if (playerX < -wallBound) {
+            playerX = -wallBound + 0.02
+            speed = max(maxSpeed * 0.70, speed * 0.96)
+            burst(g.width * 0.25f, g.height * 0.85f, Icons.SPARK, 4, 12f)
+            if (Random.nextInt(4) == 0) SoundFx.playBuild()
+        }
+        playerX = playerX.coerceIn(-wallBound, wallBound)
 
         val oldD = d
         d += speed * dtd
@@ -446,7 +463,9 @@ class KartScreen(g: BunnyView) : Screen(g) {
                 val sc = s.p1.scale + (s.p2.scale - s.p1.scale) * pcts
                 val sx = s.p1.sx + (s.p2.sx - s.p1.sx) * pcts.toFloat() + (sc * car.offset * roadW * ww / 2).toFloat()
                 val sy = s.p1.sy + (s.p2.sy - s.p1.sy) * pcts.toFloat()
-                val cw = (pw * (sc / scPlayer)).toFloat().coerceIn(12f, pw * 1.35f)
+                // Escala otimizada dos outros carros: permanecem sempre visíveis e proporcionais na pista
+                val relSc = (sc / scPlayer).toFloat()
+                val cw = (pw * (0.42f + 0.65f * relSc.coerceIn(0f, 1.2f))).coerceIn(pw * 0.42f, pw * 1.35f)
                 drawKartRacer(c, sx, sy, cw, car.isBunny, car.color, car.dark, 0.0, false, car.name)
             }
             c.restore()
@@ -517,51 +536,103 @@ class KartScreen(g: BunnyView) : Screen(g) {
         fill.color = if (light) 0xFF3B2A78.toInt() else 0xFF31226A.toInt()
         c.drawRect(0f, p2.sy, w, p1.sy, fill)
 
-        // Bermas (rumble neon vibrante)
-        val rumCol = if (start) (if (s.index % 2 == 0) Color.WHITE else Color.BLACK) else if (light) 0xFFFF3D7F.toInt() else 0xFFEFEFFF.toInt()
-        val r1 = p1.sw * 1.18f; val r2 = p2.sw * 1.18f
+        // Bermas largas e luminosas (rumble neon vibrante)
+        val rumCol = if (start) (if (s.index % 2 == 0) Color.WHITE else Color.BLACK) else if (light) Color.rgb(255, 45, 120) else Color.rgb(240, 245, 255)
+        val r1 = p1.sw * 1.22f; val r2 = p2.sw * 1.22f
         quad(c, rumCol, p1.sx - r1, p1.sy, p1.sx + r1, p1.sy, p2.sx + r2, p2.sy, p2.sx - r2, p2.sy)
 
-        // 3D Paredes / Guardrails de proteção ao longo da pista ("poe paredes poe a pista a estrada")
-        val wallH1 = p1.sw * 0.22f
-        val wallH2 = p2.sw * 0.22f
-        val wallBaseCol = if (light) 0xEE1E2C48.toInt() else 0xEE141E34.toInt()
-        val wallNeonCol = if (light) 0xFFFF2A7A.toInt() else 0xFF26DEFF.toInt()
+        // 3D Paredes / Guardrails futuristas altos de proteção ("melhores a visualização da pista com paredes")
+        val wallH1 = p1.sw * 0.44f
+        val wallH2 = p2.sw * 0.44f
+        val wallBaseCol = if (light) Color.rgb(48, 60, 90) else Color.rgb(32, 42, 68)
+        val wallNeonCol = if (light) Color.rgb(0, 240, 255) else Color.rgb(255, 35, 135)
 
-        // Parede Esquerda 3D
+        // 1. Parede Esquerda 3D Alta
         quad(c, wallBaseCol,
             p1.sx - r1, p1.sy,
             p1.sx - r1, p1.sy - wallH1,
             p2.sx - r2, p2.sy - wallH2,
             p2.sx - r2, p2.sy
         )
+        // Faixa de luz néon intermediária na Parede Esquerda
+        val midH1 = wallH1 * 0.52f; val midH2 = wallH2 * 0.52f
+        val stH1 = p1.sw * 0.05f; val stH2 = p2.sw * 0.05f
+        quad(c, wallNeonCol,
+            p1.sx - r1 * 0.995f, p1.sy - midH1,
+            p1.sx - r1 * 0.995f, p1.sy - midH1 - stH1,
+            p2.sx - r2 * 0.995f, p2.sy - midH2 - stH2,
+            p2.sx - r2 * 0.995f, p2.sy - midH2
+        )
         // Topo néon luminoso da Parede Esquerda
-        val rimH1 = p1.sw * 0.045f
-        val rimH2 = p2.sw * 0.045f
+        val rimH1 = p1.sw * 0.07f
+        val rimH2 = p2.sw * 0.07f
         quad(c, wallNeonCol,
             p1.sx - r1, p1.sy - wallH1,
-            p1.sx - r1 * 0.985f, p1.sy - wallH1 - rimH1,
-            p2.sx - r2 * 0.985f, p2.sy - wallH2 - rimH2,
+            p1.sx - r1 * 0.975f, p1.sy - wallH1 - rimH1,
+            p2.sx - r2 * 0.975f, p2.sy - wallH2 - rimH2,
             p2.sx - r2, p2.sy - wallH2
         )
 
-        // Parede Direita 3D
+        // 2. Parede Direita 3D Alta
         quad(c, wallBaseCol,
             p1.sx + r1, p1.sy,
             p1.sx + r1, p1.sy - wallH1,
             p2.sx + r2, p2.sy - wallH2,
             p2.sx + r2, p2.sy
         )
+        // Faixa de luz néon intermediária na Parede Direita
+        quad(c, wallNeonCol,
+            p1.sx + r1 * 0.995f, p1.sy - midH1,
+            p1.sx + r1 * 0.995f, p1.sy - midH1 - stH1,
+            p2.sx + r2 * 0.995f, p2.sy - midH2 - stH2,
+            p2.sx + r2 * 0.995f, p2.sy - midH2
+        )
         // Topo néon luminoso da Parede Direita
         quad(c, wallNeonCol,
             p1.sx + r1, p1.sy - wallH1,
-            p1.sx + r1 * 0.985f, p1.sy - wallH1 - rimH1,
-            p2.sx + r2 * 0.985f, p2.sy - wallH2 - rimH2,
+            p1.sx + r1 * 0.975f, p1.sy - wallH1 - rimH1,
+            p2.sx + r2 * 0.975f, p2.sy - wallH2 - rimH2,
             p2.sx + r2, p2.sy - wallH2
         )
 
-        // Asfalto escuro de alta velocidade
-        val rdCol = if (start) (if (s.index % 2 == 0) Color.WHITE else 0xFF222222.toInt()) else if (light) 0xFF6B6B7B.toInt() else 0xFF63637A.toInt()
+        // 3. Postes verticais de luz e setas de curva nas paredes
+        if (s.index % 5 == 0) {
+            val pilH1 = wallH1 * 1.35f
+            val pilW1 = p1.sw * 0.06f
+            // Poste esquerdo
+            fill.color = Color.rgb(20, 25, 40)
+            c.drawRect(p1.sx - r1 - pilW1 / 2f, p1.sy - pilH1, p1.sx - r1 + pilW1 / 2f, p1.sy, fill)
+            fill.color = Color.rgb(0, 245, 255)
+            c.drawCircle(p1.sx - r1, p1.sy - pilH1, pilW1 * 0.9f, fill)
+            // Poste direito
+            fill.color = Color.rgb(20, 25, 40)
+            c.drawRect(p1.sx + r1 - pilW1 / 2f, p1.sy - pilH1, p1.sx + r1 + pilW1 / 2f, p1.sy, fill)
+            fill.color = Color.rgb(255, 40, 140)
+            c.drawCircle(p1.sx + r1, p1.sy - pilH1, pilW1 * 0.9f, fill)
+        }
+
+        // Setas néon de curva perigosa (chevrons)
+        if (abs(s.curve) > 2.0 && s.index % 2 == 0) {
+            val arrowCol = Color.rgb(255, 235, 45)
+            if (s.curve > 0) { // Curva para a direita: aviso na parede esquerda
+                quad(c, arrowCol,
+                    p1.sx - r1 * 0.98f, p1.sy - wallH1 * 0.8f,
+                    p1.sx - r1 * 0.98f, p1.sy - wallH1 * 0.2f,
+                    p2.sx - r2 * 0.98f, p2.sy - wallH2 * 0.2f,
+                    p2.sx - r2 * 0.98f, p2.sy - wallH2 * 0.8f
+                )
+            } else { // Curva para a esquerda: aviso na parede direita
+                quad(c, arrowCol,
+                    p1.sx + r1 * 0.98f, p1.sy - wallH1 * 0.8f,
+                    p1.sx + r1 * 0.98f, p1.sy - wallH1 * 0.2f,
+                    p2.sx + r2 * 0.98f, p2.sy - wallH2 * 0.2f,
+                    p2.sx + r2 * 0.98f, p2.sy - wallH2 * 0.8f
+                )
+            }
+        }
+
+        // Asfalto nítido e escuro de alta aderência
+        val rdCol = if (start) (if (s.index % 2 == 0) Color.WHITE else Color.rgb(34, 34, 38)) else if (light) Color.rgb(75, 78, 98) else Color.rgb(65, 68, 88)
         quad(c, rdCol, p1.sx - p1.sw, p1.sy, p1.sx + p1.sw, p1.sy, p2.sx + p2.sw, p2.sy, p2.sx - p2.sw, p2.sy)
 
         // Linhas de faixa brancas
@@ -863,6 +934,23 @@ class KartScreen(g: BunnyView) : Screen(g) {
             fill.strokeWidth = w * 0.05f
             c.drawPath(path, fill)
             fill.style = Paint.Style.FILL
+        }
+
+        // Pílula com o nome do piloto oponente no topo do carro
+        if (name.isNotEmpty()) {
+            val tagY = headY - headR * 1.6f
+            val tagSize = (w * 0.16f).coerceIn(13f, 24f)
+            val tagW = D.textW(name, tagSize) + w * 0.14f
+            val tagH = tagSize * 1.45f
+            val tagRect = RectF(cx - tagW / 2f, tagY - tagH / 2f, cx + tagW / 2f, tagY + tagH / 2f)
+            fill.color = Color.argb(205, 20, 24, 38)
+            c.drawRoundRect(tagRect, tagH * 0.5f, tagH * 0.5f, fill)
+            fill.color = color
+            fill.style = Paint.Style.STROKE
+            fill.strokeWidth = 2.5f
+            c.drawRoundRect(tagRect, tagH * 0.5f, tagH * 0.5f, fill)
+            fill.style = Paint.Style.FILL
+            D.text(c, name, cx, tagY + tagSize * 0.35f, tagSize, Color.WHITE)
         }
 
         c.restore()

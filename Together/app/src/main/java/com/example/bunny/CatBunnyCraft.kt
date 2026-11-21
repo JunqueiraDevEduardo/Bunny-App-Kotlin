@@ -1152,22 +1152,30 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
 
         when (event.keyCode) {
             KeyEvent.KEYCODE_DPAD_UP -> {
-                curTargetZ = min(20, curTargetZ + 1)
+                curRelForward = min(6, curRelForward + 1)
                 return true
             }
             KeyEvent.KEYCODE_DPAD_DOWN -> {
-                curTargetZ = max(1, curTargetZ - 1)
+                curRelForward = max(-4, curRelForward - 1)
                 return true
             }
             KeyEvent.KEYCODE_DPAD_LEFT -> {
-                curRelLateral = (curRelLateral - 1).coerceIn(-4, 4)
+                curRelLateral = max(-5, curRelLateral - 1)
                 return true
             }
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                curRelLateral = (curRelLateral + 1).coerceIn(-4, 4)
+                curRelLateral = min(5, curRelLateral + 1)
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_DPAD_CENTER -> {
+                placeCurrentHotbarBlock()
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_X -> {
+                mineCurrentTargetBlock()
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_B -> {
                 if (isGrounded) {
                     playerVy = 9.5f
                     isGrounded = false
@@ -1175,20 +1183,16 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
                 }
                 return true
             }
-            KeyEvent.KEYCODE_BUTTON_X -> {
-                interactWithPartnerOrAnimal()
-                return true
-            }
             KeyEvent.KEYCODE_BUTTON_Y, KeyEvent.KEYCODE_BUTTON_SELECT -> {
                 isInventoryOpen = !isInventoryOpen
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_L1 -> {
-                selectedHotbarIdx = (selectedHotbarIdx - 1 + hotbarSlotsCount) % hotbarSlotsCount
+                curTargetZ = max(1, curTargetZ - 1)
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_R1 -> {
-                selectedHotbarIdx = (selectedHotbarIdx + 1) % hotbarSlotsCount
+                curTargetZ = min(25, curTargetZ + 1)
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_R2 -> {
@@ -1284,7 +1288,7 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         }
 
         if (zUpBtn.contains(x, y)) {
-            curTargetZ = min(20, curTargetZ + 1)
+            curTargetZ = min(25, curTargetZ + 1)
             burst(zUpBtn.centerX(), zUpBtn.centerY(), Icons.SPARK, 2, 8f)
             return
         }
@@ -1296,22 +1300,26 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         }
 
         if (curFwdBtn.contains(x, y)) {
-            curRelForward = min(5, curRelForward + 1)
+            curRelForward = min(6, curRelForward + 1)
+            burst(curFwdBtn.centerX(), curFwdBtn.centerY(), Icons.SPARK, 2, 8f)
             return
         }
 
         if (curBackBtn.contains(x, y)) {
-            curRelForward = max(1, curRelForward - 1)
+            curRelForward = max(-4, curRelForward - 1)
+            burst(curBackBtn.centerX(), curBackBtn.centerY(), Icons.SPARK, 2, 8f)
             return
         }
 
         if (curLeftBtn.contains(x, y)) {
-            curRelLateral = max(-4, curRelLateral - 1)
+            curRelLateral = max(-5, curRelLateral - 1)
+            burst(curLeftBtn.centerX(), curLeftBtn.centerY(), Icons.SPARK, 2, 8f)
             return
         }
 
         if (curRightBtn.contains(x, y)) {
-            curRelLateral = min(4, curRelLateral + 1)
+            curRelLateral = min(5, curRelLateral + 1)
+            burst(curRightBtn.centerX(), curRightBtn.centerY(), Icons.SPARK, 2, 8f)
             return
         }
 
