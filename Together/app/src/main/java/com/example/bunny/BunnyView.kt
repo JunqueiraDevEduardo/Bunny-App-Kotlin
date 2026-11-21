@@ -163,11 +163,12 @@ class BunnyView(ctx: Context) : View(ctx) {
         }
     }
 
-    /** Faixa de estado com Nível (estilo Pou), Necessidades e Moedas. */
+    /** Faixa de estado com Nível (estilo Pou), Necessidades e Moedas (Apenas na Loja). */
     private fun drawStrip(c: Canvas) {
         val h = strip.height()
         val lvlW = strip.width() * 0.22f
-        val coinW = strip.width() * 0.22f
+        val showCoins = current == Nav.SHOP
+        val coinW = if (showCoins) strip.width() * 0.22f else 0f
 
         val pillFill = if (Theme.isBunny) Theme.bNavyLight else Theme.cWhitePure
         val pillOutline = Theme.outline
@@ -225,13 +226,15 @@ class BunnyView(ctx: Context) : View(ctx) {
             D.text(c, stageName, strip.centerX(), strip.centerY() + h * 0.14f, h * 0.26f, textColor)
         }
 
-        // 3. Pílula de Moedas à direita
-        val pill = RectF(strip.right - coinW - strip.width() * 0.02f, strip.top + h * 0.10f, strip.right - strip.width() * 0.02f, strip.bottom - h * 0.10f)
-        val coinFill = if (Theme.isBunny) Theme.bNavyLight else C.butter
-        val coinOutline = if (Theme.isBunny) Theme.bWine else C.gold
-        D.rrect(c, pill, pill.height() / 2f, coinFill, coinOutline, 3f)
-        Icons.draw(c, Icons.COIN, pill.left + pill.height() * 0.55f, pill.centerY(), pill.height() * 0.34f)
-        D.text(c, Save.coins.toString(), pill.centerX() + pill.height() * 0.25f, pill.centerY() + pill.height() * 0.14f, pill.height() * 0.35f, textColor)
+        // 3. Pílula de Moedas à direita (Visível exclusivamente na Loja a pedido do utilizador!)
+        if (showCoins) {
+            val pill = RectF(strip.right - coinW - strip.width() * 0.02f, strip.top + h * 0.10f, strip.right - strip.width() * 0.02f, strip.bottom - h * 0.10f)
+            val coinFill = if (Theme.isBunny) Theme.bNavyLight else C.butter
+            val coinOutline = if (Theme.isBunny) Theme.bWine else C.gold
+            D.rrect(c, pill, pill.height() / 2f, coinFill, coinOutline, 3f)
+            Icons.draw(c, Icons.COIN, pill.left + pill.height() * 0.55f, pill.centerY(), pill.height() * 0.34f)
+            D.text(c, Save.coins.toString(), pill.centerX() + pill.height() * 0.25f, pill.centerY() + pill.height() * 0.14f, pill.height() * 0.35f, textColor)
+        }
     }
 
     override fun onDraw(c: Canvas) {
@@ -257,7 +260,7 @@ class BunnyView(ctx: Context) : View(ctx) {
             say(msg)
         }
 
-        val isFull = current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT
+        val isFull = current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT || current == Nav.KART
 
         D.f(Theme.bg); c.drawRect(0f, 0f, width.toFloat(), height.toFloat(), D.p)
 
@@ -293,7 +296,7 @@ class BunnyView(ctx: Context) : View(ctx) {
     }
 
     private fun bannerHit(x: Float, y: Float): Boolean {
-        if (current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT) return false
+        if (current == Nav.AUTH || current == Nav.SETTINGS || current == Nav.REPORT || current == Nav.CRAFT || current == Nav.KART) return false
 
         if (y < top.bottom) {
             val i = (x / (top.width() / 4f)).toInt().coerceIn(0, 3)
@@ -306,8 +309,8 @@ class BunnyView(ctx: Context) : View(ctx) {
                 say("$petName (${Save.stage()}) · Nível ${Save.level()}/100 · Faltam ${Save.nextLevelHours()}h para subir!")
                 return true
             }
-            val coinW = strip.width() * 0.25f
-            if (x >= strip.right - coinW) {
+            val coinW = if (current == Nav.SHOP) strip.width() * 0.25f else 0f
+            if (current == Nav.SHOP && x >= strip.right - coinW) {
                 say("Tens ${Save.coins} moedas! Ganha mais nos mini-jogos!")
                 return true
             }

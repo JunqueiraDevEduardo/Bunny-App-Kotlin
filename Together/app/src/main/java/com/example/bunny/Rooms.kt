@@ -22,11 +22,21 @@ object Rooms {
             "wall_stars" -> if (Theme.isBunny) Theme.bNavyDark else Color.rgb(214, 200, 240)
             "wall_inca" -> if (Theme.isBunny) Color.rgb(32, 42, 75) else Color.rgb(228, 218, 202)
             "wall_aguayo" -> if (Theme.isBunny) Theme.bNavyDark else C.cream
+            "wall_azulejos_pt" -> Color.rgb(238, 244, 255)
+            "cat_wall_azulejos_rosa" -> Color.rgb(255, 242, 248)
+            "wall_marmore_wc_azul" -> Color.rgb(225, 238, 252)
+            "cat_wall_marmore_wc_rosa" -> Color.rgb(255, 230, 242)
+            "cat_wall_azulejo_wc_branco" -> Color.rgb(248, 250, 255)
+            "wall_granito_porto" -> Color.rgb(180, 185, 195)
+            "wall_madeira_alentejo" -> Color.rgb(145, 105, 75)
+            "wall_pedra_machupicchu" -> Color.rgb(175, 170, 160)
             "cat_wall_pink" -> Color.rgb(255, 222, 235)
             "cat_wall_cloud" -> Color.rgb(255, 230, 245)
             "cat_wall_hearts" -> Color.rgb(255, 218, 232)
             "cat_wall_stars" -> Color.rgb(255, 225, 240)
             "cat_wall_stripes" -> Color.rgb(255, 228, 238)
+            "cat_wall_renda_sintra" -> Color.rgb(255, 235, 245)
+            "cat_wall_nuvens_douradas" -> Color.rgb(255, 225, 240)
             else -> if (Theme.isBunny) Theme.bNavyDark else Color.rgb(255, 217, 228)
         }
         val base = Theme.sanitize(baseRaw)
@@ -102,6 +112,48 @@ object Rooms {
                     D.line(c, rx1, ry1, rx2, ry2, 3f, C.incaGold)
                 }
             }
+            "wall_azulejos_pt", "cat_wall_azulejos_rosa" -> {
+                // Azulejos Portugueses Tradicionais de Lisboa
+                val tileCols = 6
+                val tw = r.width() / tileCols
+                val tileRows = (r.height() / tw).toInt().coerceAtLeast(2)
+                val lineCol = if (id == "wall_azulejos_pt") Color.rgb(38, 92, 175) else Color.rgb(235, 115, 165)
+                val accCol = if (id == "wall_azulejos_pt") Color.rgb(26, 52, 115) else Color.rgb(255, 185, 215)
+                for (j in 0 until tileRows) {
+                    for (i in 0 until tileCols) {
+                        val tx = r.left + i * tw; val ty = r.top + j * tw
+                        val tr = RectF(tx + 2f, ty + 2f, tx + tw - 2f, ty + tw - 2f)
+                        D.rrect(c, tr, 4f, Color.WHITE, lineCol, 1.5f)
+                        // Motivo floral de azulejo no centro
+                        val tcx = tr.centerX(); val tcy = tr.centerY()
+                        D.circle(c, tcx, tcy, tw * 0.16f, accCol)
+                        D.circle(c, tcx, tcy, tw * 0.08f, lineCol)
+                        for (k in 0..3) {
+                            val a = (k * 90) * Math.PI / 180.0
+                            val px = tcx + (Math.cos(a) * tw * 0.26f).toFloat()
+                            val py = tcy + (Math.sin(a) * tw * 0.26f).toFloat()
+                            D.circle(c, px, py, tw * 0.05f, lineCol)
+                        }
+                    }
+                }
+            }
+            "wall_marmore_wc_azul", "cat_wall_marmore_wc_rosa", "cat_wall_azulejo_wc_branco" -> {
+                // Azulejos vidrados de Casa de Banho (Subway tiles)
+                val subH = r.height() * 0.10f
+                val subW = subH * 2.0f
+                val groutCol = Color.rgb(215, 222, 235)
+                val rows = (r.height() / subH).toInt() + 1
+                for (j in 0 until rows) {
+                    val y = r.top + j * subH
+                    D.line(c, r.left, y, r.right, y, 2.5f, groutCol)
+                    val off = if (j % 2 == 0) 0f else subW * 0.5f
+                    var x = r.left - subW + off
+                    while (x <= r.right + subW) {
+                        D.line(c, x, y, x, y + subH, 2.5f, groutCol)
+                        x += subW
+                    }
+                }
+            }
             "wall_stars", "cat_wall_stars" -> {
                 val cols = 5
                 val rows = max(2, (r.height() / (r.width() / cols)).toInt())
@@ -174,6 +226,39 @@ object Rooms {
                     val x = r.left + (i + 0.3f + if (j % 2 == 0) 0f else 0.5f) * r.width() / 4f
                     val y = r.top + (j + 0.5f) * r.height() / 3f
                     Icons.draw(c, Icons.CLOUD, x, y, r.width() * 0.06f)
+                }
+            }
+            "floor_calcada_portuguesa", "cat_floor_calcada_rosa" -> {
+                // Calçada Portuguesa em Mosaico
+                val darkStone = if (id == "floor_calcada_portuguesa") Color.rgb(45, 45, 52) else Color.rgb(235, 115, 160)
+                val lightStone = Color.rgb(245, 245, 248)
+                D.f(lightStone); c.drawRect(r, D.p)
+                val cols = 12
+                val cw = r.width() / cols
+                val rows = (r.height() / (cw * 0.7f)).toInt() + 1
+                for (j in 0 until rows) {
+                    val y = r.top + j * (cw * 0.7f)
+                    for (i in 0 until cols) {
+                        val isWave = (i + (j * 2)) % 4 < 2
+                        if (isWave) {
+                            val stoneR = RectF(r.left + i * cw + 1.5f, y + 1.5f, r.left + (i + 1) * cw - 1.5f, y + cw * 0.7f - 1.5f)
+                            D.rrect(c, stoneR, 3f, darkStone)
+                        }
+                    }
+                }
+            }
+            "floor_marmore_wc_azul", "cat_floor_marmore_wc_rosa" -> {
+                // Piso de Mármore Polido para Casa de Banho
+                val marbleBase = if (id == "floor_marmore_wc_azul") Color.rgb(240, 245, 255) else Color.rgb(255, 244, 250)
+                val veinCol = if (id == "floor_marmore_wc_azul") Color.rgb(205, 220, 245) else Color.rgb(250, 215, 235)
+                D.f(marbleBase); c.drawRect(r, D.p)
+                val size = r.width() * 0.18f
+                val cols = (r.width() / size).toInt() + 1
+                val rows = (r.height() / size).toInt() + 1
+                for (i in 0 until cols) for (j in 0 until rows) {
+                    val mr = RectF(r.left + i * size + 2f, r.top + j * size + 2f, r.left + (i + 1) * size - 2f, r.top + (j + 1) * size - 2f)
+                    D.rrect(c, mr, 4f, marbleBase, veinCol, 1.8f)
+                    D.line(c, mr.left + size * 0.2f, mr.top + size * 0.15f, mr.right - size * 0.15f, mr.bottom - size * 0.2f, 1.2f, veinCol)
                 }
             }
             "cat_floor_pink" -> {
@@ -284,6 +369,128 @@ object Rooms {
                 D.oval(c, cx + u * 0.06f, cy - u * 0.82f, u * 0.06f, u * 0.035f, C.pinkD, ol, lw * 0.7f)
                 D.circle(c, cx, cy - u * 0.82f, u * 0.025f, C.white)
             }
+            // ========================================== CASA DE BANHO (WC)
+            "dec_banheira", "cat_dec_banheira_rosa" -> {
+                // Banheira de porcelana com pés dourados, espuma e patinho de borracha
+                val isPink = id == "cat_dec_banheira_rosa"
+                val tubBase = if (isPink) Color.rgb(255, 215, 235) else Color.WHITE
+                val rimCol = if (isPink) Color.rgb(255, 175, 205) else Color.rgb(225, 235, 250)
+                // Pés dourados clássicos
+                D.circle(c, cx - u * 0.38f, cy + u * 0.22f, u * 0.06f, C.gold, ol, lw)
+                D.circle(c, cx + u * 0.38f, cy + u * 0.22f, u * 0.06f, C.gold, ol, lw)
+                // Corpo da banheira
+                D.oval(c, cx, cy + u * 0.05f, u * 0.52f, u * 0.25f, tubBase, ol, lw * 1.3f)
+                D.oval(c, cx, cy - u * 0.05f, u * 0.48f, u * 0.16f, rimCol, ol, lw * 0.8f)
+                // Água com espuma
+                D.oval(c, cx, cy - u * 0.04f, u * 0.44f, u * 0.13f, if (isPink) Color.rgb(255, 235, 245) else Color.rgb(195, 225, 255))
+                for (b in 0..4) {
+                    val bx = cx - u * 0.28f + b * u * 0.14f
+                    val by = cy - u * 0.05f + (b % 2) * u * 0.02f
+                    D.circle(c, bx, by, u * 0.035f, Color.WHITE)
+                }
+                // Torneira dourada curva
+                D.line(c, cx - u * 0.42f, cy - u * 0.08f, cx - u * 0.42f, cy - u * 0.22f, lw * 2f, C.gold)
+                D.line(c, cx - u * 0.42f, cy - u * 0.22f, cx - u * 0.34f, cy - u * 0.20f, lw * 2f, C.gold)
+                // Patinho de borracha amarelo
+                D.oval(c, cx + u * 0.15f, cy - u * 0.06f, u * 0.06f, u * 0.045f, C.gold, ol, lw * 0.6f)
+                D.circle(c, cx + u * 0.18f, cy - u * 0.09f, u * 0.035f, C.gold, ol, lw * 0.6f)
+                D.poly(c, Color.rgb(255, 120, 30), 0, 0f, cx + u * 0.21f, cy - u * 0.09f, cx + u * 0.25f, cy - u * 0.08f, cx + u * 0.21f, cy - u * 0.07f)
+            }
+            "dec_sanita" -> {
+                // Sanita moderna de porcelana
+                D.rrect(c, cx - u * 0.18f, cy - u * 0.45f, cx + u * 0.18f, cy - u * 0.05f, u * 0.04f, Color.WHITE, ol, lw)
+                D.circle(c, cx, cy - u * 0.28f, u * 0.04f, Color.rgb(215, 225, 235), ol, lw * 0.6f) // Botão autoclismo
+                D.oval(c, cx, cy + u * 0.08f, u * 0.24f, u * 0.18f, Color.WHITE, ol, lw)
+                D.oval(c, cx, cy + u * 0.06f, u * 0.19f, u * 0.14f, Color.rgb(235, 242, 252), ol, lw * 0.7f)
+                D.rrect(c, cx - u * 0.12f, cy + u * 0.18f, cx + u * 0.12f, cy + u * 0.35f, u * 0.02f, Color.WHITE, ol, lw * 0.8f)
+            }
+            "dec_lavatorio", "cat_dec_lavatorio_rosa" -> {
+                // Móvel de lavatório com torneira e toalha
+                val isP = id == "cat_dec_lavatorio_rosa"
+                val cabCol = if (isP) Color.rgb(255, 225, 240) else Color.rgb(235, 240, 250)
+                D.rrect(c, cx - u * 0.30f, cy - u * 0.05f, cx + u * 0.30f, cy + u * 0.32f, u * 0.04f, cabCol, ol, lw)
+                D.oval(c, cx, cy - u * 0.08f, u * 0.28f, u * 0.12f, Color.WHITE, ol, lw)
+                D.oval(c, cx, cy - u * 0.08f, u * 0.22f, u * 0.08f, Color.rgb(205, 230, 255), ol, lw * 0.7f)
+                D.line(c, cx, cy - u * 0.14f, cx, cy - u * 0.28f, lw * 2.2f, C.gold)
+                D.line(c, cx, cy - u * 0.28f, cx + u * 0.06f, cy - u * 0.26f, lw * 2.2f, C.gold)
+            }
+            "dec_toalheiro", "cat_dec_toalheiro_rosa" -> {
+                // Toalheiro aquecido com toalhas dobradas
+                val railCol = Color.rgb(205, 215, 225)
+                D.line(c, cx - u * 0.25f, cy - u * 0.35f, cx - u * 0.25f, cy + u * 0.35f, lw * 2.5f, railCol)
+                D.line(c, cx + u * 0.25f, cy - u * 0.35f, cx + u * 0.25f, cy + u * 0.35f, lw * 2.5f, railCol)
+                for (k in 0..3) {
+                    val ry = cy - u * 0.25f + k * u * 0.18f
+                    D.line(c, cx - u * 0.25f, ry, cx + u * 0.25f, ry, lw * 2.0f, railCol)
+                }
+                val towCol = if (id == "cat_dec_toalheiro_rosa") Color.rgb(255, 185, 215) else Color.rgb(90, 160, 240)
+                D.rrect(c, cx - u * 0.18f, cy - u * 0.10f, cx + u * 0.18f, cy + u * 0.28f, u * 0.03f, towCol, ol, lw)
+            }
+            "dec_espelho_wc" -> {
+                // Espelho redondo com luz LED suave
+                D.circle(c, cx, cy - u * 0.15f, u * 0.36f, D.alpha(Color.rgb(255, 245, 210), 160))
+                D.circle(c, cx, cy - u * 0.15f, u * 0.30f, Color.rgb(235, 245, 255), ol, lw * 1.2f)
+                D.line(c, cx - u * 0.10f, cy - u * 0.30f, cx + u * 0.08f, cy - u * 0.05f, lw * 1.8f, D.alpha(Color.WHITE, 210))
+            }
+
+            // ========================================== CULTURA PORTUGUESA & PERU
+            "dec_galo_barcelos" -> {
+                // Galo de Barcelos português
+                val gcx = cx; val gcy = cy - u * 0.10f
+                D.oval(c, gcx, gcy + u * 0.15f, u * 0.22f, u * 0.18f, Color.BLACK, ol, lw)
+                D.circle(c, gcx + u * 0.08f, gcy - u * 0.12f, u * 0.11f, Color.BLACK, ol, lw)
+                // Crista vermelha
+                D.circle(c, gcx + u * 0.06f, gcy - u * 0.25f, u * 0.07f, Color.RED)
+                D.circle(c, gcx + u * 0.12f, gcy - u * 0.24f, u * 0.06f, Color.RED)
+                // Bico amarelo
+                D.poly(c, C.gold, 0, 0f, gcx + u * 0.16f, gcy - u * 0.12f, gcx + u * 0.26f, gcy - u * 0.09f, gcx + u * 0.16f, gcy - u * 0.06f)
+                // Corações vermelhos nas asas
+                D.heart(c, gcx - u * 0.02f, gcy + u * 0.12f, u * 0.07f, Color.RED)
+                D.circle(c, gcx - u * 0.02f, gcy + u * 0.12f, u * 0.02f, C.gold)
+            }
+            "dec_guitarra_fado" -> {
+                // Guitarra Portuguesa de Fado
+                D.oval(c, cx, cy + u * 0.08f, u * 0.25f, u * 0.28f, Color.rgb(165, 85, 45), ol, lw)
+                D.circle(c, cx, cy + u * 0.08f, u * 0.07f, Color.BLACK)
+                D.rrect(c, cx - u * 0.035f, cy - u * 0.35f, cx + u * 0.035f, cy - u * 0.08f, 2f, Color.rgb(90, 45, 25), ol, lw * 0.7f)
+                // Leque de afinação no topo
+                D.poly(c, Color.rgb(215, 175, 55), ol, lw * 0.7f, cx - u * 0.08f, cy - u * 0.45f, cx + u * 0.08f, cy - u * 0.45f, cx, cy - u * 0.35f)
+            }
+            "dec_azulejo_lisboa" -> {
+                // Painel de Azulejo de Lisboa com Caravela
+                D.rrect(c, cx - u * 0.45f, cy - u * 0.42f, cx + u * 0.45f, cy + u * 0.38f, u * 0.04f, Color.rgb(238, 244, 255), Color.rgb(32, 75, 155), lw * 1.5f)
+                // Caravela azul
+                D.poly(c, Color.rgb(28, 62, 135), 0, 0f, cx - u * 0.26f, cy + u * 0.15f, cx + u * 0.26f, cy + u * 0.15f, cx + u * 0.18f, cy + u * 0.25f, cx - u * 0.18f, cy + u * 0.25f)
+                // Velas com cruz
+                D.poly(c, Color.WHITE, Color.rgb(28, 62, 135), lw * 0.8f, cx - u * 0.18f, cy - u * 0.18f, cx, cy - u * 0.18f, cx, cy + u * 0.08f, cx - u * 0.18f, cy + u * 0.08f)
+                D.poly(c, Color.WHITE, Color.rgb(28, 62, 135), lw * 0.8f, cx + u * 0.02f, cy - u * 0.18f, cx + u * 0.20f, cy - u * 0.18f, cx + u * 0.20f, cy + u * 0.08f, cx + u * 0.02f, cy + u * 0.08f)
+                D.line(c, cx - u * 0.10f, cy - u * 0.10f, cx - u * 0.10f, cy + u * 0.02f, lw, Color.RED)
+                D.line(c, cx - u * 0.14f, cy - u * 0.04f, cx - u * 0.06f, cy - u * 0.04f, lw, Color.RED)
+            }
+            "dec_andorinhas", "cat_dec_andorinhas_rosa" -> {
+                // Andorinhas de Cerâmica (estilo Bordalo Pinheiro)
+                val aCol = if (id == "cat_dec_andorinhas_rosa") Color.rgb(255, 115, 165) else Color.rgb(35, 38, 48)
+                val positions = listOf(Pair(-0.15f, -0.25f), Pair(0.08f, -0.10f), Pair(-0.05f, 0.12f))
+                for (p in positions) {
+                    val ax = cx + p.first * u; val ay = cy + p.second * u
+                    D.oval(c, ax, ay, u * 0.08f, u * 0.04f, aCol)
+                    D.poly(c, aCol, 0, 0f, ax - u * 0.06f, ay - u * 0.03f, ax + u * 0.02f, ay - u * 0.10f, ax, ay)
+                    D.poly(c, aCol, 0, 0f, ax - u * 0.06f, ay + u * 0.03f, ax + u * 0.02f, ay + u * 0.10f, ax, ay)
+                }
+            }
+            "dec_sol_inti" -> {
+                // Sol Inca Sagrado em Ouro
+                val scx = cx; val scy = cy - u * 0.15f
+                D.circle(c, scx, scy, u * 0.20f, C.incaGold, Color.rgb(190, 140, 40), lw * 1.3f)
+                D.circle(c, scx, scy, u * 0.12f, Color.rgb(255, 230, 95))
+                for (k in 0..11) {
+                    val a = (k * 30) * Math.PI / 180.0
+                    val r1 = u * 0.22f; val r2 = u * 0.32f
+                    val x1 = scx + (Math.cos(a) * r1).toFloat(); val y1 = scy + (Math.sin(a) * r1).toFloat()
+                    val x2 = scx + (Math.cos(a) * r2).toFloat(); val y2 = scy + (Math.sin(a) * r2).toFloat()
+                    D.line(c, x1, y1, x2, y2, lw * 1.8f, C.incaGold)
+                }
+            }
             "dec_window" -> {
                 D.rrect(c, cx - u * 0.55f, cy - u * 0.6f, cx + u * 0.55f, cy + u * 0.6f, u * 0.08f, C.white, ol, lw)
                 D.rrect(c, cx - u * 0.47f, cy - u * 0.52f, cx + u * 0.47f, cy + u * 0.52f, u * 0.05f, D.mix(C.sky, Color.rgb(30, 35, 80), nightNow))
@@ -336,17 +543,34 @@ object Rooms {
         if (decor) {
             val w = r.width(); val h = r.height()
             fun has(id: String) = Save.decor.contains("$id@$room")
-            // Itens Bunny
+            // Itens Bunny & Portugal & Peru
             if (has("dec_machupicchu")) drawDecor(c, "dec_machupicchu", r.left + w * 0.8f, r.top + h * 0.2f, w * 0.32f)
             if (has("dec_tapete_peruano")) drawDecor(c, "dec_tapete_peruano", r.left + w * 0.5f, fy + h * 0.27f, w * 0.42f)
             if (has("dec_lhama")) drawDecor(c, "dec_lhama", r.left + w * 0.16f, fy + h * 0.32f, w * 0.26f)
             if (has("dec_zampogna")) drawDecor(c, "dec_zampogna", r.left + w * 0.16f, r.top + h * 0.24f, w * 0.24f)
+            if (has("dec_galo_barcelos")) drawDecor(c, "dec_galo_barcelos", r.left + w * 0.84f, fy + h * 0.28f, w * 0.26f)
+            if (has("dec_guitarra_fado")) drawDecor(c, "dec_guitarra_fado", r.left + w * 0.86f, fy + h * 0.18f, w * 0.28f)
+            if (has("dec_azulejo_lisboa")) drawDecor(c, "dec_azulejo_lisboa", r.left + w * 0.5f, r.top + h * 0.20f, w * 0.34f)
+            if (has("dec_andorinhas")) drawDecor(c, "dec_andorinhas", r.left + w * 0.26f, r.top + h * 0.16f, w * 0.26f)
+            if (has("dec_sol_inti")) drawDecor(c, "dec_sol_inti", r.left + w * 0.5f, r.top + h * 0.18f, w * 0.32f)
+
+            // Casa de Banho (WC)
+            if (has("dec_banheira")) drawDecor(c, "dec_banheira", r.left + w * 0.72f, fy + h * 0.22f, w * 0.44f)
+            if (has("cat_dec_banheira_rosa")) drawDecor(c, "cat_dec_banheira_rosa", r.left + w * 0.72f, fy + h * 0.22f, w * 0.44f)
+            if (has("dec_sanita")) drawDecor(c, "dec_sanita", r.left + w * 0.90f, fy + h * 0.16f, w * 0.22f)
+            if (has("dec_lavatorio")) drawDecor(c, "dec_lavatorio", r.left + w * 0.20f, fy + h * 0.16f, w * 0.28f)
+            if (has("cat_dec_lavatorio_rosa")) drawDecor(c, "cat_dec_lavatorio_rosa", r.left + w * 0.20f, fy + h * 0.16f, w * 0.28f)
+            if (has("dec_toalheiro")) drawDecor(c, "dec_toalheiro", r.left + w * 0.38f, r.top + h * 0.32f, w * 0.22f)
+            if (has("cat_dec_toalheiro_rosa")) drawDecor(c, "cat_dec_toalheiro_rosa", r.left + w * 0.38f, r.top + h * 0.32f, w * 0.22f)
+            if (has("dec_espelho_wc")) drawDecor(c, "dec_espelho_wc", r.left + w * 0.20f, r.top + h * 0.22f, w * 0.24f)
 
             // Itens Cat
             if (has("cat_dec_plush")) drawDecor(c, "cat_dec_plush", r.left + w * 0.18f, fy + h * 0.32f, w * 0.24f)
             if (has("cat_dec_rug")) drawDecor(c, "cat_dec_rug", r.left + w * 0.5f, fy + h * 0.27f, w * 0.40f)
             if (has("cat_dec_lamp")) drawDecor(c, "cat_dec_lamp", r.left + w * 0.88f, fy + h * 0.13f, w * 0.22f)
             if (has("cat_dec_mirror")) drawDecor(c, "cat_dec_mirror", r.left + w * 0.8f, r.top + h * 0.22f, w * 0.26f)
+            if (has("cat_dec_andorinhas_rosa")) drawDecor(c, "cat_dec_andorinhas_rosa", r.left + w * 0.26f, r.top + h * 0.16f, w * 0.26f)
+            if (has("cat_dec_jarra_flores")) drawDecor(c, "cat_dec_plush", r.left + w * 0.82f, fy + h * 0.26f, w * 0.22f)
 
             // Itens Universais
             if (has("dec_window")) drawDecor(c, "dec_window", r.left + w * 0.2f, r.top + h * 0.22f, w * 0.26f)

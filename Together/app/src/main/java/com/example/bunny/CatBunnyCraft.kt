@@ -16,6 +16,7 @@ import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.math.tan
 import kotlin.random.Random
 
 /**
@@ -257,23 +258,23 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
     private var isInventoryOpen = false
     private var inventoryTab = CAT_BUILD
 
-    // ================================================================= TERRENO 100% PLANO (SUPERFLAT)
-    private val worldW = 28
-    private val worldH = 28
+    // ================================================================= TERRENO 100% PLANO (SUPERFLAT EXPANDIDO 5X)
+    private val worldW = 64
+    private val worldH = 64
     private val heightMap = Array(worldW) { IntArray(worldH) }
     private val surfaceBlockType = Array(worldW) { IntArray(worldH) }
 
     // ================================================================= JOGADOR & PARCEIRO (3ª PESSOA)
-    private var playerX = 7.0f
-    private var playerY = 10.0f
+    private var playerX = 16.0f
+    private var playerY = 20.0f
     private var playerZ = 1.0f
     private var playerVy = 0f
     private var isGrounded = true
     private var isMoving = false
     private var moveStepT = 0f
 
-    private var partnerX = 21.0f
-    private var partnerY = 16.0f
+    private var partnerX = 48.0f
+    private var partnerY = 44.0f
     private var partnerZ = 1.0f
 
     // ================================================================= CÂMARA 3D AO NÍVEL DO CHÃO
@@ -359,14 +360,16 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
 
     private fun initFauna() {
         animals.clear()
-        animals.add(Animal(0, 10.5f, 11.5f, 1f)) // Lhama
-        animals.add(Animal(0, 16.5f, 14.5f, 1f)) // Lhama
-        animals.add(Animal(1, 12.0f, 8.5f, 1f))  // Ovelha
-        animals.add(Animal(1, 15.5f, 19.0f, 1f)) // Ovelha
-        animals.add(Animal(2, 8.5f, 14.0f, 1f))  // Coelho
-        animals.add(Animal(2, 20.0f, 12.0f, 1f)) // Coelho
-        animals.add(Animal(3, 11.0f, 10.0f, 2.2f)) // Borboleta
-        animals.add(Animal(3, 18.0f, 15.0f, 2.2f)) // Borboleta
+        animals.add(Animal(0, 16.5f, 18.5f, 1f)) // Lhama
+        animals.add(Animal(0, 32.5f, 35.5f, 1f)) // Lhama
+        animals.add(Animal(0, 45.5f, 42.5f, 1f)) // Lhama
+        animals.add(Animal(1, 22.0f, 25.5f, 1f)) // Ovelha
+        animals.add(Animal(1, 38.5f, 20.0f, 1f)) // Ovelha
+        animals.add(Animal(2, 18.5f, 24.0f, 1f)) // Coelho
+        animals.add(Animal(2, 42.0f, 38.0f, 1f)) // Coelho
+        animals.add(Animal(3, 20.0f, 22.0f, 2.2f)) // Borboleta
+        animals.add(Animal(3, 34.0f, 30.0f, 2.2f)) // Borboleta
+        animals.add(Animal(3, 48.0f, 44.0f, 2.2f)) // Borboleta
     }
 
     override fun enter() {
@@ -375,11 +378,11 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         (g.context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
         if (Theme.isBunny) {
-            playerX = 7.0f; playerY = 10.0f; playerZ = 1.0f
-            partnerX = 21.0f; partnerY = 16.0f; partnerZ = 1.0f
+            playerX = 16.0f; playerY = 20.0f; playerZ = 1.0f
+            partnerX = 48.0f; partnerY = 44.0f; partnerZ = 1.0f
         } else {
-            playerX = 21.0f; playerY = 16.0f; playerZ = 1.0f
-            partnerX = 7.0f; partnerY = 10.0f; partnerZ = 1.0f
+            playerX = 48.0f; playerY = 44.0f; playerZ = 1.0f
+            partnerX = 16.0f; partnerY = 20.0f; partnerZ = 1.0f
         }
         camYaw = 0.45f
         camPitch = 0.20f
@@ -472,11 +475,11 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         }
 
         // Proximidade das casinhas
-        val distBunnyH = hypot(playerX - 6.0f, playerY - 8.0f)
-        val distCatH = hypot(playerX - 22.0f, playerY - 16.0f)
+        val distBunnyH = hypot(playerX - 14.0f, playerY - 18.0f)
+        val distCatH = hypot(playerX - 50.0f, playerY - 46.0f)
         nearHouseTarget = when {
-            distBunnyH < 2.8f -> 1
-            distCatH < 2.8f -> 2
+            distBunnyH < 3.2f -> 1
+            distCatH < 3.2f -> 2
             else -> 0
         }
 
@@ -529,7 +532,7 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         }
 
         // Casinha do Bunny
-        val bHProj = project3D(6.0f, 8.0f, 1.0f, r)
+        val bHProj = project3D(14.0f, 18.0f, 1.0f, r)
         if (bHProj != null) {
             renderList.add(RenderItem(bHProj.third) {
                 drawBunnyHouse(c, bHProj.first, bHProj.second, bHProj.third, r)
@@ -537,7 +540,7 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         }
 
         // Casinha da Gatinha
-        val cHProj = project3D(22.0f, 16.0f, 1.0f, r)
+        val cHProj = project3D(50.0f, 46.0f, 1.0f, r)
         if (cHProj != null) {
             renderList.add(RenderItem(cHProj.third) {
                 drawCatHouse(c, cHProj.first, cHProj.second, cHProj.third, r)
@@ -545,7 +548,7 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         }
 
         // Baú do Tesouro no plano central
-        val chestProj = project3D(14.0f, 14.0f, 1.0f, r)
+        val chestProj = project3D(32.0f, 32.0f, 1.0f, r)
         if (chestProj != null) {
             renderList.add(RenderItem(chestProj.third) {
                 drawIncaChest(c, chestProj.first, chestProj.second, chestProj.third, r)
@@ -625,68 +628,45 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         }
     }
 
-    /** Chão 100% liso, contínuo e unido: sem linhas divisórias ou perceção de blocos separados. */
+    /** Chão 100% liso, contínuo e unido: base sólida fixa que nunca falha na rotação 360°. */
     private fun drawSeamlessFlatTerrain(c: Canvas, r: RectF) {
         val grassCol = Color.rgb(96, 172, 80)
-        val cliffStone = Color.rgb(85, 78, 72)
-        val cliffDark = Color.rgb(55, 48, 45)
+        val focal = r.height() * 0.95f
+        val horizonY = (r.centerY() + r.height() * 0.04f) + tan(camPitch) * focal
+        val hy = horizonY.coerceIn(r.top, r.bottom)
 
+        // 1. Chão contínuo 100% liso e sólido preenchendo até ao horizonte
+        D.f(grassCol)
+        c.drawRect(r.left, hy, r.right, r.bottom, D.p)
+
+        // 2. Haze atmosférico andino na linha do horizonte
+        if (hy < r.bottom) {
+            val hazeH = (r.height() * 0.12f).coerceAtMost(r.bottom - hy)
+            val hazeCol = if (Theme.isBunny) Color.argb(90, 32, 55, 95) else Color.argb(80, 160, 215, 255)
+            D.f(hazeCol)
+            c.drawRect(r.left, hy, r.right, hy + hazeH, D.p)
+        }
+
+        // 3. Detalhes andinos suaves dispersos naturalmente com ordenação
         val pGridX = playerX.toInt()
         val pGridY = playerY.toInt()
-        val renderRad = 13
+        val renderRad = 12
 
         val minX = max(0, pGridX - renderRad)
         val maxX = min(worldW - 1, pGridX + renderRad)
         val minY = max(0, pGridY - renderRad)
         val maxY = min(worldH - 1, pGridY + renderRad)
 
-        // Desenha quads de relva que se fundem perfeitamente sem linhas pretas
-        for (y in maxY downTo minY) {
+        for (y in minY..maxY) {
             for (x in minX..maxX) {
-                val p0 = project3D(x.toFloat(), y.toFloat(), 1.0f, r) ?: continue
-                val p1 = project3D(x + 1f, y.toFloat(), 1.0f, r) ?: continue
-                val p2 = project3D(x + 1f, y + 1f, 1.0f, r) ?: continue
-                val p3 = project3D(x.toFloat(), y + 1f, 1.0f, r) ?: continue
-
-                // Polígono liso sem contorno preto divisório
-                D.poly(c, grassCol, grassCol, 1.2f,
-                    p0.first, p0.second,
-                    p1.first, p1.second,
-                    p2.first, p2.second,
-                    p3.first, p3.second
-                )
-
-                // Detalhes andinos suaves dispersos naturalmente
-                if ((x * 7 + y * 13) % 11 == 0) {
-                    val cx = (p0.first + p2.first) / 2f
-                    val cy = (p0.second + p2.second) / 2f
-                    val flwCol = if ((x + y) % 2 == 0) Color.rgb(255, 235, 75) else Color.rgb(255, 255, 255)
-                    D.circle(c, cx, cy, 2.5f, flwCol)
-                }
-
-                // Margens da falésia andina (apenas no limite do mapa)
-                if (x == 0) {
-                    val pBase0 = project3D(0f, y.toFloat(), -1.5f, r)
-                    val pBase3 = project3D(0f, y + 1f, -1.5f, r)
-                    if (pBase0 != null && pBase3 != null) {
-                        D.poly(c, cliffDark, Color.BLACK, 1f,
-                            p0.first, p0.second,
-                            p3.first, p3.second,
-                            pBase3.first, pBase3.second,
-                            pBase0.first, pBase0.second
-                        )
-                    }
-                }
-                if (y == 0) {
-                    val pBase0 = project3D(x.toFloat(), 0f, -1.5f, r)
-                    val pBase1 = project3D(x + 1f, 0f, -1.5f, r)
-                    if (pBase0 != null && pBase1 != null) {
-                        D.poly(c, cliffStone, Color.BLACK, 1f,
-                            p0.first, p0.second,
-                            p1.first, p1.second,
-                            pBase1.first, pBase1.second,
-                            pBase0.first, pBase0.second
-                        )
+                if ((x * 7 + y * 13) % 9 == 0) {
+                    val p = project3D(x + 0.5f, y + 0.5f, 1.0f, r) ?: continue
+                    if (p.second >= hy && p.third in 1.2f..35.0f) {
+                        val flwCol = if ((x + y) % 2 == 0) Color.rgb(255, 235, 75) else Color.WHITE
+                        val sz = (focal / p.third) * 0.07f
+                        if (sz in 1.2f..7f) {
+                            D.circle(c, p.first, p.second, sz, flwCol)
+                        }
                     }
                 }
             }
@@ -907,10 +887,6 @@ class CatBunnyCraftScreen(g: BunnyView) : Screen(g) {
         D.rrect(c, coinPill, btnH * 0.4f, Color.rgb(26, 36, 68), Color.rgb(255, 205, 45), 2f)
         Icons.draw(c, Icons.COIN, coinPill.left + btnH * 0.55f, coinPill.centerY(), btnH * 0.35f)
         D.text(c, Save.coins.toString(), coinPill.centerX() + btnH * 0.2f, coinPill.centerY() + btnH * 0.16f, btnH * 0.38f, Color.rgb(255, 225, 80))
-
-        // Dica de comando PS4
-        val ctrlHint = if (isGamepadConnected) "🎮 PS4: R-Stick roda 360° · L2 Coloca · R2 Mina · X Salta" else "Arrasta à direita para rodar 360°"
-        D.text(c, ctrlHint, r.centerX(), backBtn.bottom + r.height() * 0.045f, r.height() * 0.030f, D.alpha(Color.WHITE, 220))
 
         // Botões de Ação no canto inferior direito: Saltar, Colocar Bloco, Eliminar Bloco
         val actBtnH = r.height() * 0.12f

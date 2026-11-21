@@ -15,11 +15,11 @@ object Preview {
         when (item.cat) {
             Items.FOOD -> {
                 val ic = when (item.id) {
-                    "food_ceviche" -> Icons.CEVICHE
-                    "food_lomo" -> Icons.LOMO_SALTADO
-                    "food_chicha" -> Icons.CHICHA_MORADA
-                    "food_alfajor" -> Icons.ALFAJOR
-                    "food_causa" -> Icons.CAUSA
+                    "food_ceviche", "food_bacalhau", "food_sardinha" -> Icons.CEVICHE
+                    "food_lomo", "food_anticuchos", "food_francesinha", "food_bifana", "food_arroz_pato" -> Icons.LOMO_SALTADO
+                    "food_chicha", "food_mazamorra", "food_picarones" -> Icons.CHICHA_MORADA
+                    "food_alfajor", "food_pastel_nata", "food_queijada", "food_travesseiro", "food_bolo_bolacha" -> Icons.ALFAJOR
+                    "food_causa", "food_huancaina", "food_caldo_verde", "food_aji_gallina" -> Icons.CAUSA
                     "food_choclo" -> Icons.CHOCLO
                     "food_carrot" -> Icons.CARROT
                     "food_apple" -> Icons.APPLE
@@ -150,11 +150,12 @@ abstract class GridScreen(g: BunnyView) : Screen(g) {
     }
 
     protected fun previewRect(cell: RectF) =
-        RectF(cell.left + cell.width() * 0.05f, cell.top + cell.height() * 0.04f, cell.right - cell.width() * 0.05f, cell.top + cell.height() * 0.68f)
+        RectF(cell.left + cell.width() * 0.05f, cell.top + cell.height() * 0.03f, cell.right - cell.width() * 0.05f, cell.top + cell.height() * 0.64f)
 
     protected fun nameText(c: Canvas, cell: RectF, s: String) {
         val txtColor = if (Theme.isBunny) Theme.bSilver else Theme.text
-        D.text(c, s, cell.centerX(), cell.top + cell.height() * 0.77f, cell.height() * 0.09f, txtColor)
+        val fSize = if (s.length > 18) cell.height() * 0.062f else if (s.length > 12) cell.height() * 0.070f else cell.height() * 0.080f
+        D.text(c, s, cell.centerX(), cell.top + cell.height() * 0.71f, fSize, txtColor)
     }
 }
 
@@ -168,7 +169,7 @@ class ShopScreen(g: BunnyView) : GridScreen(g) {
         val shopTitle = if (Theme.isCat) "Loja da Gatinha" else "Loja do Bunny"
         Icons.draw(c, Icons.BAG, r.left + r.width() * 0.12f, r.centerY(), r.height() * 0.28f)
         D.text(c, shopTitle, r.centerX() + r.width() * 0.05f, r.centerY() - r.height() * 0.08f, r.height() * 0.22f, txtColor)
-        D.text(c, "Itens Peruanos, Roupas, Cores e Comida", r.centerX() + r.width() * 0.05f, r.centerY() + r.height() * 0.20f, r.height() * 0.12f, Theme.textDim)
+        D.text(c, "Cultura Peruana & Portuguesa · Casa de Banho · Preços 5X", r.centerX() + r.width() * 0.05f, r.centerY() + r.height() * 0.18f, r.height() * 0.095f, Theme.textDim)
     }
 
     override fun cells(): List<Item?> = Items.byCat(tab).filter { it.price >= 0 }
@@ -179,7 +180,14 @@ class ShopScreen(g: BunnyView) : GridScreen(g) {
         cardBase(c, cell, owned)
         Preview.draw(c, it, previewRect(cell))
         nameText(c, cell, it.name)
-        val chip = RectF(cell.left + cell.width() * 0.12f, cell.top + cell.height() * 0.81f, cell.right - cell.width() * 0.12f, cell.bottom - cell.height() * 0.03f)
+
+        // Descrição do item em letra muito mais pequena e compacta a pedido do utilizador
+        if (it.desc.isNotEmpty()) {
+            val shortDesc = if (it.desc.length > 26) it.desc.take(24) + "…" else it.desc
+            D.text(c, shortDesc, cell.centerX(), cell.top + cell.height() * 0.785f, cell.height() * 0.045f, Theme.textDim)
+        }
+
+        val chip = RectF(cell.left + cell.width() * 0.10f, cell.top + cell.height() * 0.825f, cell.right - cell.width() * 0.10f, cell.bottom - cell.height() * 0.025f)
         if (owned) {
             D.button(c, chip, "Teu", C.mint, C.ink, chip.height() * 0.5f)
         } else if (it.price == 0) {

@@ -4,9 +4,11 @@ import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Shader
 import android.graphics.Typeface
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -90,12 +92,18 @@ class KartScreen(g: BunnyView) : Screen(g) {
     private var steerVis = 0.0
     private var partnerSyncTimer = 0f
 
-    // Pilotos
+    // 10 Pilotos estilo Ben 10 Galactic Racing (Bunny, Cat e 8 Bots companheiros)
     private val racers = listOf(
         RacerDef("🐰 Bunny", true, Color.rgb(26, 42, 85), Color.rgb(105, 20, 50)),
         RacerDef("🐱 Cat", false, Color.rgb(255, 135, 185), Color.rgb(235, 75, 135)),
-        RacerDef("🦙 Lhama", true, Color.rgb(240, 220, 195), Color.rgb(160, 120, 85)),
-        RacerDef("☀️ Inti", false, Color.rgb(255, 205, 45), Color.rgb(205, 145, 15))
+        RacerDef("🦙 Lhama Estelar", true, Color.rgb(240, 220, 195), Color.rgb(160, 120, 85)),
+        RacerDef("🦅 Cóndor Cósmico", false, Color.rgb(255, 205, 45), Color.rgb(205, 145, 15)),
+        RacerDef("🐆 Puma Galáctico", true, Color.rgb(245, 155, 65), Color.rgb(180, 95, 30)),
+        RacerDef("🦙 Vicunha Neon", false, Color.rgb(65, 235, 215), Color.rgb(25, 160, 145)),
+        RacerDef("🐓 Galo de Órbita", true, Color.rgb(255, 55, 75), Color.rgb(185, 25, 45)),
+        RacerDef("🦊 Zorro Astral", false, Color.rgb(255, 125, 45), Color.rgb(195, 75, 20)),
+        RacerDef("🐻 Urso Andino", true, Color.rgb(115, 85, 165), Color.rgb(75, 45, 115)),
+        RacerDef("☀️ Sol Inti", false, Color.rgb(255, 235, 75), Color.rgb(215, 165, 30))
     )
 
     private val cars = ArrayList<Car>()
@@ -128,7 +136,7 @@ class KartScreen(g: BunnyView) : Screen(g) {
         buildTrack()
         resetRace()
         startRace()
-        g.say("TogetherKart 3D · Corrida Bunny vs Cat! 🏎️💨")
+        g.say("TogetherKart 3D Cósmico · Corrida Ben 10 Galactic Racing! 🏎️💨")
     }
 
     override fun leave() {
@@ -137,7 +145,7 @@ class KartScreen(g: BunnyView) : Screen(g) {
         (g.context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
-    // ---------------------------------------------------------------- CONSTRUÇÃO DA PISTA
+    // ---------------------------------------------------------------- CONSTRUÇÃO DA PISTA (EXPANDIDA 5X)
     private fun ease(a: Double, b: Double, p: Double) = a + (b - a) * ((-cos(p * PI) / 2) + 0.5)
     private fun easeIn(a: Double, b: Double, p: Double) = a + (b - a) * p * p
 
@@ -158,22 +166,23 @@ class KartScreen(g: BunnyView) : Screen(g) {
 
     private fun buildTrack() {
         segments.clear(); lastY = 0.0
-        // Pista pelos vales andinos de Machu Picchu
+        // Pista 5x mais longa com montanhas-russas cósmicas estilo Ben 10 Galactic Racing
         val layout = arrayOf(
-            intArrayOf(10, 15, 10, 0, 0),
-            intArrayOf(20, 35, 20, 3, 0),
-            intArrayOf(15, 20, 15, 0, 18),
-            intArrayOf(20, 30, 20, -4, 0),
-            intArrayOf(15, 15, 15, 0, -18),
-            intArrayOf(12, 22, 12, 2, 0),
-            intArrayOf(12, 22, 12, -2, 0),
-            intArrayOf(20, 40, 20, 5, 0),
-            intArrayOf(10, 20, 10, 0, 0),
-            intArrayOf(15, 30, 15, -4, 12),
-            intArrayOf(15, 20, 15, 0, -12),
-            intArrayOf(20, 35, 20, 3, 0),
-            intArrayOf(15, 35, 15, -3, 0),
-            intArrayOf(10, 25, 10, 0, 0)
+            intArrayOf(15, 25, 15, 0, 0),
+            intArrayOf(25, 45, 25, 4, 15),     // Curva para a direita a subir
+            intArrayOf(20, 35, 20, -5, -25),   // Curva para a esquerda a descer (Rollercoaster drop!)
+            intArrayOf(30, 55, 30, 6, 20),     // Super Curva em subida
+            intArrayOf(25, 40, 25, -7, -15),   // Curva acentuada
+            intArrayOf(20, 30, 20, 0, 30),     // Grande colina cósmica
+            intArrayOf(20, 30, 20, 0, -30),    // Queda livre
+            intArrayOf(30, 60, 30, 7, 0),      // Curva parabólica
+            intArrayOf(25, 50, 25, -6, 20),    // Curva oposta
+            intArrayOf(20, 40, 20, 5, -20),    // Salto em declive
+            intArrayOf(25, 45, 25, -4, 15),    // S-curve 1
+            intArrayOf(25, 45, 25, 5, -15),    // S-curve 2
+            intArrayOf(30, 55, 30, -5, 0),     // Reta de alta velocidade com curvas
+            intArrayOf(20, 35, 20, 4, 10),     // Subida final
+            intArrayOf(20, 30, 20, 0, 0)       // Reta da meta
         )
         for (m in intArrayOf(1, -1)) for (s in layout) road(s[0], s[1], s[2], (s[3] * m).toDouble(), s[4].toDouble())
         road(5, 5, 5, 0.0, -lastY / segLen)
@@ -181,19 +190,19 @@ class KartScreen(g: BunnyView) : Screen(g) {
 
         val rnd = Random(15)
         for (s in segments) {
-            // Vegetação andina e cristais incas nas margens
-            if (s.index % 5 == 0 && s.index > 6) {
+            // Cristais espaciais e árvores cósmicas nas margens (do CosmoRacers)
+            if (s.index % 4 == 0 && s.index > 6) {
                 val kind = if (rnd.nextBoolean()) 0 else 1
-                val col = intArrayOf(Color.rgb(105, 215, 95), Color.rgb(255, 125, 195), Color.rgb(255, 215, 65))[rnd.nextInt(3)]
+                val col = intArrayOf(0xFFFF4DA6.toInt(), 0xFF4DA3FF.toInt(), 0xFFFFC94D.toInt(), 0xFF3DDC84.toInt(), 0xFFB07CFF.toInt())[rnd.nextInt(5)]
                 s.sprites.add(Spr(kind, -(1.4 + rnd.nextDouble() * 1.5), col))
                 s.sprites.add(Spr(1 - kind, 1.4 + rnd.nextDouble() * 1.5, col))
             }
-            // Cenouras douradas e corações para encher o turbo
-            if (s.index > 15 && s.index % 35 in 0..2) {
+            // Cenouras douradas (Bunny) / Corações (Cat) e orbes
+            if (s.index > 15 && s.index % 25 in 0..2) {
                 s.sprites.add(Spr(2, rnd.nextDouble() * 1.1 - 0.55, 0))
             }
-            // Plataformas de impulso na estrada
-            if (s.index > 18 && s.index % 80 in 0..2) s.boost = true
+            // Plataformas de impulso neon na estrada
+            if (s.index > 18 && s.index % 50 in 0..2) s.boost = true
         }
     }
 
@@ -202,7 +211,7 @@ class KartScreen(g: BunnyView) : Screen(g) {
         return segments[(zz / segLen).toInt() % segments.size]
     }
 
-    // ---------------------------------------------------------------- LÓGICA DA CORRIDA
+    // ---------------------------------------------------------------- LÓGICA DA CORRIDA (10 CARROS)
     private fun resetRace() {
         d = d0; playerX = 0.0; speed = 0.0; energy = 60.0; padTimer = 0.0
         raceTime = 0.0; finishedCount = 0; playerPlace = 1; currentLap = 1
@@ -213,15 +222,15 @@ class KartScreen(g: BunnyView) : Screen(g) {
         val myIdx = if (Theme.isBunny) 0 else 1
         val otherIndices = racers.indices.filter { it != myIdx }
 
-        // Os 3 oponentes: o parceiro é o 1º concorrente!
-        val fr = doubleArrayOf(0.86, 0.78, 0.82)
-        val off = doubleArrayOf(-0.55, 0.55, 0.15)
+        // Os 9 oponentes bots/companheiros na pista
+        val fr = doubleArrayOf(0.88, 0.84, 0.81, 0.79, 0.76, 0.74, 0.72, 0.70, 0.68)
+        val off = doubleArrayOf(-0.55, 0.55, -0.25, 0.25, -0.75, 0.75, 0.0, -0.40, 0.40)
         otherIndices.forEachIndexed { k, i ->
             val rDef = racers[i]
-            val c = Car(rDef.name, rDef.isBunny, rDef.color, rDef.dark, fr[k], off[k])
-            c.z = d0 + 360.0 * (k + 1)
-            c.offset = off[k]
-            c.phase = k * 1.6
+            val c = Car(rDef.name, rDef.isBunny, rDef.color, rDef.dark, fr[k % fr.size], off[k % off.size])
+            c.z = d0 + 260.0 * (k + 1)
+            c.offset = off[k % off.size]
+            c.phase = k * 1.4
             cars.add(c)
         }
     }
@@ -447,54 +456,81 @@ class KartScreen(g: BunnyView) : Screen(g) {
         drawHud(c, w, h)
     }
 
+    private var skyShader: LinearGradient? = null
+
     private fun drawPanoramicSky(c: Canvas, w: Float, h: Float) {
-        val skyCol = if (Theme.isBunny) Color.rgb(20, 32, 65) else Color.rgb(85, 168, 240)
-        fill.color = skyCol; c.drawRect(0f, 0f, w, h, fill)
+        if (skyShader == null) {
+            skyShader = LinearGradient(0f, 0f, 0f, h * 0.55f, 0xFF0D0320.toInt(), 0xFF2A1054.toInt(), Shader.TileMode.CLAMP)
+        }
+        fill.shader = skyShader
+        c.drawRect(0f, 0f, w, h * 0.55f + 4f, fill)
+        fill.shader = null
 
-        // Sol Andino
-        val sunX = w * 0.82f; val sunY = h * 0.22f; val sunR = h * 0.12f
-        fill.color = 0x55FFE666; c.drawCircle(sunX, sunY, sunR * 1.4f, fill)
-        fill.color = Color.rgb(255, 215, 55); c.drawCircle(sunX, sunY, sunR, fill)
+        // Planetas cósmicos em paralaxe (CosmoRacers)
+        val off = (skyOff * w * 6).toFloat()
+        // Planeta magenta
+        fill.color = 0xFFFFA1C6.toInt()
+        c.drawCircle(((w * 0.22f + off) % (w * 1.2f) + w * 1.2f) % (w * 1.2f) - w * 0.1f, h * 0.17f, h * 0.09f, fill)
+        // Lua roxa
+        fill.color = 0xFFC76BFF.toInt()
+        c.drawCircle(((w * 0.70f + off * 0.6f) % (w * 1.2f) + w * 1.2f) % (w * 1.2f) - w * 0.1f, h * 0.12f, h * 0.05f, fill)
 
-        // Montanhas de Machu Picchu
-        val g1 = Color.rgb(42, 98, 65)
-        val g2 = Color.rgb(55, 122, 78)
+        // Colinas cósmicas em paralaxe
+        hills(c, w, h, 0xFF3A1B78.toInt(), h * 0.07f, 0.004f, skyOff * 400)
+        hills(c, w, h, 0xFF2A1458.toInt(), h * 0.045f, 0.007f, skyOff * 900)
+        fill.color = 0xFF31226A.toInt()
+        c.drawRect(0f, h * 0.50f, w, h, fill)
+    }
+
+    private fun hills(c: Canvas, w: Float, h: Float, color: Int, amp: Float, freq: Float, off: Double) {
         path.reset()
-        path.moveTo(-40f, h * 0.52f)
-        path.lineTo(w * 0.30f, h * 0.30f)
-        path.lineTo(w * 0.65f, h * 0.52f)
-        path.close()
-        fill.color = g1; c.drawPath(path, fill)
-
-        path.reset()
-        path.moveTo(w * 0.40f, h * 0.52f)
-        path.lineTo(w * 0.78f, h * 0.32f)
-        path.lineTo(w + 40f, h * 0.52f)
-        path.close()
-        fill.color = g2; c.drawPath(path, fill)
+        path.moveTo(0f, h * 0.50f)
+        var x = 0f
+        while (x <= w + 20f) {
+            val y = h * 0.50f - amp * (0.6f + 0.4f * sin(x * freq + off).toFloat() + 0.3f * sin(x * freq * 2.3 + off * 1.7).toFloat())
+            path.lineTo(x, y)
+            x += 20f
+        }
+        path.lineTo(w, h * 0.50f); path.close()
+        fill.color = color
+        c.drawPath(path, fill)
     }
 
     private fun renderSegment(c: Canvas, w: Float, s: Seg) {
         val p1 = s.p1; val p2 = s.p2
-        val rumble = (s.index / 3) % 2 == 0
-        val rCol = if (rumble) Color.rgb(235, 55, 75) else Color.WHITE
-        val grassCol = if (rumble) Color.rgb(95, 175, 78) else Color.rgb(85, 162, 70)
-        val roadCol = if (s.boost) Color.rgb(38, 145, 235) else if (rumble) Color.rgb(72, 74, 82) else Color.rgb(65, 67, 75)
+        val light = (s.index / 3) % 2 == 0
+        val start = s.index < 4
 
-        // Relva nas margens
-        fill.color = grassCol; c.drawRect(0f, p2.sy, w, p1.sy, fill)
+        // Espaço cósmico nas margens da pista (CosmoRacers)
+        fill.color = if (light) 0xFF3B2A78.toInt() else 0xFF31226A.toInt()
+        c.drawRect(0f, p2.sy, w, p1.sy, fill)
 
-        // Faixas de bermas (zebras)
+        // Bermas (rumble neon vibrante)
+        val rumCol = if (start) (if (s.index % 2 == 0) Color.WHITE else Color.BLACK) else if (light) 0xFFFF3D7F.toInt() else 0xFFEFEFFF.toInt()
         val r1 = p1.sw * 1.18f; val r2 = p2.sw * 1.18f
-        quad(c, rCol, p1.sx - r1, p1.sy, p1.sx + r1, p1.sy, p2.sx + r2, p2.sy, p2.sx - r2, p2.sy)
+        quad(c, rumCol, p1.sx - r1, p1.sy, p1.sx + r1, p1.sy, p2.sx + r2, p2.sy, p2.sx - r2, p2.sy)
 
-        // Estrada de asfalto
-        quad(c, roadCol, p1.sx - p1.sw, p1.sy, p1.sx + p1.sw, p1.sy, p2.sx + p2.sw, p2.sy, p2.sx - p2.sw, p2.sy)
+        // Asfalto escuro cósmico
+        val rdCol = if (start) (if (s.index % 2 == 0) Color.WHITE else 0xFF222222.toInt()) else if (light) 0xFF6B6B7B.toInt() else 0xFF63637A.toInt()
+        quad(c, rdCol, p1.sx - p1.sw, p1.sy, p1.sx + p1.sw, p1.sy, p2.sx + p2.sw, p2.sy, p2.sx - p2.sw, p2.sy)
 
-        // Faixas centrais da estrada
-        if (!rumble) {
-            val lw1 = p1.sw * 0.035f; val lw2 = p2.sw * 0.035f
-            quad(c, Color.rgb(255, 235, 140), p1.sx - lw1, p1.sy, p1.sx + lw1, p1.sy, p2.sx + lw2, p2.sy, p2.sx - lw2, p2.sy)
+        // Linhas de faixa brancas
+        if (light && !start) {
+            val l1 = p1.sw / 32f; val l2 = p2.sw / 32f
+            val lanes = 3
+            val lw1 = p1.sw * 2 / lanes; val lw2 = p2.sw * 2 / lanes
+            var lx1 = p1.sx - p1.sw + lw1; var lx2 = p2.sx - p2.sw + lw2
+            for (i in 1 until lanes) {
+                quad(c, Color.WHITE, lx1 - l1 / 2, p1.sy, lx1 + l1 / 2, p1.sy, lx2 + l2 / 2, p2.sy, lx2 - l2 / 2, p2.sy)
+                lx1 += lw1; lx2 += lw2
+            }
+        }
+
+        // Plataforma de impulso neon cyan (CosmoRacers)
+        if (s.boost) {
+            val a = 0.32f
+            val bCol = if (light) 0xFF38E8FF.toInt() else 0xFF8CF4FF.toInt()
+            quad(c, bCol, p1.sx - p1.sw * a, p1.sy, p1.sx + p1.sw * a, p1.sy, p2.sx + p2.sw * a, p2.sy, p2.sx - p2.sw * a, p2.sy)
         }
     }
 
@@ -634,73 +670,112 @@ class KartScreen(g: BunnyView) : Screen(g) {
         c.restore()
     }
 
-    // ---------------------------------------------------------------- INTERFACE HUD LANDSCAPE
+    // ---------------------------------------------------------------- INTERFACE HUD LANDSCAPE (SEM TEXTO DE CONTROLOS)
     private fun drawHud(c: Canvas, w: Float, h: Float) {
         val u = h / 10f
 
+        // 1. Calcular Classificação em tempo real de 1º a 10º Lugares
+        val myName = if (Theme.isBunny) "🐰 Bunny" else "🐱 Cat"
+        val playerTotal = (currentLap - 1) * trackLength + (d % trackLength)
+
+        class RankEntry(val name: String, val dist: Double, val isMe: Boolean, val col: Int)
+        val standings = ArrayList<RankEntry>()
+        standings.add(RankEntry(myName, playerTotal, true, if (Theme.isBunny) Color.rgb(105, 175, 255) else Color.rgb(255, 165, 215)))
+        for (car in cars) {
+            val carTotal = (currentLap - 1) * trackLength + (car.z % trackLength)
+            standings.add(RankEntry(car.name, carTotal, false, car.color))
+        }
+        standings.sortByDescending { it.dist }
+        playerPlace = standings.indexOfFirst { it.isMe } + 1
+
         // Botão Voltar
-        backBtn.set(24f, 16f, 150f, 16f + u * 0.85f)
+        backBtn.set(24f, 16f, 130f, 16f + u * 0.75f)
         fill.color = Color.rgb(32, 40, 60)
         c.drawRoundRect(backBtn, backBtn.height() * 0.35f, backBtn.height() * 0.35f, fill)
-        label(c, "← Sair", backBtn.centerX(), backBtn.centerY() + u * 0.15f, u * 0.34f, Color.WHITE, Paint.Align.CENTER)
+        label(c, "← Sair", backBtn.centerX(), backBtn.centerY() + u * 0.14f, u * 0.30f, Color.WHITE, Paint.Align.CENTER)
 
         // Contador de Voltas & Posição
         val lapTxt = "VOLTA $currentLap / $totalLaps"
-        label(c, lapTxt, w * 0.22f, u * 0.65f, u * 0.40f, Color.rgb(255, 225, 80))
+        label(c, lapTxt, w * 0.17f, u * 0.60f, u * 0.36f, Color.rgb(255, 225, 80))
         val placeTxt = "${playerPlace}º LUGAR"
         val placeCol = if (playerPlace == 1) Color.rgb(255, 215, 45) else Color.WHITE
-        label(c, placeTxt, w * 0.45f, u * 0.65f, u * 0.48f, placeCol)
+        label(c, placeTxt, w * 0.35f, u * 0.60f, u * 0.44f, placeCol)
 
         // Velocímetro
-        val kmh = (speed / maxSpeed * 220).toInt()
-        label(c, "$kmh km/h", w * 0.72f, u * 0.65f, u * 0.42f, Color.rgb(105, 240, 175))
+        val kmh = (speed / maxSpeed * 240).toInt()
+        label(c, "$kmh km/h", w * 0.52f, u * 0.60f, u * 0.38f, Color.rgb(105, 240, 175))
 
         // Barra de Energia do Turbo
-        val barW = w * 0.25f
-        val barH = u * 0.28f
-        val barX = w * 0.70f
-        val barY = u * 0.95f
+        val barW = w * 0.20f
+        val barH = u * 0.25f
+        val barX = w * 0.50f
+        val barY = u * 0.90f
         fill.color = Color.rgb(45, 45, 55)
         c.drawRoundRect(barX, barY, barX + barW, barY + barH, barH / 2, barH / 2, fill)
         fill.color = Color.rgb(255, 185, 45)
         val fillW = (barW * (energy / 100.0)).toFloat().coerceIn(0f, barW)
         c.drawRoundRect(barX, barY, barX + fillW, barY + barH, barH / 2, barH / 2, fill)
-        label(c, "TURBO", barX - 12f, barY + barH * 0.82f, u * 0.26f, Color.WHITE, Paint.Align.RIGHT)
+        label(c, "TURBO", barX - 10f, barY + barH * 0.80f, u * 0.22f, Color.WHITE, Paint.Align.RIGHT)
 
-        // Dica de Gamepad PS4
-        val padHint = "🎮 PS4: D-Pad / Analógico vira · R2/X Turbo"
-        label(c, padHint, w * 0.22f, u * 1.15f, u * 0.24f, D.alpha(Color.WHITE, 190))
+        // 2. Tabela de Classificação de 1º a 10º Jogadores (Live Leaderboard Ben 10 Galactic Racing)
+        val leadW = w * 0.23f
+        val leadRowH = u * 0.25f
+        val leadH = leadRowH * 11 + 10f
+        val leadX = w - leadW - 16f
+        val leadY = 16f
 
-        // Botões táteis na vertical/landscape
-        val btnH = h * 0.22f
-        val btnW = w * 0.16f
+        fill.color = 0xAA141228.toInt()
+        c.drawRoundRect(leadX, leadY, leadX + leadW, leadY + leadH, 12f, 12f, fill)
 
-        // Botões de Virar (Esquerda / Direita) no canto inferior esquerdo
-        steerLeftBtn.set(24f, h - btnH - 24f, 24f + btnW, h - 24f)
-        steerRightBtn.set(steerLeftBtn.right + 16f, steerLeftBtn.top, steerLeftBtn.right + 16f + btnW, steerLeftBtn.bottom)
+        text.textSize = u * 0.18f
+        text.textAlign = Paint.Align.LEFT
+        text.color = Color.rgb(255, 215, 65)
+        c.drawText("TABELA 1º - 10º", leadX + 10f, leadY + leadRowH * 0.70f, text)
 
-        fill.color = if (leftDown) Color.rgb(255, 105, 165) else D.alpha(Color.rgb(35, 45, 70), 200)
+        for (i in 0 until min(10, standings.size)) {
+            val entry = standings[i]
+            val ry = leadY + leadRowH * 0.85f + i * leadRowH
+            val rankPrefix = "${i + 1}º"
+            val rowCol = if (entry.isMe) Color.rgb(255, 235, 65) else if (i == 0) Color.rgb(255, 215, 55) else Color.WHITE
+
+            text.textSize = u * 0.17f
+            text.textAlign = Paint.Align.LEFT
+            text.color = rowCol
+            c.drawText(rankPrefix, leadX + 8f, ry + leadRowH * 0.65f, text)
+
+            val dName = if (entry.name.length > 14) entry.name.take(13) + "…" else entry.name
+            c.drawText(dName, leadX + 36f, ry + leadRowH * 0.65f, text)
+        }
+
+        // Botões táteis discretos na vertical/landscape (Sem texto de controlos explicativos)
+        val btnH = h * 0.20f
+        val btnW = w * 0.14f
+
+        steerLeftBtn.set(24f, h - btnH - 20f, 24f + btnW, h - 20f)
+        steerRightBtn.set(steerLeftBtn.right + 14f, steerLeftBtn.top, steerLeftBtn.right + 14f + btnW, steerLeftBtn.bottom)
+
+        fill.color = if (leftDown) Color.rgb(255, 105, 165) else D.alpha(Color.rgb(35, 45, 70), 160)
         c.drawRoundRect(steerLeftBtn, btnH * 0.28f, btnH * 0.28f, fill)
-        label(c, "◀", steerLeftBtn.centerX(), steerLeftBtn.centerY() + btnH * 0.15f, btnH * 0.45f, Color.WHITE, Paint.Align.CENTER)
+        label(c, "◀", steerLeftBtn.centerX(), steerLeftBtn.centerY() + btnH * 0.15f, btnH * 0.40f, Color.WHITE, Paint.Align.CENTER)
 
-        fill.color = if (rightDown) Color.rgb(255, 105, 165) else D.alpha(Color.rgb(35, 45, 70), 200)
+        fill.color = if (rightDown) Color.rgb(255, 105, 165) else D.alpha(Color.rgb(35, 45, 70), 160)
         c.drawRoundRect(steerRightBtn, btnH * 0.28f, btnH * 0.28f, fill)
-        label(c, "▶", steerRightBtn.centerX(), steerRightBtn.centerY() + btnH * 0.15f, btnH * 0.45f, Color.WHITE, Paint.Align.CENTER)
+        label(c, "▶", steerRightBtn.centerX(), steerRightBtn.centerY() + btnH * 0.15f, btnH * 0.40f, Color.WHITE, Paint.Align.CENTER)
 
         // Botão de Turbo no canto inferior direito
-        val turbW = w * 0.20f
-        turboBtn.set(w - turbW - 24f, h - btnH - 24f, w - 24f, h - 24f)
+        val turbW = w * 0.18f
+        turboBtn.set(w - turbW - 24f, h - btnH - 20f, w - 24f, h - 20f)
         val turbCol = if (boostDown || ps4Boost) Color.rgb(255, 195, 35) else Color.rgb(235, 45, 95)
         fill.color = turbCol
         c.drawRoundRect(turboBtn, btnH * 0.32f, btnH * 0.32f, fill)
-        label(c, "⚡ TURBO", turboBtn.centerX(), turboBtn.centerY() + btnH * 0.12f, btnH * 0.34f, Color.WHITE, Paint.Align.CENTER)
+        label(c, "⚡ TURBO", turboBtn.centerX(), turboBtn.centerY() + btnH * 0.12f, btnH * 0.32f, Color.WHITE, Paint.Align.CENTER)
 
         // Ecrã de Contagem Decrescente
         if (state == State.COUNTDOWN) {
             val countSec = (timer).toInt() + 1
             val countTxt = if (countSec > 3) "PREPARAR..." else "$countSec"
             label(c, countTxt, w / 2, h * 0.48f, u * 1.5f, Color.rgb(255, 225, 60), Paint.Align.CENTER)
-            label(c, "Bunny vs Cat · Corrida em Machu Picchu!", w / 2, h * 0.58f, u * 0.40f, Color.WHITE, Paint.Align.CENTER)
+            label(c, "TogetherKart Cósmico · 10 Corredores!", w / 2, h * 0.58f, u * 0.38f, Color.WHITE, Paint.Align.CENTER)
         }
 
         // Ecrã de Fim de Corrida
@@ -714,7 +789,7 @@ class KartScreen(g: BunnyView) : Screen(g) {
             val winTxt = if (playerPlace == 1) "🏆 1º LUGAR! CAMPEÕES!" else "🏁 CORRIDA TERMINADA (${playerPlace}º)"
             label(c, winTxt, box.centerX(), box.top + boxH * 0.25f, u * 0.55f, Color.rgb(255, 215, 55), Paint.Align.CENTER)
             val partnerName = if (Save.partnerConnected) Save.partnerName else (if (Theme.isBunny) "Gatinha" else "Bunny")
-            label(c, "Parceiro(a) $partnerName correu contigo! +50 Moedas!", box.centerX(), box.top + boxH * 0.48f, u * 0.32f, Color.WHITE, Paint.Align.CENTER)
+            label(c, "Parceiro(a) $partnerName correu contigo! +100 Moedas!", box.centerX(), box.top + boxH * 0.48f, u * 0.32f, Color.WHITE, Paint.Align.CENTER)
 
             restartBtn.set(box.centerX() - boxW * 0.32f, box.bottom - boxH * 0.32f, box.centerX() + boxW * 0.32f, box.bottom - boxH * 0.10f)
             fill.color = Theme.primary

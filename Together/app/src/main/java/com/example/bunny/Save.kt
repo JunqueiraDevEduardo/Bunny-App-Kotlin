@@ -30,140 +30,243 @@ object Items {
 
     val all = listOf(
         // ==========================================
-        // COMIDA & DELÍCIAS (Disponível para ambos)
+        // COMIDA & DELÍCIAS (Peru, Portugal, Doces - 5X Preços)
         // ==========================================
-        Item("food_ceviche", "Ceviche Peruano", FOOD, 35, "Peixe marinado fresco com lima e milho choclo", "both"),
-        Item("food_lomo", "Lomo Saltado", FOOD, 40, "Carne salteada andina com batatas douradas", "both"),
-        Item("food_chicha", "Chicha Morada", FOOD, 20, "Bebida tradicional de milho roxo e canela", "both"),
-        Item("food_alfajor", "Alfajores Peruanos", FOOD, 25, "Biscoito com doce de leite e açúcar em pó", "both"),
-        Item("food_causa", "Causa Limeña", FOOD, 30, "Massa de batata amarela com abacate", "both"),
-        Item("food_choclo", "Choclo c/ Queijo", FOOD, 20, "Milho gigante dos Andes com queijo", "both"),
-        Item("food_carrot", "Cenoura Doce", FOOD, 0, "A favorita doce e fresca", "both"),
-        Item("food_apple", "Maçã Fresca", FOOD, 15, "Doce e crocante", "both"),
-        Item("food_berry", "Bagas Silvestres", FOOD, 18, "Frutos doces do bosque", "both"),
-        Item("food_cupcake", "Cupcake Festivo", FOOD, 28, "Bolo fofo de festa", "both"),
-        Item("food_potion_energy", "Poção Energia", FOOD, 60, "Recupera 100% da energia imediatamente", "both"),
-        Item("food_potion_clean", "Poção Banho", FOOD, 50, "Deixa o pet limpo e cheiroso", "both"),
+        Item("food_ceviche", "Ceviche Peruano", FOOD, 175, "Peixe marinado fresco com lima, cebola roxa e milho choclo", "both"),
+        Item("food_lomo", "Lomo Saltado", FOOD, 200, "Carne salteada andina no wok com batatas douradas", "both"),
+        Item("food_chicha", "Chicha Morada", FOOD, 100, "Bebida tradicional de milho roxo, canela e cravinho", "both"),
+        Item("food_alfajor", "Alfajores Peruanos", FOOD, 125, "Biscoito com doce de leite e açúcar em pó", "both"),
+        Item("food_causa", "Causa Limeña", FOOD, 150, "Massa de batata amarela com abacate e lima", "both"),
+        Item("food_choclo", "Choclo c/ Queijo", FOOD, 100, "Milho gigante dos Andes com fatia de queijo fresco", "both"),
+        Item("food_anticuchos", "Anticuchos Andinos", FOOD, 180, "Espetadas tradicionais temperadas com aji panca", "both"),
+        Item("food_huancaina", "Papa a la Huancaína", FOOD, 160, "Batatas macias com molho cremoso de queijo e aji amarillo", "both"),
+        Item("food_picarones", "Picarones Melosos", FOOD, 120, "Filhoses de abóbora e batata-doce com calda de chancaca", "both"),
+        Item("food_mazamorra", "Mazamorra Morada", FOOD, 110, "Sobremesa quente de milho roxo com frutas secas e canela", "both"),
+        Item("food_aji_gallina", "Ají de Gallina", FOOD, 195, "Creme andino aveludado de frango com azeitonas e nozes", "both"),
+        Item("food_pastel_nata", "Pastel de Nata", FOOD, 130, "Pastel folhado estaladiço com creme polvilhado de canela", "both"),
+        Item("food_francesinha", "Francesinha do Porto", FOOD, 220, "Tosta farta com carnes, queijo derretido e molho picante", "both"),
+        Item("food_bacalhau", "Bacalhau à Brás", FOOD, 210, "Bacalhau desfiado com batata-palha fina, ovos e salsa", "both"),
+        Item("food_caldo_verde", "Caldo Verde Minhoto", FOOD, 105, "Sopa tradicional de couve-galega e azeite português", "both"),
+        Item("food_sardinha", "Sardinha Assada", FOOD, 150, "Sardinha fresca assada na brasa sobre fatia de broa", "both"),
+        Item("food_arroz_pato", "Arroz de Pato", FOOD, 205, "Arroz tostado no forno com rodelas de chouriço tradicional", "both"),
+        Item("food_bifana", "Bifana à Moda do Porto", FOOD, 145, "Pão quente com febras tenras em molho de cerveja e louro", "both"),
+        Item("food_queijada", "Queijada de Sintra", FOOD, 115, "Doce histórico com queijo fresco e canela perfumada", "both"),
+        Item("food_travesseiro", "Travesseiro de Sintra", FOOD, 125, "Folhado crocante recheado com creme de ovo e amêndoa", "both"),
+        Item("food_bolo_bolacha", "Bolo de Bolacha", FOOD, 135, "Camadas de bolacha embebidas em café com creme aveludado", "both"),
+        Item("food_carrot", "Cenoura Doce", FOOD, 0, "A favorita doce e fresca acabada de colher", "both"),
+        Item("food_apple", "Maçã de Alcobaça", FOOD, 75, "Maçã fresca, sumarenta e estaladiça", "both"),
+        Item("food_berry", "Bagas Silvestres", FOOD, 90, "Frutos vermelhos doces colhidos no bosque", "both"),
+        Item("food_cupcake", "Cupcake Festivo", FOOD, 140, "Bolinho fofo com cobertura colorida de festa", "both"),
+        Item("food_potion_energy", "Super Poção Energia", FOOD, 300, "Recupera 100% da energia imediatamente", "both"),
+        Item("food_potion_clean", "Super Poção Banho", FOOD, 250, "Deixa o pet 100% limpo, cheiroso e radiante", "both"),
 
         // ==========================================
-        // CHAPÉUS: BUNNY (Azul/Vinho/Roxo/Peru)
+        // CHAPÉUS: BUNNY (Azul / Vinho / Roxo / Peru / Portugal)
         // ==========================================
-        Item("hat_chullo", "Chullo Andino", HAT, 85, "Gorro peruano tradicional de lã com borlas", "bunny"),
-        Item("hat_montera", "Montera Peruana", HAT, 90, "Chapéu tradicional de festa andina", "bunny"),
-        Item("hat_beanie", "Gorro Azul Andino", HAT, 75, "Gorro quente azul meia-noite", "bunny"),
-        Item("hat_cap", "Boné Roxo Imperial", HAT, 70, "Boné desportivo roxo", "bunny"),
-        Item("hat_crown_inca", "Coroa de Ouro Inca", HAT, 150, "Coroa sagrada do imperador inca", "bunny"),
-        Item("hat_straw", "Chapéu de Palha", HAT, 65, "Chapéu campestre tradicional", "bunny"),
+        Item("hat_chullo", "Chullo Andino", HAT, 425, "Gorro peruano tradicional de lã com borlas e abas para as orelhas", "bunny"),
+        Item("hat_montera", "Montera Peruana", HAT, 450, "Chapéu tradicional de festa andina decorado", "bunny"),
+        Item("hat_barrete_pt", "Barrete Campino Português", HAT, 390, "Gorro clássico português verde e preto com borla de lã", "bunny"),
+        Item("hat_bone_porto", "Boné Azul Invicta", HAT, 380, "Boné desportivo azul escuro de campeão", "bunny"),
+        Item("hat_beanie", "Gorro Azul Meia-Noite", HAT, 375, "Gorro quente de lã azul escuro", "bunny"),
+        Item("hat_cap", "Boné Roxo Imperial", HAT, 350, "Boné elegante de veludo roxo", "bunny"),
+        Item("hat_crown_inca", "Coroa de Ouro Inca", HAT, 750, "Coroa sagrada do imperador inca esculpida em ouro", "bunny"),
+        Item("hat_straw", "Chapéu de Palha Minhoto", HAT, 325, "Chapéu campestre fresco para dias de sol", "bunny"),
+        Item("hat_cartola_fado", "Cartola Lisboa Antiga", HAT, 480, "Cartola nobre de veludo para noites de fado", "bunny"),
+        Item("hat_coroa_cusco", "Coroa Imperial de Cusco", HAT, 700, "Coroa dourada majestosa com pedras de lápis-lazúli", "bunny"),
+        Item("hat_boina_alentejo", "Boina Alentejana", HAT, 360, "Boina de lã pura azul escura muito elegante", "bunny"),
 
-        // CHAPÉUS: CAT (Rosa/Brancos)
-        Item("cat_hat_bow", "Laço Rosa Princesa", HAT, 45, "Laço cor-de-rosa fofinho", "cat"),
-        Item("cat_hat_flower", "Tiara de Flores", HAT, 65, "Flores brancas e rosa delicadas", "cat"),
-        Item("cat_hat_crown", "Coroa de Princesa", HAT, 140, "Coroa dourada com joia rosa", "cat"),
-        Item("cat_hat_beret", "Boina Branca de Lã", HAT, 75, "Boina elegante e quentinha", "cat"),
-        Item("cat_hat_party", "Chapéu de Festa Rosa", HAT, 50, "Cone festivo com pom-pom", "cat"),
-
-        // ==========================================
-        // ROUPA: BUNNY (Azul/Vinho/Roxo/Peru)
-        // ==========================================
-        Item("fit_poncho", "Poncho Andino", OUTFIT, 110, "Poncho tradicional peruano colorido com franjas", "bunny"),
-        Item("fit_andina", "Camisola Andina", OUTFIT, 95, "Camisola com padrões geométricos incas", "bunny"),
-        Item("fit_overall", "Jardineiras Azuis", OUTFIT, 90, "Jardineiras azuis clássicas", "bunny"),
-        Item("fit_sweater", "Camisola Vinho", OUTFIT, 85, "Camisola vinho quente e fofa", "bunny"),
-        Item("fit_cape", "Capa Imperial Roxa", OUTFIT, 130, "Capa nobre com fecho dourado", "bunny"),
-        Item("fit_scarf", "Cachecol Andino", OUTFIT, 50, "Cachecol quente azul e vinho", "bunny"),
-
-        // ROUPA: CAT (Rosa/Brancos)
-        Item("cat_fit_dress", "Vestidinho Rosa", OUTFIT, 110, "Vestidinho com rendas brancas de princesa", "cat"),
-        Item("cat_fit_sweater", "Camisola Nuvem Branca", OUTFIT, 90, "Camisola macia e fofa", "cat"),
-        Item("cat_fit_cape", "Capa de Algodão Rosa", OUTFIT, 120, "Capa doce com pom-pons", "cat"),
-        Item("cat_fit_scarf", "Cachecol Rosa e Branco", OUTFIT, 55, "Cachecol às riscas macio", "cat"),
-        Item("cat_fit_overall", "Jardineiras Rosa Bebé", OUTFIT, 85, "Jardineiras doces de gatinha", "cat"),
+        // CHAPÉUS: CAT (Rosa / Brancos / Princesa / Portugal)
+        Item("cat_hat_bow", "Laço Rosa Princesa", HAT, 225, "Laço cor-de-rosa de cetim fofinho", "cat"),
+        Item("cat_hat_flower", "Tiara de Flores Rosa", HAT, 325, "Flores brancas e rosa delicadas com folhas verdes", "cat"),
+        Item("cat_hat_viana", "Lenço de Viana Rosa", HAT, 460, "Lenço minhoto tradicional bordado com coração de Viana", "cat"),
+        Item("cat_hat_tiara_perolas", "Tiara de Pérolas Brancas", HAT, 490, "Pérolas brancas brilhantes com pequeno laço rosa", "cat"),
+        Item("cat_hat_crown", "Coroa de Princesa Rosa", HAT, 700, "Coroa dourada com brilhante rubi rosa central", "cat"),
+        Item("cat_hat_beret", "Boina Branca de Lã", HAT, 375, "Boina elegante e macia como uma nuvem", "cat"),
+        Item("cat_hat_party", "Chapéu de Festa Rosa", HAT, 250, "Cone festivo brilhante com pom-pom branco", "cat"),
+        Item("cat_hat_veu", "Véu de Princesa", HAT, 550, "Véu suave em tule branco transparente com tiara", "cat"),
+        Item("cat_hat_orelhinhas", "Capuz de Gatinha Rosa", HAT, 380, "Capuz quentinho de lã com orelhinhas fofas", "cat"),
+        Item("cat_hat_diadema_estrelas", "Diadema Estrelas Rosa", HAT, 440, "Diadema com estrelas douradas e brilhantes", "cat"),
+        Item("cat_hat_boina_lisboa", "Boina Romântica Branca", HAT, 420, "Boina clássica com bordado floral artesanal", "cat"),
 
         // ==========================================
-        // CALÇADO: BUNNY (Azul/Vinho/Andino)
+        // ROUPA: BUNNY (Azul / Vinho / Roxo / Peru / Portugal)
         // ==========================================
-        Item("shoe_andean", "Sapatilhas Andinas", SHOES, 85, "Ténis com tecido peruano artesanal colorido", "bunny"),
-        Item("shoe_blue", "Sapatilhas Azuis", SHOES, 60, "Ténis desportivos azuis", "bunny"),
-        Item("shoe_wine", "Sapatilhas Vinho", SHOES, 65, "Sapatilhas elegantes cor de vinho", "bunny"),
-        Item("shoe_boots", "Botas Altiplano", SHOES, 80, "Botas quentinhas de couro andino", "bunny"),
-        Item("shoe_gold", "Ténis Dourados Incas", SHOES, 120, "Sapatilhas douradas brilhantes de campeão", "bunny"),
+        Item("fit_poncho", "Poncho Andino", OUTFIT, 550, "Poncho tradicional peruano colorido com franjas e motivos geométricos", "bunny"),
+        Item("fit_samarra", "Samarra Alentejana Nobre", OUTFIT, 600, "Casaco de burel alentejano com gola farta de ovelha", "bunny"),
+        Item("fit_traje_viana_azul", "Traje de Viana Azul", OUTFIT, 620, "Traje minhoto de festa em azul meia-noite bordado à mão", "bunny"),
+        Item("fit_camisola_poveira", "Camisola Poveira Tradicional", OUTFIT, 520, "Malha branca de lã pura com símbolos marítimos azuis da Póvoa", "bunny"),
+        Item("fit_andina", "Camisola Andina", OUTFIT, 475, "Camisola com padrões geométricos incas de lã de alpaca", "bunny"),
+        Item("fit_overall", "Jardineiras Azuis", OUTFIT, 450, "Jardineiras de ganga azul clássicas", "bunny"),
+        Item("fit_sweater", "Camisola Vinho Andina", OUTFIT, 425, "Camisola quente e acolhedora em tom vinho aveludado", "bunny"),
+        Item("fit_cape", "Capa Imperial Roxa", OUTFIT, 650, "Capa nobre com forro de cetim e fecho dourado", "bunny"),
+        Item("fit_fato_fado", "Fato Nobre de Lisboa", OUTFIT, 680, "Fato formal em azul escuro e colete vinho para grandes noites", "bunny"),
+        Item("fit_fato_kart", "Fato Piloto Cósmico Azul", OUTFIT, 590, "Macacão aerodinâmico azul e vinho com faixas refletoras de corrida", "bunny"),
+        Item("fit_scarf", "Cachecol Andino", OUTFIT, 250, "Cachecol comprido às riscas azul, vinho e roxo", "bunny"),
 
-        // CALÇADO: CAT (Rosa/Brancos)
-        Item("cat_shoe_pink", "Sabrinas Rosa Bebé", SHOES, 60, "Sabrinas fofas com lacinho", "cat"),
-        Item("cat_shoe_boots", "Botinhas de Lã Branca", SHOES, 75, "Botinhas fofas quentinhas", "cat"),
-        Item("cat_shoe_slippers", "Pantufas Nuvem", SHOES, 70, "Pantufas brancas fofas como nuvem", "cat"),
-        Item("cat_shoe_gold", "Sabrinas Douradas", SHOES, 110, "Sabrinas brilhantes de princesa", "cat"),
+        // ROUPA: CAT (Rosa / Brancos / Princesa / Portugal)
+        Item("cat_fit_dress", "Vestidinho Rosa Princesa", OUTFIT, 550, "Vestidinho com rendas brancas e folhos delicados", "cat"),
+        Item("cat_fit_traje_viana", "Traje de Viana Rosa Minhota", OUTFIT, 620, "Traje minhoto tradicional bordado em tons rosa e ouro", "cat"),
+        Item("cat_fit_sweater", "Camisola Nuvem Branca", OUTFIT, 450, "Camisola macia, quente e felpuda como uma nuvem", "cat"),
+        Item("cat_fit_gala", "Vestido de Gala Rosa", OUTFIT, 680, "Vestido comprido de princesa em cetim brilhante e tule", "cat"),
+        Item("cat_fit_cape", "Capa de Algodão Doce", OUTFIT, 600, "Capa rosa claro com forro felpudo e pom-pons brancos", "cat"),
+        Item("cat_fit_overall", "Jardineiras Rosa Bebé", OUTFIT, 425, "Jardineiras confortáveis com bolso de coração", "cat"),
+        Item("cat_fit_kart", "Fato Piloto Cósmico Rosa", OUTFIT, 590, "Macacão desportivo rosa e branco com estrelas douradas", "cat"),
+        Item("cat_fit_pijama_nuvem", "Pijama Nuvem com Corações", OUTFIT, 400, "Algodão macio cor-de-rosa perfeito para dormir quentinha", "cat"),
+        Item("cat_fit_floral", "Vestido Floral de Sintra", OUTFIT, 480, "Vestido primaveril com flores delicadas e laço de cetim", "cat"),
+        Item("cat_fit_camisola_renda", "Camisola Renda Portuguesa", OUTFIT, 460, "Renda fina e macia inspirada na tradição de Peniche", "cat"),
+        Item("cat_fit_scarf", "Cachecol Rosa e Branco", OUTFIT, 275, "Cachecol fofo às riscas rosa e branco de lã suave", "cat"),
 
         // ==========================================
-        // CORES: BUNNY (Azuis, Vinho, Roxo - ZERO Rosa/Branco)
+        // CALÇADO: BUNNY (Azul / Vinho / Andino / Portugal)
+        // ==========================================
+        Item("shoe_andean", "Sapatilhas Andinas", SHOES, 425, "Ténis com tecido peruano artesanal colorido e sola macia", "bunny"),
+        Item("shoe_botas_alentejo", "Botas Alentejanas de Couro", SHOES, 480, "Botas tradicionais artesanais de couro escuro resistentes", "bunny"),
+        Item("shoe_blue", "Sapatilhas Azuis", SHOES, 300, "Ténis desportivos azuis flexíveis para correr", "bunny"),
+        Item("shoe_wine", "Sapatilhas Vinho Nobre", SHOES, 325, "Sapatilhas elegantes em tom vinho aveludado", "bunny"),
+        Item("shoe_boots", "Botas Altiplano", SHOES, 400, "Botas quentinhas de couro andino com sola reforçada", "bunny"),
+        Item("shoe_gold", "Ténis Dourados Incas", SHOES, 600, "Sapatilhas douradas brilhantes de grande campeão", "bunny"),
+        Item("shoe_sapatilhas_kart", "Ténis Racing Cósmicos", SHOES, 450, "Calçado de corrida com aderência aos pedais do TogetherKart", "bunny"),
+        Item("shoe_pantufas_azul", "Pantufas Azuis de Lã", SHOES, 280, "Pantufas confortáveis para andar em casa", "bunny"),
+        Item("shoe_sapatos_fado", "Sapatos de Verniz Escuro", SHOES, 470, "Sapatos formais brilhantes para cerimónias e noites de gala", "bunny"),
+        Item("shoe_alpargatas", "Alpargatas Rústicas", SHOES, 310, "Calçado leve de lona com sola de corda andina", "bunny"),
+
+        // CALÇADO: CAT (Rosa / Brancos / Princesa / Portugal)
+        Item("cat_shoe_pink", "Sabrinas Rosa Bebé", SHOES, 300, "Sabrinas fofas com lacinho de cetim", "cat"),
+        Item("cat_shoe_botas_viana", "Botinhas Bordadas de Viana", SHOES, 480, "Botinhas de camurça rosa com motivos florais bordados", "cat"),
+        Item("cat_shoe_boots", "Botinhas de Lã Branca", SHOES, 375, "Botinhas fofas de lã quentinha forradas a veludo", "cat"),
+        Item("cat_shoe_slippers", "Pantufas Nuvem Fofa", SHOES, 350, "Pantufas brancas macias como caminhar sobre nuvens", "cat"),
+        Item("cat_shoe_gold", "Sabrinas Douradas de Princesa", SHOES, 550, "Sabrinas reluzentes com fivela dourada", "cat"),
+        Item("cat_shoe_sabrinas_cetim", "Sabrinas de Cetim Rosa", SHOES, 420, "Sabrinas suaves de bailarina com fita no tornozelo", "cat"),
+        Item("cat_shoe_racing", "Ténis Racing Rosa Pastel", SHOES, 450, "Sapatilhas aerodinâmicas para acelerar no TogetherKart", "cat"),
+        Item("cat_shoe_botas_neve", "Botas de Neve Brancas", SHOES, 460, "Botas altas impermeáveis forradas com pele sintética fofa", "cat"),
+        Item("cat_shoe_pantufas_ursinho", "Pantufas Ursinho Rosa", SHOES, 320, "Pantufas doces com cara de ursinho cor-de-rosa", "cat"),
+        Item("cat_shoe_sandalias_sol", "Sandálias Brancas de Verão", SHOES, 340, "Sandálias abertas com pequenas pérolas decorativas", "cat"),
+
+        // ==========================================
+        // CORES DE PELO: BUNNY (Azuis, Vinho, Roxo - ZERO Rosa/Branco)
         // ==========================================
         Item("col_sky", "Azul Celestial", COLOR, 0, "Pelo azul suave e celestial", "bunny"),
-        Item("col_royal", "Azul Real", COLOR, 75, "Pelo azul profundo e nobre", "bunny"),
-        Item("col_wine", "Vinho Andino", COLOR, 80, "Pelo vinho aveludado e acolhedor", "bunny"),
-        Item("col_purple", "Roxo Imperial", COLOR, 85, "Pelo roxo majestoso", "bunny"),
-        Item("col_caramel", "Caramelo Quente", COLOR, 70, "Pelo caramelo escuro andino", "bunny"),
+        Item("col_royal", "Azul Real Nobre", COLOR, 375, "Pelo azul profundo e majestoso", "bunny"),
+        Item("col_wine", "Vinho Andino", COLOR, 400, "Pelo vinho aveludado e acolhedor", "bunny"),
+        Item("col_purple", "Roxo Imperial", COLOR, 425, "Pelo roxo nobre do império inca", "bunny"),
+        Item("col_caramel", "Caramelo Andino", COLOR, 350, "Pelo caramelo escuro das montanhas andinas", "bunny"),
+        Item("col_navy_night", "Azul Noite Profundo", COLOR, 450, "Pelo azul-escuro como o céu noturno do Alentejo", "bunny"),
 
-        // CORES: CAT (Rosa, Brancos - ZERO Azul/Vinho/Roxo)
-        Item("cat_col_white", "Branco Algodão Doce", COLOR, 0, "Pelo branco puro fofinho", "cat"),
-        Item("cat_col_pink", "Rosa Pastel Macio", COLOR, 85, "Pelo cor-de-rosa doce e amoroso", "cat"),
-        Item("cat_col_cream", "Creme Baunilha", COLOR, 70, "Pelo creme baunilha aveludado", "cat"),
-        Item("cat_col_silver", "Prateado Suave", COLOR, 75, "Pelo prateado clarinho brilhante", "cat"),
-
-        // ==========================================
-        // ACESSÓRIOS: BUNNY (Azul/Vinho)
-        // ==========================================
-        Item("acc_glasses", "Óculos Azuis", ACC, 60, "Óculos intelectuais azuis", "bunny"),
-        Item("acc_bow_wine", "Laço Vinho Nobre", ACC, 55, "Laço formal cor de vinho", "bunny"),
-        Item("acc_chullo_scarf", "Lenço Andino", ACC, 65, "Lenço artesanal tradicional", "bunny"),
-
-        // ACESSÓRIOS: CAT (Rosa/Brancos)
-        Item("cat_acc_pearls", "Colar de Pérolas", ACC, 80, "Colar de pérolas brancas brilhantes", "cat"),
-        Item("cat_acc_bow", "Lacinho Rosa no Peito", ACC, 50, "Laço de cetim rosa doce", "cat"),
-        Item("cat_acc_glasses", "Óculos Rosa Fofos", ACC, 60, "Armação rosa com formato de coração", "cat"),
+        // CORES DE PELO: CAT (Rosa, Brancos - ZERO Azul/Vinho/Roxo)
+        Item("cat_col_white", "Branco Algodão Doce", COLOR, 0, "Pelo branco puro fofinho e imaculado", "cat"),
+        Item("cat_col_pink", "Rosa Pastel Macio", COLOR, 425, "Pelo cor-de-rosa doce e carinhoso", "cat"),
+        Item("cat_col_cream", "Creme Baunilha", COLOR, 350, "Pelo creme suave e aveludado", "cat"),
+        Item("cat_col_silver", "Prateado Suave", COLOR, 375, "Pelo prateado clarinho brilhante", "cat"),
+        Item("cat_col_rosinha_bebe", "Rosa Bebé Princesa", COLOR, 450, "Pelo rosa suave com reflexos perolados", "cat"),
 
         // ==========================================
-        // PAREDES: BUNNY (Inca, Meia-Noite, Roxo)
+        // ACESSÓRIOS: BUNNY (Azul / Vinho / Peru / Portugal)
         // ==========================================
-        Item("wall_inca", "Muro Inca de Cusco", WALL, 0, "Pedra esculpida de Cusco com símbolos Incas", "bunny"),
-        Item("wall_navy", "Azul Meia-Noite", WALL, 70, "Azul escuro tranquilo e moderno", "bunny"),
-        Item("wall_purple", "Roxo Imperial", WALL, 80, "Parede em tom roxo nobre", "bunny"),
-        Item("wall_aguayo", "Tecido Aguayo", WALL, 100, "Cores vibrantes tradicionais peruanas", "bunny"),
-        Item("wall_stars", "Céu Estrelado", WALL, 120, "Céu azul escuro com estrelas douradas", "bunny"),
+        Item("acc_glasses", "Óculos Azuis Intelectuais", ACC, 300, "Óculos elegantes com armação azul", "bunny"),
+        Item("acc_bow_wine", "Laço Vinho Nobre", ACC, 275, "Laço formal cor de vinho para usar ao peito", "bunny"),
+        Item("acc_chullo_scarf", "Lenço Andino Colorido", ACC, 325, "Lenço artesanal tradicional tecido à mão", "bunny"),
+        Item("acc_relogio_bolso", "Relógio de Bolso Dourado", ACC, 450, "Relógio clássico de corrente com detalhes incas", "bunny"),
+        Item("acc_guitarra_miniatura", "Mini Guitarra Portuguesa", ACC, 480, "Pequena guitarra de Fado colocada às costas", "bunny"),
+        Item("acc_medalhao_inca", "Medalhão do Sol Inca", ACC, 500, "Medalhão sagrado em ouro polido dos Andes", "bunny"),
 
-        // PAREDES: CAT (Rosa, Nuvens, Corações)
-        Item("cat_wall_pink", "Rosa Bebé Suave", WALL, 0, "Rosa acolhedor e doce", "cat"),
-        Item("cat_wall_cloud", "Nuvens Brancas", WALL, 80, "Céu rosa claro com nuvens fofas", "cat"),
-        Item("cat_wall_hearts", "Corações Amorosos", WALL, 90, "Parede cheia de corações cor-de-rosa", "cat"),
-        Item("cat_wall_stars", "Estrelas Brilhantes", WALL, 100, "Estrelinhas brancas suaves", "cat"),
-        Item("cat_wall_stripes", "Riscas Rosa & Brancas", WALL, 95, "Padrão às riscas elegante", "cat"),
-
-        // ==========================================
-        // CHÃO: BUNNY (Inca, Madeira Peruana)
-        // ==========================================
-        Item("floor_inca", "Calçada Inca", FLOOR, 0, "Pedra talhada histórica dos Andes", "bunny"),
-        Item("floor_peru", "Madeira Andina", FLOOR, 75, "Soalho de madeira nobre com borda artesanal", "bunny"),
-        Item("floor_wood", "Madeira Nobre", FLOOR, 60, "Soalho de madeira escura", "bunny"),
-        Item("floor_grass", "Relva dos Andes", FLOOR, 80, "Verde natural fresco", "bunny"),
-
-        // CHÃO: CAT (Nuvens, Rosa, Branco)
-        Item("cat_floor_cloud", "Chão Nuvens Fofas", FLOOR, 0, "Chão suave como caminhar no céu", "cat"),
-        Item("cat_floor_pink", "Soalho Rosa Pastel", FLOOR, 70, "Madeira em tom rosa claro", "cat"),
-        Item("cat_floor_white", "Madeira Clara Suave", FLOOR, 65, "Soalho branco macio e acolhedor", "cat"),
-        Item("cat_floor_check", "Xadrez Rosa & Branco", FLOOR, 75, "Mosaico xadrez fofinho", "cat"),
+        // ACESSÓRIOS: CAT (Rosa / Brancos / Princesa / Portugal)
+        Item("cat_acc_pearls", "Colar de Pérolas Brancas", ACC, 400, "Colar de pérolas brilhantes de princesa", "cat"),
+        Item("cat_acc_bow", "Lacinho Rosa no Peito", ACC, 250, "Laço de cetim rosa doce com brilhante", "cat"),
+        Item("cat_acc_glasses", "Óculos Coração Rosa", ACC, 300, "Armação em formato de coração rosa fofinha", "cat"),
+        Item("cat_acc_coracao_viana", "Coração de Viana em Ouro", ACC, 520, "Filigrana portuguesa autêntica em ouro puro", "cat"),
+        Item("cat_acc_pulseira_flores", "Pulseira Floral Rosa", ACC, 350, "Flores delicadas entrelaçadas em fita de cetim", "cat"),
+        Item("cat_acc_brincos_perola", "Brincos de Pérola Branca", ACC, 380, "Pérolas cintilantes muito elegantes", "cat"),
 
         // ==========================================
-        // DECORAÇÃO: BUNNY (Peru & Andes)
+        // PAREDES: BUNNY (Inca, Portugal, Casa de Banho Azul)
         // ==========================================
-        Item("dec_machupicchu", "Machu Picchu", DECOR, 85, "Quadro ilustrado da cidadela sagrada nos Andes", "bunny"),
-        Item("dec_tapete_peruano", "Tapete Andino", DECOR, 75, "Tapete geométrico peruano tecido à mão", "bunny"),
-        Item("dec_lhama", "Peluche Lhama", DECOR, 95, "Lhama fofa com borlas coloridas nas orelhas", "bunny"),
-        Item("dec_zampogna", "Flauta de Pã", DECOR, 70, "Flauta musical andina de bambu tradicional", "bunny"),
+        Item("wall_inca", "Muro Inca de Cusco", WALL, 0, "Pedra esculpida de Cusco com símbolos Incas históricos", "bunny"),
+        Item("wall_azulejos_pt", "Azulejos Tradicionais de Lisboa", WALL, 480, "Padrão histórico azul e branco de azulejos portugueses pintados", "bunny"),
+        Item("wall_navy", "Azul Meia-Noite Nobre", WALL, 350, "Azul escuro tranquilo, acolhedor e moderno", "bunny"),
+        Item("wall_purple", "Roxo Imperial", WALL, 400, "Parede em tom roxo nobre do império andino", "bunny"),
+        Item("wall_aguayo", "Tecido Aguayo dos Andes", WALL, 500, "Cores vibrantes tradicionais peruanas tecidas à mão", "bunny"),
+        Item("wall_stars", "Céu Estrelado dos Andes", WALL, 600, "Céu azul escuro salpicado de estrelas douradas", "bunny"),
+        Item("wall_marmore_wc_azul", "Mármore Azul de Casa de Banho", WALL, 450, "Lajes impermeáveis de mármore azul real para o WC", "bunny"),
+        Item("wall_granito_porto", "Granito da Ribeira do Porto", WALL, 420, "Pedra rústica e sólida do norte de Portugal", "bunny"),
+        Item("wall_madeira_alentejo", "Madeira de Sobreiro Alentejano", WALL, 380, "Painéis aconchegantes de madeira portuguesa", "bunny"),
+        Item("wall_pedra_machupicchu", "Pedra Polida de Machu Picchu", WALL, 460, "Muralhas talhadas com precisão milimétrica inca", "bunny"),
 
-        // DECORAÇÃO: CAT (Princesa, Ursinho, Corações)
-        Item("cat_dec_plush", "Peluche Ursinho Rosa", DECOR, 85, "Ursinho cor-de-rosa super fofo", "cat"),
-        Item("cat_dec_rug", "Tapete Coração", DECOR, 70, "Tapete fofo em forma de coração", "cat"),
-        Item("cat_dec_lamp", "Candeeiro Nuvem", DECOR, 75, "Candeeiro quentinho em forma de nuvem", "cat"),
-        Item("cat_dec_mirror", "Espelho Princesa", DECOR, 90, "Espelho oval com pérolas e lacinho", "cat")
+        // PAREDES: CAT (Rosa, Nuvens, Corações, Casa de Banho Rosa)
+        Item("cat_wall_pink", "Rosa Bebé Suave", WALL, 0, "Rosa acolhedor e doce como um abraço", "cat"),
+        Item("cat_wall_azulejos_rosa", "Azulejos Lisboa Rosa e Branco", WALL, 480, "Painel de azulejos portugueses em tons rosa pastel", "cat"),
+        Item("cat_wall_cloud", "Nuvens Brancas e Céu Rosa", WALL, 400, "Céu rosa claro salpicado de nuvens fofas", "cat"),
+        Item("cat_wall_hearts", "Corações Amorosos", WALL, 450, "Parede cheia de corações cor-de-rosa e brancos", "cat"),
+        Item("cat_wall_stars", "Estrelas Brilhantes", WALL, 500, "Estrelinhas brancas suaves a cintilar na parede", "cat"),
+        Item("cat_wall_stripes", "Riscas Rosa e Brancas", WALL, 475, "Padrão às riscas verticais elegante e clássico", "cat"),
+        Item("cat_wall_marmore_wc_rosa", "Mármore Rosa de Casa de Banho", WALL, 450, "Mármore polido brilhante e reluzente para o WC de princesa", "cat"),
+        Item("cat_wall_azulejo_wc_branco", "Azulejo WC Branco Puro", WALL, 430, "Azulejo cerâmico vidrado fácil de limpar para o duche", "cat"),
+        Item("cat_wall_renda_sintra", "Papel de Renda de Sintra", WALL, 440, "Motivos florais finos inspirados nos palácios de Sintra", "cat"),
+        Item("cat_wall_nuvens_douradas", "Céu Rosa com Nuvens Douradas", WALL, 520, "Cenário de conto de fadas celestial acolhedor", "cat"),
+
+        // ==========================================
+        // CHÃO: BUNNY (Calçada Portuguesa, Inca, Mármore WC)
+        // ==========================================
+        Item("floor_inca", "Calçada Inca", FLOOR, 0, "Pedra talhada histórica dos Andes resistente e firme", "bunny"),
+        Item("floor_calcada_portuguesa", "Calçada Portuguesa de Lisboa", FLOOR, 480, "Mosaico calcário preto e branco tradicional em ondas do mar", "bunny"),
+        Item("floor_peru", "Madeira Andina Nobre", FLOOR, 375, "Soalho de madeira escura com borda artesanal inca", "bunny"),
+        Item("floor_wood", "Madeira Maciça de Pinho", FLOOR, 300, "Soalho de tábua corrida aconchegante", "bunny"),
+        Item("floor_grass", "Relva Fresca dos Andes", FLOOR, 400, "Verde natural fresco e macio como um jardim", "bunny"),
+        Item("floor_marmore_wc_azul", "Mármore Branco de WC", FLOOR, 440, "Mosaico de mármore branco brilhante ideal para a casa de banho", "bunny"),
+        Item("floor_tabua_corrida", "Tábua Corrida Portuguesa", FLOOR, 360, "Madeira encerada tradicional com acabamento sedoso", "bunny"),
+        Item("floor_granito", "Lajes de Granito do Norte", FLOOR, 390, "Pedra polida fresca e muito durável", "bunny"),
+        Item("floor_tapete_arraiolos", "Tapete de Arraiolos Azul", FLOOR, 520, "Tapeçaria histórica alentejana bordada com motivos nobres", "bunny"),
+
+        // CHÃO: CAT (Nuvens, Calçada Rosa, Mármore WC Rosa)
+        Item("cat_floor_cloud", "Chão Nuvens Fofas", FLOOR, 0, "Chão suave como caminhar nas nuvens do céu", "cat"),
+        Item("cat_floor_calcada_rosa", "Calçada Portuguesa Rosa & Branca", FLOOR, 480, "Padrão geométrico suave de calçada em tons rosa e branco", "cat"),
+        Item("cat_floor_pink", "Soalho Rosa Pastel", FLOOR, 350, "Madeira encerada em tom rosa claro aconchegante", "cat"),
+        Item("cat_floor_white", "Madeira Clara Suave", FLOOR, 325, "Soalho branco macio que ilumina toda a sala", "cat"),
+        Item("cat_floor_check", "Xadrez Rosa & Branco", FLOOR, 375, "Mosaico xadrez fofinho de princesa", "cat"),
+        Item("cat_floor_marmore_wc_rosa", "Mármore Rosa de Casa de Banho", FLOOR, 440, "Piso de mármore polido rosa suave à prova de salpicos de água", "cat"),
+        Item("cat_floor_tapete_felpudo", "Tapete Felpudo Branco Puro", FLOOR, 420, "Algodão espesso super macio para pisar descalço", "cat"),
+        Item("cat_floor_madeira_clara", "Parquet Branco Escandinavo", FLOOR, 340, "Madeira nobre envernizada luminosa e fresca", "cat"),
+        Item("cat_floor_petalas", "Mosaico Pétalas de Rosa", FLOOR, 460, "Mosaico cerâmico com pequenas pétalas de flor rosa", "cat"),
+
+        // ==========================================
+        // DECORAÇÃO & CASA DE BANHO & CULTURA (25+ Itens)
+        // ==========================================
+        // Casa de Banho (WC) completa para ambos
+        Item("dec_banheira", "Banheira com Patinho", DECOR, 550, "Banheira de porcelana branca com torneira dourada e patinho de borracha amarelo", "both"),
+        Item("dec_sanita", "Sanita Moderna de Porcelana", DECOR, 420, "Sanita elegante de porcelana brilhante com autoclismo embutido", "both"),
+        Item("dec_lavatorio", "Lavatório em Mármore", DECOR, 480, "Móvel de lavatório com cuba em mármore, saboneteira e toalha", "both"),
+        Item("dec_toalheiro", "Toalheiro Aquecido", DECOR, 360, "Toalheiro de parede com toalhas felpudas macias e quentes", "both"),
+        Item("dec_espelho_wc", "Espelho Iluminado de WC", DECOR, 390, "Espelho redondo com iluminação LED suave para a casa de banho", "both"),
+
+        // Cultura Portuguesa
+        Item("dec_galo_barcelos", "Galo de Barcelos Português", DECOR, 480, "Símbolo icónico de Portugal pintado à mão com corações vermelhos", "bunny"),
+        Item("dec_guitarra_fado", "Guitarra Portuguesa de Fado", DECOR, 540, "Instrumento nobre de 12 cordas em madeira trabalhada", "bunny"),
+        Item("dec_azulejo_lisboa", "Painel de Azulejo de Lisboa", DECOR, 460, "Quadro com caravela e motivos marítimos portugueses", "bunny"),
+        Item("dec_andorinhas", "Andorinhas Bordalo Pinheiro", DECOR, 410, "Três andorinhas pretas de cerâmica para a parede", "bunny"),
+
+        // Cultura Peruana (Andes & Machu Picchu)
+        Item("dec_machupicchu", "Quadro Machu Picchu", DECOR, 425, "Quadro ilustrado da cidadela sagrada nos picos andinos", "bunny"),
+        Item("dec_tapete_peruano", "Tapete Geométrico Andino", DECOR, 375, "Tapete peruano tecido à mão com padrões geométricos incas", "bunny"),
+        Item("dec_lhama", "Peluche Lhama com Borlas", DECOR, 475, "Lhama andina super fofa com borlas coloridas nas orelhas", "bunny"),
+        Item("dec_zampogna", "Flauta de Pã Andina", DECOR, 350, "Flauta musical de bambu tradicional dos Andes", "bunny"),
+        Item("dec_sol_inti", "Sol Inca Inti em Ouro", DECOR, 520, "Escultura de parede do sagrado deus Sol esculpida em ouro", "bunny"),
+
+        // Casa de Banho e Quarto Princesa da Cat
+        Item("cat_dec_banheira_rosa", "Banheira Rosa Vitoriana", DECOR, 560, "Banheira clássica rosa com pés dourados e espuma perfumada", "cat"),
+        Item("cat_dec_lavatorio_rosa", "Toucador e Lavatório Rosa", DECOR, 490, "Móvel toucador com espelho oval e frascos de perfume rosa", "cat"),
+        Item("cat_dec_toalheiro_rosa", "Toalheiro Rosa com Lacinho", DECOR, 370, "Toalheiro com toalhas rosa bordadas e sabonetes de lavanda", "cat"),
+        Item("cat_dec_plush", "Peluche Ursinho Rosa", DECOR, 425, "Ursinho cor-de-rosa super fofo com lacinho branco", "cat"),
+        Item("cat_dec_rug", "Tapete Coração Rosa", DECOR, 350, "Tapete macio em formato de coração", "cat"),
+        Item("cat_dec_lamp", "Candeeiro Nuvem Quente", DECOR, 375, "Luz de presença acolhedora em forma de nuvem", "cat"),
+        Item("cat_dec_mirror", "Espelho Princesa com Pérolas", DECOR, 450, "Espelho oval com moldura de pérolas e laço rosa", "cat"),
+        Item("cat_dec_andorinhas_rosa", "Andorinhas Rosa em Cerâmica", DECOR, 410, "Andorinhas decorativas em cerâmica rosa para a parede", "cat"),
+        Item("cat_dec_jarra_flores", "Jarra de Flores de Sintra", DECOR, 380, "Flores campestres frescas perfumadas numa jarra de porcelana", "cat"),
+
+        // Itens Universais
+        Item("dec_window", "Janela Panorâmica", DECOR, 400, "Janela com vista para as montanhas e céu estrelado à noite", "both"),
+        Item("dec_rug", "Tapete Circular Acolhedor", DECOR, 340, "Tapete suave para colocar no meio da sala", "both"),
+        Item("dec_plant", "Vaso com Planta Verde", DECOR, 320, "Planta natural viçosa num vaso de barro", "both"),
+        Item("dec_lamp", "Candeeiro de Pé Alto", DECOR, 360, "Candeeiro com abajur que emite luz quente e suave", "both"),
+        Item("dec_plush", "Peluche Fofinho", DECOR, 380, "Amiguinho de peluche doce para fazer companhia no quarto", "both")
     )
 
     /** Filtra itens pela categoria e estritamente pelo pet ativo (Bunny vs Cat). */

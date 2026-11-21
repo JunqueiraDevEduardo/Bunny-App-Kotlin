@@ -40,6 +40,7 @@ class HomeScreen(g: BunnyView) : Screen(g) {
     private val multiBtn = RectF()
     private val settBtn = RectF()
     private val craftBtn = RectF()
+    private val kartBtn = RectF()
     private var bx = 0f; private var by = 0f; private var bs = 0f
 
     // Companheiro(a)
@@ -134,26 +135,34 @@ class HomeScreen(g: BunnyView) : Screen(g) {
             D.text(c, btnNames[i], cx, cy + rad * 1.32f, rad * 0.32f, btnTxt)
         }
 
-        // Botões de Acesso à Esquerda (Multiplayer & Definições)
+        // Botões de Acesso à Esquerda (Multiplayer, Definições, Craft 3D e TogetherKart 3D)
         val lcx = r.left + r.width() * 0.11f
-        val multiCy = r.top + r.height() * 0.22f
+        val multiCy = r.top + r.height() * 0.18f
         multiBtn.set(lcx - rad, multiCy - rad, lcx + rad, multiCy + rad)
         D.circle(c, lcx, multiCy, rad, if (Save.partnerConnected) Theme.primary else btnFill, Theme.outline, 2.5f)
         Icons.draw(c, Icons.MULTIPLAYER, lcx, multiCy - rad * 0.08f, rad * 0.52f)
         D.text(c, "A Dois", lcx, multiCy + rad * 1.32f, rad * 0.32f, btnTxt)
 
-        val settCy = multiCy + r.height() * 0.13f
+        val settCy = multiCy + r.height() * 0.11f
         settBtn.set(lcx - rad, settCy - rad, lcx + rad, settCy + rad)
         D.circle(c, lcx, settCy, rad, btnFill, Theme.outline, 2.5f)
         Icons.draw(c, Icons.SETTINGS, lcx, settCy - rad * 0.08f, rad * 0.52f)
         D.text(c, "Ajustes", lcx, settCy + rad * 1.32f, rad * 0.32f, btnTxt)
 
         // Botão direto para CatBunnyCraft 3D
-        val craftCy = settCy + r.height() * 0.13f
+        val craftCy = settCy + r.height() * 0.11f
         craftBtn.set(lcx - rad, craftCy - rad, lcx + rad, craftCy + rad)
         D.circle(c, lcx, craftCy, rad, btnFill, Theme.outline, 2.5f)
         Icons.draw(c, Icons.CRAFT, lcx, craftCy - rad * 0.08f, rad * 0.52f)
         D.text(c, "Craft ⛏️", lcx, craftCy + rad * 1.32f, rad * 0.32f, btnTxt)
+
+        // Botão direto para TogetherKart 3D em Landscape
+        val kartCy = craftCy + r.height() * 0.11f
+        kartBtn.set(lcx - rad, kartCy - rad, lcx + rad, kartCy + rad)
+        val kartCol = if (Theme.isBunny) Theme.bWine else Theme.primary
+        D.circle(c, lcx, kartCy, rad, kartCol, Theme.outline, 2.5f)
+        Icons.draw(c, Icons.STAR, lcx, kartCy - rad * 0.08f, rad * 0.52f)
+        D.text(c, "Kart 🏎️", lcx, kartCy + rad * 1.32f, rad * 0.32f, if (Theme.isBunny) Theme.bSilver else Theme.cWhitePure)
 
         drawFx(c)
     }
@@ -163,6 +172,7 @@ class HomeScreen(g: BunnyView) : Screen(g) {
         if (multiBtn.contains(x, y)) { g.go(Nav.MULTIPLAYER); return }
         if (settBtn.contains(x, y)) { g.go(Nav.SETTINGS); return }
         if (craftBtn.contains(x, y)) { g.go(Nav.CRAFT); return }
+        if (kartBtn.contains(x, y)) { g.go(Nav.KART); return }
 
         // Carinho no Pet Principal
         if (hypot(x - bx, y - (by - bs * 0.6f)) < bs * 0.6f) {

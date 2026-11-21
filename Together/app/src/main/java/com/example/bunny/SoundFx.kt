@@ -209,26 +209,9 @@ object SoundFx {
         postPcm(buf)
     }
 
-    // ================================================================= SOM NO BANHO
+    // ================================================================= SOM NO BANHO (SILENCIOSO)
     fun playBath(isCat: Boolean) {
-        if (isCat) {
-            // Cat: Salpico de água delicado e miadinho fofo
-            playCatMeow()
-        } else {
-            // Bunny: Gotinhas e bolhinhas de sabão no chuveiro
-            val duration = 0.24f
-            val count = (SAMPLE_RATE * duration).toInt()
-            val buf = ShortArray(count)
-            for (i in 0 until count) {
-                val t = i / SAMPLE_RATE.toFloat()
-                val popT = t % 0.05f
-                val env = exp(-popT * 55.0).toFloat()
-                val freq = 480f + ((t * 1400f) % 700f)
-                val s = sin(2.0 * PI * freq * popT).toFloat() * env
-                buf[i] = (s * 19000f).toInt().coerceIn(-32767, 32767).toShort()
-            }
-            postPcm(buf)
-        }
+        // Silêncio completo no banho/duche a pedido do utilizador
     }
 
     // ================================================================= SOM AO BRINCAR
